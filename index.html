@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Affiliate Intelligence Studio — Central DB Explorer v53.0</title>
+    <link rel="stylesheet" href="styles.css?v=53.0">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="logo-icon">⚡</span>
+                <div>
+                    <h2>Affiliate Intel</h2>
+                    <span class="version-badge">v53.0 Central DB</span>
+                </div>
+            </div>
+
+            <!-- Active Account Picker Pill -->
+            <div class="user-pill">
+                <div class="user-avatar">👤</div>
+                <div class="user-info">
+                    <span class="user-name" id="sideAccName">namkhangcollection</span>
+                    <span class="user-status" id="sideAccId">🟢 ID: an_15320530167</span>
+                </div>
+            </div>
+
+            <div class="lan-card">
+                <div class="lan-title">📡 เชื่อมต่อวงแลน (LAN Sync)</div>
+                <div class="lan-url" id="lanUrlDisplay">http://192.168.1.160:8080</div>
+                <div class="lan-desc">เปิด URL นี้บนคอมเครื่องอื่นหรือโทรศัพท์ได้เลย!</div>
+            </div>
+
+            <nav class="nav-menu">
+                <div class="menu-group-title">🗄️ ค้นหาฐานข้อมูลกลาง (Central Database)</div>
+                <button class="nav-item active" onclick="switchTab('centraldb')">🗄️ คลังค้นหาฐานข้อมูลกลาง SQLite</button>
+
+                <div class="menu-group-title">📺 สูตรทำคลิปตามยูทูป (YouTube Workflows)</div>
+                <button class="nav-item" onclick="switchTab('ytworkflow4')">📱 สูตรโพสต์ 4 แพลตฟอร์มออโต้ (BAeKh_Pekb8)</button>
+                <button class="nav-item" onclick="switchTab('ytworkflow3')">🔴 สูตรบอทไลฟ์สด 24 ชม. (J1PPRCvI8Kw)</button>
+                <button class="nav-item" onclick="switchTab('ytworkflow2')">🎬 สูตรสร้างคลิปอัตโนมัติ AI (UmgVh8U3ZqY)</button>
+                <button class="nav-item" onclick="switchTab('ytworkflow')">📺 สูตรทำคลิปทำเงิน (B82CcEoAzpQ)</button>
+
+                <div class="menu-group-title">📊 แดชบอร์ดบัญชี Affiliate</div>
+                <button class="nav-item" onclick="switchTab('dashboard')">📊 แดชบอร์ดรายได้ & สถิติ</button>
+                <button class="nav-item" onclick="switchTab('catalog')">🛒 คลังสินค้าในคอลเล็คชั่น (เชิงลึก)</button>
+                <button class="nav-item" onclick="switchTab('addproduct')">📥 ดึงข้อมูลสินค้าจริง</button>
+                <button class="nav-item" onclick="switchTab('settings')">🌐 จัดการบัญชี & สลับแอคเค้าท์</button>
+
+                <div class="menu-group-title">🎬 สตูดิโอทำคลิป AI</div>
+                <button class="nav-item" onclick="switchTab('prompt')">🎬 พรอมต์ Google Flow 9:16</button>
+                <button class="nav-item" onclick="switchTab('shopeevdo')">🎥 Shopee VDO Studio (EP2)</button>
+                <button class="nav-item" onclick="switchTab('captions')">🛡️ คลังแคปชัน & Anti-Ban</button>
+                <button class="nav-item" onclick="switchTab('calendar')">📅 ตารางโพสต์ประจำสัปดาห์</button>
+
+                <div class="menu-group-title">💡 เทรนด์ & ความปลอดภัย</div>
+                <button class="nav-item" onclick="switchTab('insights')">💡 Creators Search Insights</button>
+                <button class="nav-item" onclick="switchTab('safety')">🛡️ Anti-Ban Safety Suite</button>
+                <button class="nav-item" onclick="switchTab('dlp')">🛡️ ระบบกันข้อมูลรั่วไหล (DLP)</button>
+                <button class="nav-item" onclick="switchTab('backup')">💾 แบ็กอัปข้อมูล (Backup & Restore)</button>
+
+                <div class="menu-group-title">🔴 สตูดิโอไลฟ์ & เครื่องมือ</div>
+                <button class="nav-item" onclick="switchTab('live')">🔴 Auto Live 24/7 Studio</button>
+                <button class="nav-item" onclick="switchTab('livemedia')">🎨 สื่อประกอบไลฟ์ (ภาพ/เสียง)</button>
+                <button class="nav-item" onclick="switchTab('linkconv')">🔗 แปลง Affiliate Link</button>
+                <button class="nav-item" onclick="switchTab('outreach')">👥 ข้อความชวน Creator</button>
+                <button class="nav-item" onclick="switchTab('vault')">📦 Media Vault คลังคลิป</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="breadcrumb" id="breadcrumbText">ฐานข้อมูลกลาง / 🗄️ ค้นหาและสำรวจข้อมูลสินค้าในฐานข้อมูลกลาง SQLite</div>
+                <div class="header-actions">
+                    <button class="btn-toggle-lan active" id="btnLanToggle" onclick="toggleLanServer()">
+                        <span class="lan-dot"></span>
+                        <span id="lanToggleText">📡 LAN Sync: ON (192.168.1.160:8080)</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="openShopeeLogin()">🌐 เปิดเว็บ Shopee Affiliate</button>
+                </div>
+            </header>
+
+            <div class="container" id="contentArea">
+                <!-- TAB: CENTRAL DATABASE EXPLORER -->
+                <section id="tab-centraldb" class="tab-page active">
+                    <div class="card bg-gradient-card" style="margin-bottom:16px;">
+                        <div class="card-header">
+                            <h3>📊 โครงสร้างจัดเก็บข้อมูลอย่างเป็นระเบียบ 3 ชั้น (Structured Data 3-Layers)</h3>
+                            <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="saveCatalogToSqlitePermanent()">💾 บันทึกระเบียบลงฐานข้อมูลถาวร</button>
+                        </div>
+                        <p class="desc-text" style="font-size:13px; margin-bottom:12px;">ระบบทำการจัดระเบียบข้อมูลสินค้าออกเป็น 3 ชั้น เพื่อความถาวร ค้นหาง่าย และส่งต่อทำคลิป AI 9:16 อัตโนมัติ:</p>
+
+                        <div class="stats-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+                            <div class="card" style="padding:12px; background:#f0fdf4; border:1px solid #bbf7d0;">
+                                <strong style="color:#166534; font-size:13px;">1️⃣ ฐานข้อมูลกลาง SQLite (Relational DB)</strong>
+                                <p style="font-size:11px; color:#15803d; margin-top:4px;">
+                                    <code>~/.affiliate_intel_db.sqlite</code><br>
+                                    เก็บ 12 มิติข้อมูล (ราคา/คอม%/กำไรบาท/ลิงก์) มี Primary Key กำกับ
+                                </p>
+                            </div>
+                            <div class="card" style="padding:12px; background:#eff6ff; border:1px solid #bfdbfe;">
+                                <strong style="color:#1e40af; font-size:13px;">2️⃣ คลังไฟล์รูปภาพ Mac (Asset Registry)</strong>
+                                <p style="font-size:11px; color:#1d4ed8; margin-top:4px;">
+                                    <code>~/Pictures/AffiliateIntel_Images/</code><br>
+                                    ตั้งชื่อไฟล์เป็นระเบียบ <code>{item_id}_0.jpg</code> ไม่ปนกัน 100%
+                                </p>
+                            </div>
+                            <div class="card" style="padding:12px; background:#faf5ff; border:1px solid #e9d5ff;">
+                                <strong style="color:#6b21a8; font-size:13px;">3️⃣ ไฟล์ส่งออกทำคลิป AI (Export Payload)</strong>
+                                <p style="font-size:11px; color:#7e22ce; margin-top:4px;">
+                                    <code>~/Desktop/to_google_flow.json</code><br>
+                                    จัดชุดข้อมูลสำเร็จรูปพร้อมส่งต่อสร้างคลิป 9:16 บน Shopee VDO
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-gradient-card">
+                        <div class="card-header">
+                            <h3>🗄️ หน้าค้นหาและสำรวจฐานข้อมูลกลาง SQLite (Central Database Explorer)</h3>
+                            <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="searchCentralDbLive()">🔎 ค้นหาเรียลไทม์</button>
+                        </div>
+                        <p class="desc-text" style="font-size:14px;">ค้นหา ค้นคลัง และกรองสินค้าทั้งหมดที่บันทึกไว้ในฐานข้อมูลกลาง <code>~/.affiliate_intel_db.sqlite</code> บนดิสก์ Mac ของคุณ</p>
+
+                        <div class="form-grid" style="margin-top:16px;">
+                            <div class="form-row">
+                                <div class="form-group" style="flex:3;">
+                                    <label>🔍 คีย์เวิร์ดค้นหาในฐานข้อมูลกลาง (ชื่อสินค้า / ร้านค้า / รายละเอียด):</label>
+                                    <input type="text" id="inpDbSearchQuery" class="form-input" placeholder="พิมพ์ชื่อสินค้า เช่น พัดลมมือถือ, SKINTIFIC..." onkeyup="searchCentralDbLive()">
+                                </div>
+                                <div class="form-group" style="flex:1;">
+                                    <label>💎 ขั้นต่ำค่าคอม %:</label>
+                                    <select id="inpDbMinComm" class="form-select" onchange="searchCentralDbLive()">
+                                        <option value="0">ทั้งหมด (All %)</option>
+                                        <option value="20">20% ขึ้นไป</option>
+                                        <option value="25">25% ขึ้นไป</option>
+                                        <option value="28">28% ขึ้นไป (ค่าคอมสูงพิเศษ)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex:1;">
+                                    <label>📊 เรียงลำดับตาม:</label>
+                                    <select id="inpDbSortBy" class="form-select" onchange="searchCentralDbLive()">
+                                        <option value="net_profit_thb">💵 กำไรต่อชิ้นสูงสุด (฿)</option>
+                                        <option value="commission_rate">💎 ค่าคอมมิชชันสูงสุด (%)</option>
+                                        <option value="total_sold">📦 ยอดขายสูงสุด</option>
+                                        <option value="created_at">📅 ล่าสุดที่บันทึก</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top:16px;">
+                        <div class="card-header">
+                            <h3 id="dbSearchResultTitle">📋 รายการสินค้าในฐานข้อมูลกลาง (กำลังโหลด...)</h3>
+                            <button class="btn btn-primary" onclick="importSelectedDbItemToCatalog()">📥 ดึงรายการที่เลือกเข้าตระกร้าใช้งาน</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>🖼️ รูปภาพ</th>
+                                        <th>🛍️ ชื่อสินค้า & ร้านค้า</th>
+                                        <th>💰 ราคาขาย</th>
+                                        <th>💎 ค่าคอม %</th>
+                                        <th>💵 กำไรสุทธิ (฿)</th>
+                                        <th>📦 ยอดขาย & ดาว</th>
+                                        <th>สถานะจัดเก็บ</th>
+                                        <th>การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="centralDbTableBody">
+                                    <!-- Dynamic SQLite Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: YOUTUBE WORKFLOW 4 (BAeKh_Pekb8) -->
+                <section id="tab-ytworkflow4" class="tab-page">
+                    <div class="card bg-gradient-card">
+                        <div class="card-header">
+                            <h3>📱 ระบบถอดสูตรโพสต์กระจายคลิป 4 แพลตฟอร์มออโต้ (ตามคลิป BAeKh_Pekb8)</h3>
+                            <button class="btn btn-primary" onclick="window.open('https://youtu.be/BAeKh_Pekb8?si=hU566XHkMTJ9LaRy', '_blank')">▶️ เปิดดูคลิปต้นฉบับในยูทูป</button>
+                        </div>
+                        <p class="desc-text" style="font-size:14px;">ถอดสูตรทำคลิปครั้งเดียว กระจายลง 4 ช่องทางอัตโนมัติ: Shopee VDO + TikTok Shop + Facebook Reels + YouTube Shorts ดักจับทราฟฟิกฟรี 100%</p>
+
+                        <div class="stats-grid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-top:16px;">
+                            <div class="card" style="padding:14px; text-align:center;">
+                                <div style="font-size:24px; margin-bottom:6px;">🟠</div>
+                                <strong>Shopee VDO Studio</strong>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">ติดแท็กสินค้า EP2 + ลิงก์ทำเงิน</p>
+                                <button class="btn btn-primary" style="font-size:11px; margin-top:8px;" onclick="switchTab('shopeevdo')">🎥 Shopee VDO</button>
+                            </div>
+                            <div class="card" style="padding:14px; text-align:center;">
+                                <div style="font-size:24px; margin-bottom:6px;">🖤</div>
+                                <strong>TikTok Shop Creator</strong>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">แคปชัน Anti-Ban + แฮชแท็กติดเทรนด์</p>
+                                <button class="btn btn-outline" style="font-size:11px; margin-top:8px;" onclick="switchTab('captions')">💬 แคปชัน TikTok</button>
+                            </div>
+                            <div class="card" style="padding:14px; text-align:center;">
+                                <div style="font-size:24px; margin-bottom:6px;">📘</div>
+                                <strong>Facebook Reels</strong>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">สคริปต์สั้นกระชับ ชี้พิกัดคอมเมนต์</p>
+                                <button class="btn btn-primary" style="font-size:11px; margin-top:8px;" onclick="switchTab('prompt')">🎬 พรอมต์ Reels</button>
+                            </div>
+                            <div class="card" style="padding:14px; text-align:center;">
+                                <div style="font-size:24px; margin-bottom:6px;">🔴</div>
+                                <strong>YouTube Shorts 9:16</strong>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">คีย์เวิร์ด SEO ดักยอดวิว 1 ล้าน</p>
+                                <button class="btn btn-outline" style="font-size:11px; margin-top:8px;" onclick="switchTab('insights')">💡 SEO Insights</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: YOUTUBE WORKFLOW 3 (J1PPRCvI8Kw) -->
+                <section id="tab-ytworkflow3" class="tab-page">
+                    <div class="card bg-gradient-card">
+                        <div class="card-header">
+                            <h3>🔴 ระบบถอดสูตรบอทไลฟ์สดทำเงิน 24 ชม. (ตามคลิป J1PPRCvI8Kw)</h3>
+                            <button class="btn btn-primary" onclick="window.open('https://youtu.be/J1PPRCvI8Kw?si=sZBM9KZEKJZPzrDL', '_blank')">▶️ เปิดดูคลิปต้นฉบับในยูทูป</button>
+                        </div>
+                        <p class="desc-text" style="font-size:14px;">ถอดสูตรทำไลฟ์สดอัตโนมัติ 24 ชม. บน Shopee Live & TikTok Live: สลับปักหมุดสินค้าอัตโนมัติ ➔ ตอบแชทลูกค้าออโต้ ➔ แสดงป้ายคาดจอส่วนลดพิเศษ ➔ ปั๊มยอดขายต่อเนื่องตลอดคืน</p>
+                    </div>
+                </section>
+
+                <!-- TAB: YOUTUBE WORKFLOW 2 (UmgVh8U3ZqY) -->
+                <section id="tab-ytworkflow2" class="tab-page">
+                    <div class="card bg-gradient-card">
+                        <div class="card-header">
+                            <h3>🎬 ระบบถอดสูตรสร้างคลิปทำเงินอัตโนมัติ AI (ตามคลิป UmgVh8U3ZqY)</h3>
+                            <button class="btn btn-primary" onclick="window.open('https://www.youtube.com/watch?v=UmgVh8U3ZqY', '_blank')">▶️ เปิดดูคลิปต้นฉบับในยูทูป</button>
+                        </div>
+                        <p class="desc-text" style="font-size:14px;">ถอดสูตรทำคลิปวิดีโอสั้นอัตโนมัติ: ดึงสินค้า Flash Sale ➔ พากย์เสียง AI ภาษาไทย ➔ ใส่เอฟเฟกต์กันโดนแบน (Anti-Ban Dynamic Motion) ➔ โพสต์รับยอดขายถล่มทลาย</p>
+                    </div>
+                </section>
+
+                <!-- TAB: YOUTUBE WORKFLOW 1 (B82CcEoAzpQ) -->
+                <section id="tab-ytworkflow" class="tab-page">
+                    <div class="card bg-gradient-card">
+                        <div class="card-header">
+                            <h3>📺 ระบบถอดสูตรทำคลิปทำเงิน Shopee Affiliate (ตามคลิป B82CcEoAzpQ)</h3>
+                            <button class="btn btn-primary" onclick="window.open('https://youtu.be/B82CcEoAzpQ?si=dreWdrvWqmHVG67p', '_blank')">▶️ เปิดดูคลิปต้นฉบับในยูทูป</button>
+                        </div>
+                        <p class="desc-text" style="font-size:14px;">ถอดเวิร์กโฟลว์ 4 ขั้นตอนจากคลิปยูทูปสำหรับดึงสินค้า Shopee ➔ สร้างวิดีโอ AI 9:16 ➔ โพสต์ Shopee VDO รับค่าคอมมิชชันรวดเร็ว</p>
+                    </div>
+                </section>
+
+                <!-- TAB: AFFILIATE ACCOUNT DASHBOARD -->
+                <section id="tab-dashboard" class="tab-page">
+                    <div class="account-selector-card">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <label style="font-weight:600; font-size:15px; color:var(--text-main);">👤 เลือกบัญชี Affiliate ที่ใช้งาน:</label>
+                            <select id="dashAccountSelect" onchange="switchActiveAccount(this.value)" class="form-select" style="max-width:280px; font-weight:600;">
+                                <option value="acc_1">namkhangcollection (Partner: an_15320530167)</option>
+                                <option value="acc_2">+ เพิ่มบัญชี Shopee Affiliate ใหม่</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-outline" onclick="openShopeeLogin()">🔄 ล็อกอินเข้า Shopee Affiliate จริง</button>
+                    </div>
+
+                    <div class="stats-grid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:20px;">
+                        <div class="stat-card" style="background:#f0fdf4; border:1px solid #bbf7d0; padding:18px; border-radius:12px;">
+                            <div style="font-size:13px; color:#166534; font-weight:600;">💰 ค่าคอมมิชชันสะสมเดือนนี้</div>
+                            <div style="font-size:24px; font-weight:700; color:#15803d; margin-top:4px;" id="dashMetricRevenue">฿68,450.00</div>
+                        </div>
+                        <div class="stat-card" style="background:#eff6ff; border:1px solid #bfdbfe; padding:18px; border-radius:12px;">
+                            <div style="font-size:13px; color:#1e40af; font-weight:600;">👆 จำนวนคนคลิกลิงก์ (Total Clicks)</div>
+                            <div style="font-size:24px; font-weight:700; color:#1d4ed8; margin-top:4px;" id="dashMetricClicks">24,580 ครั้ง</div>
+                        </div>
+                        <div class="stat-card" style="background:#faf5ff; border:1px solid #e9d5ff; padding:18px; border-radius:12px;">
+                            <div style="font-size:13px; color:#6b21a8; font-weight:600;">📦 คำสั่งซื้อสำเร็จ (Total Orders)</div>
+                            <div style="font-size:24px; font-weight:700; color:#7e22ce; margin-top:4px;" id="dashMetricOrders">1,420 ออเดอร์</div>
+                        </div>
+                        <div class="stat-card" style="background:#fff7ed; border:1px solid #fed7aa; padding:18px; border-radius:12px;">
+                            <div style="font-size:13px; color:#9a3412; font-weight:600;">📈 อัตราแปลงเป็นยอดขาย (CR%)</div>
+                            <div style="font-size:24px; font-weight:700; color:#c2410c; margin-top:4px;" id="dashMetricCR">5.78%</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>📌 รายละเอียดบัญชี & หน้าร้านคอลเล็คชั่น (Account Info)</h3>
+                            <button class="btn btn-primary" onclick="testShopeeApiPingLive()">🧪 ทดสอบเชื่อมต่อ API เรียลไทม์</button>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>👤 ชื่อบัญชี / ชื่อช่อง:</label>
+                                    <input type="text" id="dashAccName" class="form-input" value="namkhangcollection" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>🆔 Shopee Partner ID:</label>
+                                    <input type="text" id="dashPartnerId" class="form-input code-text" value="an_15320530167" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>🏷️ Referral Code:</label>
+                                    <input type="text" id="dashRefCode" class="form-input code-text" value="X4EBLKP" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: RICH DETAILED CATALOG -->
+                <section id="tab-catalog" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>📋 ข้อมูลสินค้าเชิงลึกในคอลเล็คชั่น (12 รายการมิติข้อมูล: รูปภาพ/ราคา/ค่าคอม%/กำไรบาท/ยอดขาย/ดาว)</h3>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="saveCatalogToSqlitePermanent()">💾 บันทึกข้อมูลเข้าฐานข้อมูล SQLite ถาวร</button>
+                                <button class="btn btn-outline" onclick="fetchStorefrontCollectionLive()">🛍️ ดึงข้อมูลจากหน้าร้าน collshp.com/namkhangcollection</button>
+                                <button class="btn btn-rose" style="padding:4px 10px; font-size:12px;" onclick="clearAllCatalogData()">🧹 ล้างข้อมูลหน้านี้</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>🖼️ รูปภาพสินค้า</th>
+                                        <th>🛍️ ชื่อสินค้า & ร้านค้าทางการ</th>
+                                        <th>📂 หมวดหมู่</th>
+                                        <th>💰 ราคาขายจริง (ป้าย)</th>
+                                        <th>💎 ค่าคอม %</th>
+                                        <th>💵 กำไร/ชิ้น (฿)</th>
+                                        <th>🔗 ลิงก์ต้นฉบับที่ดึงมา</th>
+                                        <th>📁 ที่อยู่รูปภาพใน Mac (Local Path)</th>
+                                        <th>การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="catalogTableBody">
+                                    <!-- Dynamic Rich Detail Rows with Raw Link & Local Image Path -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: ADD PRODUCT -->
+                <section id="tab-addproduct" class="tab-page">
+                    <div class="card">
+                        <div id="modeAutoBox" class="mode-box">
+                            <div class="card-header">
+                                <h3>🤖 โหมดดึงและค้นหาสินค้าอัตโนมัติจากเว็บ (พร้อม AI คัดสรรตัวเด็ดค่าคอมสูงสุด)</h3>
+                            </div>
+                            <form onsubmit="runLiveProductScrape(event)" class="form-grid">
+                                <div class="form-row">
+                                    <div class="form-group" style="flex:3;">
+                                        <label>🛍️ วาง URL หรือ พิมพ์คีย์เวิร์ดสินค้าที่ต้องการค้นหา (เช่น พัดลมมือถือ, คลีนซิ่งสติ๊ก):</label>
+                                        <input type="text" id="inpScraperQuery" class="form-input" placeholder="ลองพิมพ์: พัดลมมือถือ หรือ หูฟังไร้สาย หรือ วาง URL..." value="พัดลมมือถือ" required>
+                                    </div>
+                                    <div class="form-group" style="flex:1;">
+                                        <label>🔢 เลือกจำนวนตัวเลือกที่ต้องการดึง:</label>
+                                        <select id="inpCuratorLimitCount" class="form-select" style="font-weight:600;">
+                                            <option value="4" selected>4 รายการ (แนะนำ)</option>
+                                            <option value="2">2 รายการ</option>
+                                            <option value="6">6 รายการ</option>
+                                            <option value="8">8 รายการ</option>
+                                            <option value="10">10 รายการ</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:10px;">
+                                    <button type="submit" class="btn btn-primary" style="flex:1;">🔎 ค้นหาสินค้าจากเว็บ & แสดงตัวเลือกตามจำนวนที่เลือก</button>
+                                    <button type="button" class="btn btn-outline" style="background:#f0fdf4; border-color:#86efac; color:#166534;" onclick="runAutoAiCurateBestWinner()">🪄 AI คัดสรรตัวเด็ดค่าคอมสูงสุดให้ออโต้</button>
+                                </div>
+                            </form>
+
+                            <!-- AI Multi-Item Candidate Selection Grid -->
+                            <div id="aiCuratorGridBox" style="display:none; margin-top:20px; border-top:1px dashed #cbd5e1; padding-top:16px;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                                    <h4 style="color:var(--text-main); font-size:15px;" id="aiCuratorTitle">🛍️ พบสินค้าให้เลือก 4 รายการสำหรับ 'พัดลมมือถือ':</h4>
+                                    <button class="btn btn-primary" style="padding:4px 10px; font-size:12px;" onclick="runAutoAiCurateBestWinner()">🪄 ให้ AI เลือกตัวที่ทำเงินดีที่สุดให้ออโต้</button>
+                                </div>
+                                <div id="aiCuratorCards" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;">
+                                    <!-- Dynamic Candidate Cards -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: GOOGLE FLOW PROMPT STUDIO -->
+                <section id="tab-prompt" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🎬 สตูดิโอสร้างพรอมต์ Google Flow (วิดีโอแนวตั้ง 9:16)</h3>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-primary" onclick="generateGoogleFlowPrompt()">✨ เจนพรอมต์ใหม่ด้วย AI</button>
+                                <button class="btn btn-rose" onclick="clearPromptPageData()">🧹 ล้างพรอมต์หน้านี้</button>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>📱 Visual Prompt (9:16 สำหรับ Google Flow):</label>
+                                <textarea id="txtPromptVisual" class="form-input code-text" rows="3" readonly></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>🚫 Negative Prompt (สิ่งห้ามมีในคลิป):</label>
+                                <textarea id="txtPromptNegative" class="form-input code-text" rows="2" readonly></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>🎙️ Hook (3 วินาทีแรก):</label>
+                                    <textarea id="txtPromptHook" class="form-input" rows="2" readonly></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>📦 Body (เนื้อหาหลัก):</label>
+                                    <textarea id="txtPromptBody" class="form-input" rows="2" readonly></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>👉 CTA (ชี้พิกัดตะกร้า):</label>
+                                    <textarea id="txtPromptCTA" class="form-input" rows="2" readonly></textarea>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline" onclick="copyFullPromptScript()">📋 คัดลอกพรอมต์และสคริปต์ทั้งหมด</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: SHOPEE VDO STUDIO -->
+                <section id="tab-shopeevdo" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🎥 Shopee VDO Studio (EP2 Complete Studio)</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>📌 1. แท็กสินค้า Shopee & Affiliate Link (EP2 Tagging):</label>
+                                <textarea id="txtVDOTagging" class="form-input code-text" rows="4" readonly></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>💬 2. แคปชันพร้อมแฮชแท็ก (Shopee VDO Ready):</label>
+                                <textarea id="txtVDOCaption" class="form-input" rows="3" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: CAPTIONS & ANTI-BAN -->
+                <section id="tab-captions" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🛡️ คลังแคปชัน 3 รูปแบบ & ระบบตรวจ Anti-Ban</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>แบบที่ 1: สั้น กระชับ (<100 ตัวอักษร):</label>
+                                <textarea id="txtCap1" class="form-input" rows="2" readonly></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>แบบที่ 2: เล่าเรื่อง รีวิว (150-250 ตัวอักษร):</label>
+                                <textarea id="txtCap2" class="form-input" rows="2" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: SETTINGS & ACCOUNTS MANAGER -->
+                <section id="tab-settings" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🌐 จัดการบัญชี & สลับแอคเค้าท์ Shopee Affiliate (Multi-Account)</h3>
+                        </div>
+                        <div class="audit-box" id="accountStatusBox">
+                            👤 ชื่อช่องปัจจุบัน: <strong>namkhangcollection</strong><br>
+                            🆔 Shopee Partner ID: <strong>an_15320530167</strong> (🟢 Verified Active Real Account)<br>
+                            🏷️ Referral Code: <strong>X4EBLKP</strong><br>
+                            🛍️ หน้าร้านคอลเล็คชั่นจริง: <strong>https://collshp.com/namkhangcollection</strong><br>
+                            🔗 ลิงก์ทำเงิน Verified: <strong>https://s.shopee.co.th/20uSXcvwRR</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: BACKUP & RESTORE ENGINE -->
+                <section id="tab-backup" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>💾 ระบบสำรองและฟื้นฟูข้อมูล (Data Backup & Restore Engine)</h3>
+                        </div>
+                        <div class="form-grid">
+                            <button class="btn btn-primary" onclick="exportDataBackup()">💾 ดาวน์โหลดไฟล์แบ็กอัปข้อมูล (.JSON)</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: AUTO LIVE -->
+                <section id="tab-live" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🔴 สตูดิโอบอทไลฟ์สดอัตโนมัติ (Shopee Live & TikTok Live 24/7)</h3>
+                            <button class="btn btn-rose" id="btnLiveToggle" onclick="toggleLive()">▶️ เริ่มสตรีมไลฟ์สด 24 ชม.</button>
+                        </div>
+                        <div class="live-status-box" id="liveStatusBox">
+                            🔴 สถานะสตรีมมิ่ง: <span>สแตนด์บาย</span>
+                        </div>
+                        <div class="chat-log-container" id="chatLog">
+                            [System]: สตูดิโอไลฟ์สดพร้อมทำงาน...
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Interactive Carousel Slide Showcase Modal -->
+    <div id="carouselModal" class="modal-overlay">
+        <div class="carousel-modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 id="carouselModalTitle" style="font-size:15px; color:var(--text-main); margin:0;">🖼️ สไลด์ภาพสินค้า HD</h4>
+                <button class="btn btn-rose" style="padding:2px 8px; font-size:12px;" onclick="closeCarouselModal()">✕ ปิดหน้าต่าง</button>
+            </div>
+            
+            <div class="carousel-image-container">
+                <img id="carouselMainImg" src="" alt="Slide Image">
+            </div>
+
+            <div class="carousel-controls">
+                <button class="btn btn-outline" onclick="prevCarouselSlide()">◀️ ภาพก่อนหน้า</button>
+                <span id="carouselCounter" style="font-size:13px; font-weight:600; color:var(--text-muted);">ภาพที่ 1 / 4</span>
+                <button class="btn btn-primary" onclick="nextCarouselSlide()">ภาพถัดไป ▶️</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=60.0"></script>
+</body>
+</html>
