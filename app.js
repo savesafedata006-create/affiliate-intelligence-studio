@@ -410,11 +410,12 @@ function renderCatalog(filterCategory = "ALL") {
     if (filtered.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" style="text-align:center; padding: 40px; color: var(--text-muted);">
+                <td colspan="10" style="text-align:center; padding: 40px; color: var(--text-muted);">
                     🛒 ไม่พบรายการสินค้าในหมวดหมู่นี้ กรุณากดปุ่ม <b>ดึงข้อมูลจากหน้าร้าน</b> ด้านบน
                 </td>
             </tr>
         `;
+        updateSelectedCountBadge();
         return;
     }
 
@@ -430,6 +431,9 @@ function renderCatalog(filterCategory = "ALL") {
 
         return `
             <tr>
+                <td style="text-align:center;">
+                    <input type="checkbox" class="chkCatalogItem" value="${item.id}" onchange="updateSelectedCountBadge()">
+                </td>
                 <td>
                     <img src="${imgSrc}" class="prod-thumb" alt="Product Image" title="คลิกเปิดสไลด์โชว์คลังภาพ" onclick="openCarouselModal('${item.id}')" onerror="this.src='https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b'">
                 </td>
@@ -453,16 +457,117 @@ function renderCatalog(filterCategory = "ALL") {
                 </td>
                 <td>
                     <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                        <button class="btn btn-primary" style="padding:4px 6px; font-size:11px;" onclick="openCarouselModal('${item.id}')">🖼️ ดูสไลด์ภาพ</button>
+                        <button class="btn btn-primary" style="padding:4px 6px; font-size:11px;" onclick="openCarouselModal('${item.id}')">🖼️ ดูสไลด์</button>
                         <button class="btn btn-outline" style="padding:4px 6px; font-size:11px;" onclick="copyProductLink('${item.url}')">🔗 ลิงก์</button>
-                        <button class="btn btn-outline" style="padding:4px 6px; font-size:11px;" onclick="editProduct('${item.id}')">✏️ แก้ไข</button>
-                        <button class="btn btn-outline" style="padding:4px 6px; font-size:11px;" onclick="saveToVault('${item.title}')">🎬 พรอมต์</button>
-                        <button class="btn btn-rose" style="padding:4px 6px; font-size:11px;" onclick="deleteProduct('${item.id}')">🗑️ ลบ</button>
+                        <button class="btn btn-outline" style="padding:4px 6px; font-size:11px;" onclick="openEditProductModal('${item.id}')">✏️ แก้ไข</button>
+                        <button class="btn btn-rose" style="padding:4px 6px; font-size:11px;" onclick="deleteSingleProductConfirm('${item.id}')">🗑️ ลบ</button>
                     </div>
                 </td>
             </tr>
         `;
     }).join("");
+
+    updateSelectedCountBadge();
+}
+
+function toggleSelectAllCatalog(isChecked) {
+    const checkboxes = document.querySelectorAll(".chkCatalogItem");
+    checkboxes.forEach(chk => chk.checked = isChecked);
+    updateSelectedCountBadge();
+}
+
+function updateSelectedCountBadge() {
+    const checked = document.querySelectorAll(".chkCatalogItem:checked");
+    const badge = document.getElementById("selectedCountBadge");
+    if (badge) badge.innerText = checked.length;
+}
+
+function deleteSingleProductConfirm(prodId) {
+    const item = catalogData.find(x => x.id === prodId);
+    const title = item ? item.title : prodId;
+    
+    if (confirm(`⚠️ ยืนยันการลบสินค้า:\n\nคุณต้องการลบสินค้า '${title.substring(0, 30)}...' ออกจากคลังใช่หรือไม่?`)) {
+        catalogData = catalogData.filter(x => x.id !== prodId);
+        saveCatalogToStorage();
+        renderCatalog();
+        alert("✅ ลบสินค้าเรียบร้อยแล้ว!");
+    }
+}
+
+function deleteSelectedCatalogItems() {
+    const checkedBoxes = document.querySelectorAll(".chkCatalogItem:checked");
+    if (checkedBoxes.length === 0) {
+        alert("⚠️ กรุณาติ๊กเลือกสินค้าอย่างน้อย 1 รายการก่อนทำการลบครับ");
+        return;
+    }
+
+    const selectedIds = Array.from(checkedBoxes).map(chk => chk.value);
+    
+    if (confirm(`⚠️ ยืนยันการลบสินค้าทีละหลายรายการ:\n\nคุณต้องการลบสินค้าจำนวน ${selectedIds.length} รายการที่เลือกใช่หรือไม่?`)) {
+        catalogData = catalogData.filter(x => !selectedIds.includes(x.id));
+        saveCatalogToStorage();
+        renderCatalog();
+        alert(`✅ ลบสินค้าจำนวน ${selectedIds.length} รายการที่เลือกเรียบร้อยแล้ว!`);
+    }
+}
+
+function deleteAllCatalogItemsWithConfirmation() {
+    if (catalogData.length === 0) {
+        alert("ℹ️ คลังสินค้าว่างเปล่าอยู่แล้วครับ");
+        return;
+    }
+
+    if (confirm(`🚨 ยืนยันการลบสินค้าทั้งหมด (Delete All):\n\nคุณต้องการลบสินค้าทั้งหมดในคลังจำนวน ${catalogData.length} รายการออกใช่หรือไม่?\n(ข้อมูลใน SQLite DB จะยังอยู่ถาวร)`)) {
+        catalogData = [];
+        saveCatalogToStorage();
+        renderCatalog();
+        alert("✅ ล้างรายการสินค้าในคลังทั้งหมดเรียบร้อยแล้ว!");
+    }
+}
+
+function openEditProductModal(prodId) {
+    const item = catalogData.find(x => x.id === prodId);
+    if (!item) return;
+
+    document.getElementById("editProdId").value = item.id;
+    document.getElementById("editProdTitle").value = item.title;
+    document.getElementById("editProdPrice").value = parseFloat(item.price || 390);
+    document.getElementById("editProdOrigPrice").value = item.origPrice ? parseFloat(item.origPrice) : "";
+    document.getElementById("editProdComm").value = parseFloat((item.comm || "22.5").replace("%", ""));
+    document.getElementById("editProdShop").value = item.shopName || "Shopee Official Store";
+
+    const modal = document.getElementById("editProductModal");
+    if (modal) modal.classList.add("active");
+}
+
+function closeEditModal() {
+    const modal = document.getElementById("editProductModal");
+    if (modal) modal.classList.remove("active");
+}
+
+function saveEditedProduct(event) {
+    event.preventDefault();
+    const id = document.getElementById("editProdId").value;
+    const title = document.getElementById("editProdTitle").value.trim();
+    const price = parseFloat(document.getElementById("editProdPrice").value) || 390.0;
+    const origPrice = document.getElementById("editProdOrigPrice").value ? parseFloat(document.getElementById("editProdOrigPrice").value) : null;
+    const commRate = parseFloat(document.getElementById("editProdComm").value) || 22.5;
+    const shopName = document.getElementById("editProdShop").value.trim();
+
+    const item = catalogData.find(x => x.id === id);
+    if (item) {
+        item.title = title;
+        item.price = price.toFixed(2);
+        item.origPrice = origPrice ? origPrice.toFixed(2) : "";
+        item.comm = `${commRate}%`;
+        item.profit = (price * (commRate / 100.0)).toFixed(2);
+        item.shopName = shopName;
+
+        saveCatalogToStorage();
+        renderCatalog();
+        closeEditModal();
+        alert(`✅ บันทึกการแก้ไขสินค้า '${title.substring(0, 20)}...' เรียบร้อยแล้ว!`);
+    }
 }
 
 function fetchStorefrontCollectionLive() {
