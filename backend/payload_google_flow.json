@@ -1,6 +1,6 @@
 {
   "pipeline": "Shopee Affiliate Data Extractor -> Google Flow AI",
-  "timestamp": "2026-08-08 17:52:17",
+  "timestamp": "2026-08-08 17:53:34",
   "total_items": 9,
   "verified_partner_id": "an_15320530167",
   "verified_referral_code": "X4EBLKP",
@@ -15,10 +15,10 @@
       "main_image_path": "",
       "shop_name": "namkhangcollection Official",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🛍️ SKINTIFIC Mugwort Clay Stick มาส์กโคลนทำความสะอาดรูขุมขน 55g. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of SKINTIFIC Mugwort Clay Stick มาส์กโคลนทำความสะอาดรูขุมขน 55g. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 🛍️ อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา SKINTIFIC อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿390.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }
@@ -39,10 +39,10 @@
       "main_image_path": "",
       "shop_name": "namkhangcollection Official",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🎧 หูฟังบลูทูธไร้สาย EARMOR ANC ตัดเสียงรบกวน 45dB แบตอึด 40 ชม.. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of หูฟังบลูทูธไร้สาย EARMOR ANC ตัดเสียงรบกวน 45dB แบตอึด 40 ชม. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 🎧 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา หูฟังบลูทูธไร้สาย อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿540.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }
@@ -63,10 +63,10 @@
       "main_image_path": "",
       "shop_name": "namkhangcollection Official",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 📱 พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W ความจุ 10,000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W ความจุ 10000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 📱 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา พาวเวอร์แบงค์ไร้สาย อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿690.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }
@@ -87,10 +87,10 @@
       "main_image_path": "",
       "shop_name": "namkhangcollection Official",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 👗 เสื้อเชิ้ตแขนยาวผ้าไหมอิตาลี ทรงโอเวอร์ไซส์ มินิมอลเรียบหรู. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of เสื้อเชิ้ตแขนยาวผ้าไหมอิตาลี ทรงโอเวอร์ไซส์ มินิมอลเรียบหรู. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 👗 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา เสื้อเชิ้ตแขนยาวผ้าไหมอิตาลี อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿840.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }
@@ -111,10 +111,10 @@
       "main_image_path": "",
       "shop_name": "namkhangcollection Official",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🏠 หม้อทอดไร้น้ำมันอัจฉริยะ 5.5L จอสัมผัส LED กระจกมองเห็นอาหาร. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of หม้อทอดไร้น้ำมันอัจฉริยะ 55L จอสัมผัส LED กระจกมองเห็นอาหาร. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 🏠 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา หม้อทอดไร้น้ำมันอัจฉริยะ อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿990.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }
@@ -135,10 +135,10 @@
       "main_image_path": "/Users/namkhng/Pictures/AffiliateIntel_Images/namkhang_live_101_0.jpg",
       "shop_name": "SKINTIFIC Official Store",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🛍️ SKINTIFIC Mugwort Clay Stick มาส์กโคลนทำความสะอาดรูขุมขน 55g. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of SKINTIFIC Mugwort Clay Stick มาส์กโคลนทำความสะอาดรูขุมขน 55g. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 🛍️ อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา SKINTIFIC อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน SKINTIFIC Official Store คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿390.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }
@@ -159,10 +159,10 @@
       "main_image_path": "/Users/namkhng/Pictures/AffiliateIntel_Images/namkhang_live_102_0.jpg",
       "shop_name": "JISULIFE Official Store",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🌀 JISULIFE พัดลมพกพาไร้สาย พัดลมมือถือปรับความเร็ว 5 ระดับ 5,000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of JISULIFE พัดลมพกพาไร้สาย พัดลมมือถือปรับความเร็ว 5 ระดับ 5000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 🌀 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา JISULIFE อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน JISULIFE Official Store คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿290.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }
@@ -183,10 +183,10 @@
       "main_image_path": "/Users/namkhng/Pictures/AffiliateIntel_Images/namkhang_live_103_0.jpg",
       "shop_name": "EARMOR Flagship Store",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🎧 หูฟังบลูทูธไร้สาย EARMOR ANC ตัดเสียงรบกวน 45dB แบตอึด 40 ชม.. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of หูฟังบลูทูธไร้สาย EARMOR ANC ตัดเสียงรบกวน 45dB แบตอึด 40 ชม. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 🎧 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา หูฟังบลูทูธไร้สาย อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน EARMOR Flagship Store คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿890.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }
@@ -207,10 +207,10 @@
       "main_image_path": "/Users/namkhng/Pictures/AffiliateIntel_Images/namkhang_live_104_0.jpg",
       "shop_name": "Anker Thailand",
       "google_flow_prompts": {
-        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 📱 พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W ความจุ 10,000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W ความจุ 10000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
         "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
         "voice_script": {
-          "hook_3s": "ใครกำลังมองหา 📱 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "hook_3s": "ใครกำลังมองหา พาวเวอร์แบงค์ไร้สาย อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
           "body": "สินค้าชิ้นนี้จากร้าน Anker Thailand คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿690.0 เท่านั้น!",
           "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
         }

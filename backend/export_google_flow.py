@@ -3,6 +3,7 @@ import os
 import json
 import sqlite3
 import time
+import re
 
 SQLITE_DB_PATH = os.path.expanduser("~/.affiliate_intel_db.sqlite")
 EXPORT_PATH_DESKTOP = os.path.expanduser("~/Desktop/payload_google_flow.json")
@@ -25,9 +26,12 @@ def get_db_connection():
         return conn, "SQLITE"
 
 def generate_flow_video_prompt(title, sale_price, shop_name):
-    visual_prompt = f"Vertical 9:16 portrait. High-end commercial product video shot of {title}. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation."
+    clean_title = re.sub(r'[^\w\s\u0e00-\u0e7f]', '', title).strip()
+    first_word = clean_title.split()[0] if clean_title.split() else "สินค้านี้"
+
+    visual_prompt = f"Vertical 9:16 portrait. High-end commercial product video shot of {clean_title}. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation."
     negative_prompt = "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing"
-    hook_script = f"ใครกำลังมองหา {title.split()[0]} อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!"
+    hook_script = f"ใครกำลังมองหา {first_word} อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!"
     body_script = f"สินค้าชิ้นนี้จากร้าน {shop_name} คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿{sale_price} เท่านั้น!"
     cta_script = "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
 
