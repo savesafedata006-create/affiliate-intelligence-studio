@@ -513,166 +513,41 @@ function runLiveProductScrape(event) {
     const limitCount = parseInt(document.getElementById("inpCuratorLimitCount")?.value || "4");
     const acc = accountsData[currentAccountId] || accountsData["acc_1"];
     
-    // Dynamic Candidate Pool Generator according to limitCount selected by user!
-    const masterPool = [
-        {
-            item_id: `fan_${Date.now()}_1`,
-            title: `🌀 ${query} JISULIFE พัดลมพกพาไร้สาย ลมแรงปรับระดับได้ 5,000mAh`,
-            original_price: 490.0,
-            sale_price: 290.0,
-            commission_rate: 28.5,
-            net_profit_thb: 82.65,
-            total_sold: "8,500",
-            rating_star: "4.9",
-            shop_name: "JISULIFE Official Store",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "🔥 AI Winner (ค่าคอมสูงสุด 28.5%)"
-        },
-        {
-            item_id: `fan_${Date.now()}_2`,
-            title: `🌀 ${query} Muji Style พัดลมมือถือพกพาดีไซน์มินิมอล ชาร์จ Type-C`,
-            original_price: 350.0,
-            sale_price: 199.0,
-            commission_rate: 22.0,
-            net_profit_thb: 43.78,
-            total_sold: "5,400",
-            rating_star: "4.8",
-            shop_name: "Muji Lifestyle Thailand",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "⭐ ขายดีอันดับ 2"
-        },
-        {
-            item_id: `fan_${Date.now()}_3`,
-            title: `🌀 ${query} แบบพับตั้งโต๊ะได้ มีไฟ LED ปรับความเร็ว 5 ระดับ แบต 24 ชม.`,
-            original_price: 550.0,
-            sale_price: 350.0,
-            commission_rate: 25.0,
-            net_profit_thb: 87.50,
-            total_sold: "3,200",
-            rating_star: "4.9",
-            shop_name: "Gadget Pro Store",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "💎 กำไรสูงสุด ฿87.50/ชิ้น"
-        },
-        {
-            item_id: `fan_${Date.now()}_4`,
-            title: `🌀 ${query} ไอเย็นระบายความร้อน พกพาขนาดจิ๋ว น้ำหนักเบา 120g`,
-            original_price: 290.0,
-            sale_price: 150.0,
-            commission_rate: 20.0,
-            net_profit_thb: 30.00,
-            total_sold: "1,900",
-            rating_star: "4.7",
-            shop_name: "Mini Fan Direct",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "🏷️ ราคาถูกที่สุด ฿150"
-        },
-        {
-            item_id: `fan_${Date.now()}_5`,
-            title: `🌀 ${query} พัดลมไอน้ำพกพา ละอองหมอกเย็น สเปรย์นาโนฉีดไอน้ำ`,
-            original_price: 590.0,
-            sale_price: 390.0,
-            commission_rate: 24.5,
-            net_profit_thb: 95.55,
-            total_sold: "4,100",
-            rating_star: "4.9",
-            shop_name: "Cooling Tech Store",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "❄️ พัดลมสเปรย์ไอน้ำ"
-        },
-        {
-            item_id: `fan_${Date.now()}_6`,
-            title: `🌀 ${query} ดีไซน์ไร้ใบพัด ปลอดภัยสำหรับเด็ก ชาร์จ USB-C`,
-            original_price: 690.0,
-            sale_price: 450.0,
-            commission_rate: 26.0,
-            net_profit_thb: 117.00,
-            total_sold: "2,900",
-            rating_star: "4.8",
-            shop_name: "Safety Gadget Mall",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "🛡️ ดีไซน์ไร้ใบพัด"
-        },
-        {
-            item_id: `fan_${Date.now()}_7`,
-            title: `🌀 ${query} พัดลมแขวนคอไร้สาย พัดลมคล้องคอ 360 องศา`,
-            original_price: 790.0,
-            sale_price: 490.0,
-            commission_rate: 27.0,
-            net_profit_thb: 132.30,
-            total_sold: "6,200",
-            rating_star: "4.9",
-            shop_name: "NeckFan Official",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "🎧 พัดลมคล้องคอ"
-        },
-        {
-            item_id: `fan_${Date.now()}_8`,
-            title: `🌀 ${query} หน้าจอดิจิทัลบอกเปอร์เซ็นต์แบต ปรับแรงลม 100 ระดับ`,
-            original_price: 890.0,
-            sale_price: 590.0,
-            commission_rate: 29.0,
-            net_profit_thb: 171.10,
-            total_sold: "7,300",
-            rating_star: "4.9",
-            shop_name: "SmartFan Thailand",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "📱 หน้าจอดิจิทัล LED"
-        },
-        {
-            item_id: `fan_${Date.now()}_9`,
-            title: `🌀 ${query} พัดลมจิ๋วเสียบตูดไอโฟน/Type-C ขนาดพกพากระเป๋าเสื้อ`,
-            original_price: 150.0,
-            sale_price: 79.0,
-            commission_rate: 18.0,
-            net_profit_thb: 14.22,
-            total_sold: "9,800",
-            rating_star: "4.6",
-            shop_name: "Pocket Direct",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "⚡ เสียบตูดชาร์จจิ๋ว"
-        },
-        {
-            item_id: `fan_${Date.now()}_10`,
-            title: `🌀 ${query} พัดลมพลังงานแสงอาทิตย์ โซล่าเซลล์พกพาเดินป่า`,
-            original_price: 990.0,
-            sale_price: 650.0,
-            commission_rate: 30.0,
-            net_profit_thb: 195.00,
-            total_sold: "1,500",
-            rating_star: "4.8",
-            shop_name: "Outdoor Gear TH",
-            images: ["https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492"],
-            affiliate_link: `https://s.shopee.co.th/20uSXcvwRR?af_id=${acc.refCode}&mmp_pid=${acc.id}`,
-            badge: "☀️ โซล่าเซลล์ 30% Comm"
-        }
-    ];
+    const curatorTitle = document.getElementById("aiCuratorTitle");
+    const curatorGrid = document.getElementById("aiCuratorGridBox");
+    const cardsBox = document.getElementById("aiCuratorCards");
 
-    const candidateItems = masterPool.slice(0, limitCount);
-    lastFetchedCandidates = candidateItems;
-    renderAiCandidateGrid(query, candidateItems);
+    if (curatorGrid) curatorGrid.style.display = "block";
+    if (curatorTitle) curatorTitle.innerText = `⏳ กำลังเชื่อมต่อ Shopee Thailand API เพื่อสกัดสินค้าจริงสำหรับ '${query}'...`;
+    if (cardsBox) cardsBox.innerHTML = `<div style="grid-column: span 2; text-align:center; padding:30px; color:var(--accent-purple); font-weight:600;">📡 กำลังสกัดรูปภาพและคำนวณค่าคอมมิชชันสินค้าจริงจาก Shopee Thailand...</div>`;
 
-    // Also attempt background sync with backend server
     fetch(`/api/ai_curate?keyword=${encodeURIComponent(query)}&limit=${limitCount}`)
         .then(res => res.json())
         .then(data => {
             if (data && data.items && data.items.length > 0) {
+                const isRealLive = data.items.some(x => x.badge && (x.badge.includes("Live Real Shopee") || x.badge.includes("Verified")));
+                
+                if (isRealLive) {
+                    alert(`✅ ดึงข้อมูลสดจาก Shopee Thailand สำเร็จ!\n\n🛍️ คีย์เวิร์ด: '${query}'\n📦 จำนวนสินค้าสดที่สกัดได้: ${data.items.length} รายการ\n🟢 สถานะ: เชื่อมต่อ Shopee API ตรงสำเร็จ 100%`);
+                } else {
+                    alert(`⚠️ แจ้งเตือนการดึงข้อมูล Shopee (Extraction Alert):\n\nไม่สามารถดึงข้อมูลสดตรงจาก Shopee API สำหรับคำว่า '${query}' ได้ในขณะนี้ (เนื่องจาก Shopee Anti-Bot บล็อกการดึงข้อมูลอัตโนมัติ)\n\n💡 คำแนะนำแก้ไขทันที: กดปุ่ม '🌐 เปิดเบราว์เซอร์ Shopee' หรือใช้ '📌 Chrome Extension' เพื่อสกัดข้อมูลสดผ่านเบราว์เซอร์โดยตรงครับ!`);
+                }
+                
                 lastFetchedCandidates = data.items;
                 renderAiCandidateGrid(data.keyword, data.items);
+            } else {
+                notifyExtractionFailure(query, limitCount, acc);
             }
         })
         .catch(err => {
-            console.log("Using instant client-side curation grid:", err);
+            console.log("Shopee Live API extraction error:", err);
+            notifyExtractionFailure(query, limitCount, acc);
         });
+}
+
+function notifyExtractionFailure(query, limitCount, acc) {
+    alert(`⚠️ แจ้งเตือนการดึงข้อมูล Shopee สำคัญ (Extraction Alert):\n\n❌ ไม่สามารถเชื่อมต่อสกัดข้อมูลสดจาก Shopee สำหรับคำว่า '${query}' ได้\n\n🔍 สาเหตุ: Shopee Anti-Bot บล็อกการเชื่อมต่อตรง\n\n💡 วิธีแก้ไขทันที:\n1. กดปุ่ม '🌐 เปิดเบราว์เซอร์ Shopee' ด้านบน เพื่อเปิดหน้าเว็บ Shopee จริง\n2. หรือใช้ปุ่ม '📌 ดึงเข้า Python DB' บน Chrome Extension เพื่อดึงข้อมูลจากหน้าจอโดยตรงครับ`);
+    fetchRealShopeeFallbackCandidates(query, limitCount, acc);
 }
 
 function renderAiCandidateGrid(keyword, items) {
