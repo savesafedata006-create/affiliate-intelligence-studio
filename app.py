@@ -1,4 +1,6 @@
-# ⚡ Affiliate Intelligence Studio — Universal Database & 30-Day Trash Bin Engine v70.0
+# ⚡ Affiliate Intelligence Studio — Single Unified Database Engine v71.0
+# Single Source of Truth: ~/.affiliate_intel_db.sqlite
+
 import sys
 import os
 import json
@@ -11,18 +13,15 @@ import base64
 import re
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-# ==================== CONFIGURATION & DIRECTORIES ====================
-APP_KEY = os.environ.get("SHOPEE_APP_KEY", "an_15320530167")
-APP_SECRET = os.environ.get("SHOPEE_APP_SECRET", "X4EBLKP_SECRET")
-
+# ==================== SINGLE UNIFIED DATABASE CONFIGURATION ====================
+UNIFIED_DB_PATH = os.path.expanduser("~/.affiliate_intel_db.sqlite")
 IMAGE_SAVE_DIR = os.path.expanduser("~/Pictures/AffiliateIntel_Images")
 os.makedirs(IMAGE_SAVE_DIR, exist_ok=True)
 
-DB_PATH = os.path.expanduser("~/.affiliate_intel_db.sqlite")
 WEB_DIR = os.path.expanduser("~/Desktop/AffiliateIntelligenceStudio")
 
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
+def init_single_unified_db():
+    conn = sqlite3.connect(UNIFIED_DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS shopee_affiliate_items (
@@ -48,19 +47,31 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
+init_single_unified_db()
 
-def get_db_connection():
-    try:
-        import mysql.connector
-        conn = mysql.connector.connect(host='localhost', user='root', password='', database='shopee_affiliate_db')
-        return conn, "MYSQL"
-    except Exception:
-        conn = sqlite3.connect(DB_PATH)
-        return conn, "SQLITE"
+def get_single_db_connection():
+    return sqlite3.connect(UNIFIED_DB_PATH)
 
-def save_products_permanently(items):
-    conn, db_type = get_db_connection()
+def download_product_images(image_urls, item_id):
+    saved_paths = []
+    for idx, url in enumerate(image_urls[:4]):
+        if not url or not url.startswith("http"):
+            continue
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                if resp.status == 200:
+                    filename = f"{item_id}_{idx}.jpg"
+                    filepath = os.path.join(IMAGE_SAVE_DIR, filename)
+                    with open(filepath, 'wb') as f:
+                        f.write(resp.read())
+                    saved_paths.append(filepath)
+        except Exception as e:
+            print(f"Image download note ({idx}): {e}")
+    return saved_paths
+
+def db_save_products(items):
+    conn = get_single_db_connection()
     cursor = conn.cursor()
     saved_count = 0
 
@@ -78,87 +89,61 @@ def save_products_permanently(items):
         shop_name = item.get('shop_name', item.get('shopName', 'Shopee Official Store'))
         status = item.get('status', 'PENDING_VIDEO')
 
-        if db_type == "MYSQL":
-            sql = """
-                INSERT INTO shopee_affiliate_items (
-                    item_id, title, description, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, images_json, total_sold, rating_star, shop_name, status
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    title = VALUES(title), sale_price = VALUES(sale_price), commission_rate = VALUES(commission_rate), net_profit_thb = VALUES(net_profit_thb), status = VALUES(status)
-            """
-            cursor.execute(sql, (
-                item_id, title, desc, orig_price, sale_price, comm_rate, net_profit, aff_link, main_img, json.dumps(images_list), 1500, 4.9, shop_name, status
-            ))
-        else:
-            sql = """
-                INSERT INTO shopee_affiliate_items (
-                    item_id, title, description, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, images_json, total_sold, rating_star, shop_name, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(item_id) DO UPDATE SET
-                    title = excluded.title, sale_price = excluded.sale_price, commission_rate = excluded.commission_rate, net_profit_thb = excluded.net_profit_thb, status = excluded.status
-            """
-            cursor.execute(sql, (
-                item_id, title, desc, orig_price, sale_price, comm_rate, net_profit, aff_link, main_img, json.dumps(images_list), 1500, 4.9, shop_name, status
-            ))
+        local_paths = download_product_images(images_list, item_id)
+        if local_paths:
+            main_img = local_paths[0]
+
+        sql = """
+            INSERT INTO shopee_affiliate_items (
+                item_id, title, description, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, images_json, total_sold, rating_star, shop_name, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(item_id) DO UPDATE SET
+                title = excluded.title, sale_price = excluded.sale_price, commission_rate = excluded.commission_rate, net_profit_thb = excluded.net_profit_thb, shop_name = excluded.shop_name, status = excluded.status
+        """
+        cursor.execute(sql, (
+            item_id, title, desc, orig_price, sale_price, comm_rate, net_profit, aff_link, main_img, json.dumps(images_list), 1500, 4.9, shop_name, status
+        ))
         saved_count += 1
 
     conn.commit()
     conn.close()
-    return saved_count, db_type
+    return saved_count
 
-def soft_delete_products(item_ids):
-    """ย้ายสินค้าเข้าถังขยะ 30 วันในฐานข้อมูลถาวร"""
-    conn, db_type = get_db_connection()
+def db_soft_delete(item_ids):
+    conn = get_single_db_connection()
     cursor = conn.cursor()
-    deleted_count = 0
-
+    count = 0
     for i_id in item_ids:
-        if db_type == "MYSQL":
-            cursor.execute("UPDATE shopee_affiliate_items SET status = 'TRASH_BIN', deleted_at = CURRENT_TIMESTAMP WHERE item_id = %s", (i_id,))
-        else:
-            cursor.execute("UPDATE shopee_affiliate_items SET status = 'TRASH_BIN', deleted_at = CURRENT_TIMESTAMP WHERE item_id = ?", (i_id,))
-        deleted_count += 1
-
+        cursor.execute("UPDATE shopee_affiliate_items SET status = 'TRASH_BIN', deleted_at = CURRENT_TIMESTAMP WHERE item_id = ?", (i_id,))
+        count += 1
     conn.commit()
     conn.close()
-    return deleted_count
+    return count
 
-def permanent_delete_products(item_ids):
-    """ลบสินค้าออกจากฐานข้อมูลถาวร 100%"""
-    conn, db_type = get_db_connection()
+def db_permanent_delete(item_ids):
+    conn = get_single_db_connection()
     cursor = conn.cursor()
-    deleted_count = 0
-
+    count = 0
     for i_id in item_ids:
-        if db_type == "MYSQL":
-            cursor.execute("DELETE FROM shopee_affiliate_items WHERE item_id = %s", (i_id,))
-        else:
-            cursor.execute("DELETE FROM shopee_affiliate_items WHERE item_id = ?", (i_id,))
-        deleted_count += 1
-
+        cursor.execute("DELETE FROM shopee_affiliate_items WHERE item_id = ?", (i_id,))
+        count += 1
     conn.commit()
     conn.close()
-    return deleted_count
+    return count
 
-def restore_products_from_trash(item_ids):
-    """กู้คืนสินค้าจากถังขยะกลับเข้าสู่ระบบถาวร"""
-    conn, db_type = get_db_connection()
+def db_restore(item_ids):
+    conn = get_single_db_connection()
     cursor = conn.cursor()
-    restored_count = 0
-
+    count = 0
     for i_id in item_ids:
-        if db_type == "MYSQL":
-            cursor.execute("UPDATE shopee_affiliate_items SET status = 'PENDING_VIDEO', deleted_at = NULL WHERE item_id = %s", (i_id,))
-        else:
-            cursor.execute("UPDATE shopee_affiliate_items SET status = 'PENDING_VIDEO', deleted_at = NULL WHERE item_id = ?", (i_id,))
-        restored_count += 1
-
+        cursor.execute("UPDATE shopee_affiliate_items SET status = 'PENDING_VIDEO', deleted_at = NULL WHERE item_id = ?", (i_id,))
+        count += 1
     conn.commit()
     conn.close()
-    return restored_count
+    return count
 
-# ==================== CUSTOM REQUEST HANDLER WITH HARDENED DB PERSISTENCE ====================
-class UniversalPipelineHandler(SimpleHTTPRequestHandler):
+# ==================== SINGLE DATABASE HANDLER ====================
+class SingleDatabaseHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WEB_DIR, **kwargs)
 
@@ -183,45 +168,45 @@ class UniversalPipelineHandler(SimpleHTTPRequestHandler):
 
         if self.path in ["/api/save_product", "/api/save_db_permanent"]:
             items = body if isinstance(body, list) else [body]
-            count, db_type = save_products_permanently(items)
+            count = db_save_products(items)
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "saved_count": count, "message": f"Saved {count} items permanently to {db_type}!"}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "db_file": UNIFIED_DB_PATH, "saved_count": count, "message": f"Saved {count} items to single unified SQLite database!"}, ensure_ascii=False).encode('utf-8'))
             return
 
         elif self.path == "/api/soft_delete_product":
             item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
-            count = soft_delete_products(item_ids)
+            count = db_soft_delete(item_ids)
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Moved {count} items to 30-Day Trash Bin!"}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Moved {count} items to 30-Day Trash Bin in unified DB!"}, ensure_ascii=False).encode('utf-8'))
             return
 
         elif self.path == "/api/permanent_delete_product":
             item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
-            count = permanent_delete_products(item_ids)
+            count = db_permanent_delete(item_ids)
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Permanently deleted {count} items from database!"}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Permanently deleted {count} items from unified DB!"}, ensure_ascii=False).encode('utf-8'))
             return
 
         elif self.path == "/api/restore_product":
             item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
-            count = restore_products_from_trash(item_ids)
+            count = db_restore(item_ids)
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Restored {count} items to main catalog!"}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Restored {count} items in unified DB!"}, ensure_ascii=False).encode('utf-8'))
             return
 
         super().do_POST()
 
     def do_GET(self):
         if self.path in ["/api/fetch_products", "/api/search_db"]:
-            conn, db_type = get_db_connection()
+            conn = get_single_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, created_at FROM shopee_affiliate_items WHERE status != 'TRASH_BIN' ORDER BY created_at DESC")
             rows = cursor.fetchall()
@@ -237,11 +222,11 @@ class UniversalPipelineHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "db_file": UNIFIED_DB_PATH, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
             return
 
         elif self.path == "/api/fetch_trash_bin":
-            conn, db_type = get_db_connection()
+            conn = get_single_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, deleted_at FROM shopee_affiliate_items WHERE status = 'TRASH_BIN' ORDER BY deleted_at DESC")
             rows = cursor.fetchall()
@@ -257,22 +242,23 @@ class UniversalPipelineHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "db_file": UNIFIED_DB_PATH, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
             return
 
         elif self.path == "/api/test_ping":
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "message": "Backend Hardened Database Engine v70.0 is running OK!"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "db_file": UNIFIED_DB_PATH, "message": "Single Unified SQLite Database Engine v71.0 is running OK!"}).encode('utf-8'))
             return
+
         super().do_GET()
 
 if __name__ == '__main__':
     url = "http://127.0.0.1:8080"
-    print(f"🚀 Starting Database & 30-Day Trash Bin Server v70.0 at {url}...")
+    print(f"🚀 Starting Single Unified SQLite Database Server v71.0 at {url}...")
     try:
-        server = HTTPServer(('0.0.0.0', 8080), UniversalPipelineHandler)
+        server = HTTPServer(('0.0.0.0', 8080), SingleDatabaseHandler)
         server.serve_forever()
     except Exception as e:
         print(f"Server note: {e}")
