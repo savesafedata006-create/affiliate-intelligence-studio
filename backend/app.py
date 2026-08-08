@@ -1,4 +1,4 @@
-# ⚡ Affiliate Intelligence Studio — Single Unified Database Engine v71.0 (Port 5000)
+# ⚡ Affiliate Intelligence Studio — Bulletproof 3-Tier Shopee Scraper Engine v73.0 (Port 5000)
 # Single Source of Truth: ~/.affiliate_intel_db.sqlite
 
 import sys
@@ -13,7 +13,7 @@ import base64
 import re
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-# ==================== SINGLE UNIFIED DATABASE CONFIGURATION ====================
+# ==================== CONFIGURATION & DIRECTORIES ====================
 UNIFIED_DB_PATH = os.path.expanduser("~/.affiliate_intel_db.sqlite")
 IMAGE_SAVE_DIR = os.path.expanduser("~/Pictures/AffiliateIntel_Images")
 os.makedirs(IMAGE_SAVE_DIR, exist_ok=True)
@@ -245,14 +245,14 @@ class SingleDatabaseHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "db_file": UNIFIED_DB_PATH, "message": "Single Unified SQLite Database Engine v71.0 is running OK!"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "db_file": UNIFIED_DB_PATH, "message": "Bulletproof 3-Tier Shopee Scraper Engine v73.0 is running OK!"}).encode('utf-8'))
             return
 
         super().do_GET()
 
 if __name__ == '__main__':
     port = 5000
-    print(f"🚀 Starting Single Unified SQLite Database Server v71.0 on Port {port}...")
+    print(f"🚀 Starting Bulletproof 3-Tier Shopee Scraper Server v73.0 on Port {port}...")
     try:
         server = HTTPServer(('0.0.0.0', port), SingleDatabaseHandler)
         server.serve_forever()
