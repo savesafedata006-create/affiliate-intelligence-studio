@@ -1,0 +1,225 @@
+{
+  "pipeline": "Shopee Affiliate Data Extractor -> Google Flow AI",
+  "timestamp": "2026-08-08 17:52:17",
+  "total_items": 9,
+  "verified_partner_id": "an_15320530167",
+  "verified_referral_code": "X4EBLKP",
+  "items": [
+    {
+      "item_id": "namkhang_coll_101",
+      "title": "🛍️ SKINTIFIC Mugwort Clay Stick มาส์กโคลนทำความสะอาดรูขุมขน 55g",
+      "sale_price_thb": 390.0,
+      "commission_rate_percent": 22.5,
+      "estimated_net_profit_thb": 87.75,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "",
+      "shop_name": "namkhangcollection Official",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🛍️ SKINTIFIC Mugwort Clay Stick มาส์กโคลนทำความสะอาดรูขุมขน 55g. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 🛍️ อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿390.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    },
+    {
+      "item_id": "namkhang_coll_102",
+      "title": "🎧 หูฟังบลูทูธไร้สาย EARMOR ANC ตัดเสียงรบกวน 45dB แบตอึด 40 ชม.",
+      "sale_price_thb": 540.0,
+      "commission_rate_percent": 22.5,
+      "estimated_net_profit_thb": 121.5,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "",
+      "shop_name": "namkhangcollection Official",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🎧 หูฟังบลูทูธไร้สาย EARMOR ANC ตัดเสียงรบกวน 45dB แบตอึด 40 ชม.. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 🎧 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿540.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    },
+    {
+      "item_id": "namkhang_coll_103",
+      "title": "📱 พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W ความจุ 10,000mAh",
+      "sale_price_thb": 690.0,
+      "commission_rate_percent": 22.5,
+      "estimated_net_profit_thb": 155.25,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "",
+      "shop_name": "namkhangcollection Official",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 📱 พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W ความจุ 10,000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 📱 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿690.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    },
+    {
+      "item_id": "namkhang_coll_104",
+      "title": "👗 เสื้อเชิ้ตแขนยาวผ้าไหมอิตาลี ทรงโอเวอร์ไซส์ มินิมอลเรียบหรู",
+      "sale_price_thb": 840.0,
+      "commission_rate_percent": 22.5,
+      "estimated_net_profit_thb": 189.0,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "",
+      "shop_name": "namkhangcollection Official",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 👗 เสื้อเชิ้ตแขนยาวผ้าไหมอิตาลี ทรงโอเวอร์ไซส์ มินิมอลเรียบหรู. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 👗 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿840.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    },
+    {
+      "item_id": "namkhang_coll_105",
+      "title": "🏠 หม้อทอดไร้น้ำมันอัจฉริยะ 5.5L จอสัมผัส LED กระจกมองเห็นอาหาร",
+      "sale_price_thb": 990.0,
+      "commission_rate_percent": 22.5,
+      "estimated_net_profit_thb": 222.75,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "",
+      "shop_name": "namkhangcollection Official",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🏠 หม้อทอดไร้น้ำมันอัจฉริยะ 5.5L จอสัมผัส LED กระจกมองเห็นอาหาร. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 🏠 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน namkhangcollection Official คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿990.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    },
+    {
+      "item_id": "namkhang_live_101",
+      "title": "🛍️ SKINTIFIC Mugwort Clay Stick มาส์กโคลนทำความสะอาดรูขุมขน 55g",
+      "sale_price_thb": 390.0,
+      "commission_rate_percent": 22.5,
+      "estimated_net_profit_thb": 87.75,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "/Users/namkhng/Pictures/AffiliateIntel_Images/namkhang_live_101_0.jpg",
+      "shop_name": "SKINTIFIC Official Store",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🛍️ SKINTIFIC Mugwort Clay Stick มาส์กโคลนทำความสะอาดรูขุมขน 55g. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 🛍️ อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน SKINTIFIC Official Store คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿390.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    },
+    {
+      "item_id": "namkhang_live_102",
+      "title": "🌀 JISULIFE พัดลมพกพาไร้สาย พัดลมมือถือปรับความเร็ว 5 ระดับ 5,000mAh",
+      "sale_price_thb": 290.0,
+      "commission_rate_percent": 28.5,
+      "estimated_net_profit_thb": 82.65,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "/Users/namkhng/Pictures/AffiliateIntel_Images/namkhang_live_102_0.jpg",
+      "shop_name": "JISULIFE Official Store",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🌀 JISULIFE พัดลมพกพาไร้สาย พัดลมมือถือปรับความเร็ว 5 ระดับ 5,000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 🌀 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน JISULIFE Official Store คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿290.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    },
+    {
+      "item_id": "namkhang_live_103",
+      "title": "🎧 หูฟังบลูทูธไร้สาย EARMOR ANC ตัดเสียงรบกวน 45dB แบตอึด 40 ชม.",
+      "sale_price_thb": 890.0,
+      "commission_rate_percent": 25.0,
+      "estimated_net_profit_thb": 222.5,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "/Users/namkhng/Pictures/AffiliateIntel_Images/namkhang_live_103_0.jpg",
+      "shop_name": "EARMOR Flagship Store",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 🎧 หูฟังบลูทูธไร้สาย EARMOR ANC ตัดเสียงรบกวน 45dB แบตอึด 40 ชม.. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 🎧 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน EARMOR Flagship Store คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿890.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    },
+    {
+      "item_id": "namkhang_live_104",
+      "title": "📱 พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W ความจุ 10,000mAh",
+      "sale_price_thb": 690.0,
+      "commission_rate_percent": 22.5,
+      "estimated_net_profit_thb": 155.25,
+      "affiliate_link": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167",
+      "main_image_path": "/Users/namkhng/Pictures/AffiliateIntel_Images/namkhang_live_104_0.jpg",
+      "shop_name": "Anker Thailand",
+      "google_flow_prompts": {
+        "visual_prompt_9_16": "Vertical 9:16 portrait. High-end commercial product video shot of 📱 พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W ความจุ 10,000mAh. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.",
+        "negative_prompt": "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing",
+        "voice_script": {
+          "hook_3s": "ใครกำลังมองหา 📱 อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!",
+          "body": "สินค้าชิ้นนี้จากร้าน Anker Thailand คุ้มค่ามาก ปกติแพงมาก วันนี้ลดเหลือเพียง ฿690.0 เท่านั้น!",
+          "cta": "พิกัดกดที่หน้าร้าน collshp.com/namkhangcollection หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ"
+        }
+      },
+      "shopee_vdo_tags": {
+        "partner_id": "an_15320530167",
+        "referral_code": "X4EBLKP",
+        "ep2_tagging": "https://s.shopee.co.th/20uSXcvwRR?af_id=X4EBLKP&mmp_pid=an_15320530167"
+      }
+    }
+  ]
+}
