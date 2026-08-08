@@ -486,11 +486,18 @@ function deleteSingleProductConfirm(prodId) {
     const item = catalogData.find(x => x.id === prodId);
     const title = item ? item.title : prodId;
     
-    if (confirm(`⚠️ ยืนยันการลบสินค้า:\n\nคุณต้องการลบสินค้า '${title.substring(0, 30)}...' ออกจากคลังใช่หรือไม่?`)) {
+    if (confirm(`⚠️ ยืนยันการย้ายลงถังขยะ 30 วัน:\n\nคุณต้องการย้ายสินค้า '${title.substring(0, 30)}...' ไปพักไว้ที่ถังขยะใช่หรือไม่?`)) {
         catalogData = catalogData.filter(x => x.id !== prodId);
         saveCatalogToStorage();
         renderCatalog();
-        alert("✅ ลบสินค้าเรียบร้อยแล้ว!");
+
+        fetch('/api/soft_delete_product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_ids: [prodId] })
+        }).then(() => loadTrashBinData()).catch(e => console.log(e));
+
+        alert("✅ ย้ายสินค้าลงถังขยะ 30 วันเรียบร้อยแล้ว!");
     }
 }
 
@@ -503,11 +510,18 @@ function deleteSelectedCatalogItems() {
 
     const selectedIds = Array.from(checkedBoxes).map(chk => chk.value);
     
-    if (confirm(`⚠️ ยืนยันการลบสินค้าทีละหลายรายการ:\n\nคุณต้องการลบสินค้าจำนวน ${selectedIds.length} รายการที่เลือกใช่หรือไม่?`)) {
+    if (confirm(`⚠️ ยืนยันการย้ายลงถังขยะ 30 วัน:\n\nคุณต้องการย้ายสินค้าจำนวน ${selectedIds.length} รายการที่เลือก ไปพักไว้ที่ถังขยะใช่หรือไม่?`)) {
         catalogData = catalogData.filter(x => !selectedIds.includes(x.id));
         saveCatalogToStorage();
         renderCatalog();
-        alert(`✅ ลบสินค้าจำนวน ${selectedIds.length} รายการที่เลือกเรียบร้อยแล้ว!`);
+
+        fetch('/api/soft_delete_product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_ids: selectedIds })
+        }).then(() => loadTrashBinData()).catch(e => console.log(e));
+
+        alert(`✅ ย้ายสินค้าจำนวน ${selectedIds.length} รายการลงถังขยะ 30 วันเรียบร้อยแล้ว!`);
     }
 }
 
@@ -517,11 +531,87 @@ function deleteAllCatalogItemsWithConfirmation() {
         return;
     }
 
-    if (confirm(`🚨 ยืนยันการลบสินค้าทั้งหมด (Delete All):\n\nคุณต้องการลบสินค้าทั้งหมดในคลังจำนวน ${catalogData.length} รายการออกใช่หรือไม่?\n(ข้อมูลใน SQLite DB จะยังอยู่ถาวร)`)) {
+    const allIds = catalogData.map(x => x.id);
+    if (confirm(`🚨 ยืนยันการย้ายสินค้าทั้งหมดเข้าถังขยะ:\n\nคุณต้องการย้ายสินค้าทั้งหมดจำนวน ${catalogData.length} รายการเข้าถังขยะ 30 วันใช่หรือไม่?`)) {
         catalogData = [];
         saveCatalogToStorage();
         renderCatalog();
-        alert("✅ ล้างรายการสินค้าในคลังทั้งหมดเรียบร้อยแล้ว!");
+
+        fetch('/api/soft_delete_product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_ids: allIds })
+        }).then(() => loadTrashBinData()).catch(e => console.log(e));
+
+        alert("✅ ย้ายสินค้าทั้งหมดเข้าถังขยะ 30 วันเรียบร้อยแล้ว!");
+    }
+}
+
+function loadTrashBinData() {
+    fetch('/api/fetch_trash_bin')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById("trashBinTableBody");
+            if (!tbody) return;
+
+            if (!data.items || data.items.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding: 20px; color: #991b1b;">
+                            🗑️ ถังขยะว่างเปล่า (ไม่มีรายการที่ถูกย้ายเข้าถังขยะ)
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = data.items.map(item => `
+                <tr>
+                    <td><img src="${item.main_image_path || 'https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b'}" class="prod-thumb" style="width:36px; height:36px;"></td>
+                    <td><strong style="font-size:12px; color:#1e293b;">${item.title}</strong><br><small style="color:#64748b;">${item.shop_name}</small></td>
+                    <td><strong style="color:#0284c7;">฿${item.sale_price}</strong></td>
+                    <td><strong style="color:#047857;">${item.commission_rate}%</strong></td>
+                    <td><small style="color:#991b1b; font-weight:600;">⏳ ${item.deleted_at || 'เพิ่งย้ายเข้าถังขยะ'}</small></td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn btn-primary" style="padding:4px 8px; font-size:11px; background:#059669;" onclick="restoreProductFromTrash('${item.item_id}')">🔄 กู้คืนสินค้า</button>
+                            <button class="btn btn-rose" style="padding:4px 8px; font-size:11px; background:#991b1b;" onclick="permanentDeleteFromTrash('${item.item_id}')">💀 ลบถาวร</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join("");
+        })
+        .catch(err => console.log("Trash bin note:", err));
+}
+
+function restoreProductFromTrash(prodId) {
+    fetch('/api/restore_product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item_ids: [prodId] })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert("✅ กู้คืนสินค้ากลับเข้าสู่คลังหลักเรียบร้อยแล้ว!");
+        loadCatalogFromStorage();
+        loadTrashBinData();
+    })
+    .catch(err => console.log(err));
+}
+
+function permanentDeleteFromTrash(prodId) {
+    if (confirm("💀 ยืนยันการลบออกจากระบบถาวร 100%:\n\nการลบนี้จะไม่สามารถกู้คืนได้อีก คุณต้องการลบสินค้าชิ้นนี้ถาวรใช่หรือไม่?")) {
+        fetch('/api/permanent_delete_product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_ids: [prodId] })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert("✅ ลบสินค้าออกจากระบบและฐานข้อมูลถาวรเรียบร้อยแล้ว!");
+            loadTrashBinData();
+        })
+        .catch(err => console.log(err));
     }
 }
 

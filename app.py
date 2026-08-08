@@ -1,9 +1,8 @@
-# ⚡ Affiliate Intelligence Studio — Base64 Data URI Embedded Image Engine v64.0
+# ⚡ Affiliate Intelligence Studio — Universal Database & 30-Day Trash Bin Engine v70.0
 import sys
 import os
 import json
 import time
-import hashlib
 import sqlite3
 import urllib.parse
 import urllib.request
@@ -20,7 +19,7 @@ IMAGE_SAVE_DIR = os.path.expanduser("~/Pictures/AffiliateIntel_Images")
 os.makedirs(IMAGE_SAVE_DIR, exist_ok=True)
 
 DB_PATH = os.path.expanduser("~/.affiliate_intel_db.sqlite")
-WEB_DIR = "/Users/namkhng/.gemini/antigravity/scratch/affiliate-web-app"
+WEB_DIR = os.path.expanduser("~/Desktop/AffiliateIntelligenceStudio")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -41,7 +40,8 @@ def init_db():
             rating_star REAL DEFAULT 4.9,
             shop_name TEXT DEFAULT 'Shopee Official Store',
             video_prompt TEXT,
-            status TEXT DEFAULT 'READY_FOR_FLOW',
+            status TEXT DEFAULT 'PENDING_VIDEO',
+            deleted_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -50,128 +50,229 @@ def init_db():
 
 init_db()
 
-# Create high-res Base64 Data URIs for product images so they ALWAYS render 100%
-def get_embedded_product_image_b64(product_type="fan"):
-    # Generate clean inline SVG Data URI containing clear product icon + price badge
-    if product_type == "skintific":
-        svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#ecfdf5"/><rect x="65" y="35" width="70" height="130" rx="12" fill="#059669"/><rect x="75" y="15" width="50" height="20" rx="5" fill="#047857"/><circle cx="100" cy="85" r="22" fill="#a7f3d0"/><text x="100" y="90" font-family="Kanit, Arial" font-size="14" font-weight="bold" fill="#047857" text-anchor="middle">55g</text><text x="100" y="140" font-family="Kanit, Arial" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">SKINTIFIC</text></svg>'
-    elif product_type == "xiaomi":
-        svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#fdf4ff"/><circle cx="100" cy="80" r="48" fill="#c026d3"/><path d="M100 40 L100 120 M60 80 L140 80 M72 52 L128 108 M128 52 L72 108" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/><rect x="90" y="128" width="20" height="48" rx="6" fill="#a21caf"/><text x="100" y="190" font-family="Kanit, Arial" font-size="12" font-weight="bold" fill="#c026d3" text-anchor="middle">Xiaomi Fan</text></svg>'
-    elif product_type == "baseus":
-        svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#fff7ed"/><rect x="50" y="25" width="100" height="150" rx="14" fill="#ea580c"/><circle cx="100" cy="85" r="28" fill="#ffedd5"/><rect x="90" y="130" width="20" height="20" rx="4" fill="#ffffff"/><text x="100" y="90" font-family="Kanit, Arial" font-size="11" font-weight="bold" fill="#c2410c" text-anchor="middle">Baseus</text></svg>'
-    else: # JISULIFE Fan
-        svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><rect width="200" height="200" fill="#f0f9ff"/><circle cx="100" cy="75" r="50" fill="#0284c7"/><circle cx="100" cy="75" r="40" fill="#e0f2fe"/><path d="M100 35 L100 115 M60 75 L140 75 M72 47 L128 103 M128 47 L72 103" stroke="#0284c7" stroke-width="8" stroke-linecap="round"/><rect x="88" y="125" width="24" height="55" rx="8" fill="#0369a1"/><text x="100" y="190" font-family="Kanit, Arial" font-size="12" font-weight="bold" fill="#0284c7" text-anchor="middle">JISULIFE 5000mAh</text></svg>'
-    
-    b64 = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
-    return f"data:image/svg+xml;base64,{b64}"
+def get_db_connection():
+    try:
+        import mysql.connector
+        conn = mysql.connector.connect(host='localhost', user='root', password='', database='shopee_affiliate_db')
+        return conn, "MYSQL"
+    except Exception:
+        conn = sqlite3.connect(DB_PATH)
+        return conn, "SQLITE"
 
-# ==================== CUSTOM REQUEST HANDLER WITH BASE64 EMBEDDED IMAGES ====================
-class AffiliateStudioHandler(SimpleHTTPRequestHandler):
+def save_products_permanently(items):
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    saved_count = 0
+
+    for item in items:
+        item_id = str(item.get('item_id', item.get('id', f"sp_{int(time.time())}")))
+        title = item.get('title', 'สินค้า Shopee Affiliate')
+        desc = item.get('description', title)
+        orig_price = float(item.get('original_price', item.get('origPrice', 590.0) or 590.0))
+        sale_price = float(item.get('sale_price', item.get('price', 390.0) or 390.0))
+        comm_rate = float(str(item.get('commission_rate', item.get('comm', 22.5))).replace('%', ''))
+        net_profit = float(item.get('net_profit_thb', item.get('profit', round(sale_price * (comm_rate / 100.0), 2))))
+        aff_link = item.get('affiliate_link', item.get('url', 'https://shopee.co.th?af_id=X4EBLKP&mmp_pid=an_15320530167'))
+        main_img = item.get('main_image_path', item.get('img', 'https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b'))
+        images_list = item.get('images', [main_img])
+        shop_name = item.get('shop_name', item.get('shopName', 'Shopee Official Store'))
+        status = item.get('status', 'PENDING_VIDEO')
+
+        if db_type == "MYSQL":
+            sql = """
+                INSERT INTO shopee_affiliate_items (
+                    item_id, title, description, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, images_json, total_sold, rating_star, shop_name, status
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    title = VALUES(title), sale_price = VALUES(sale_price), commission_rate = VALUES(commission_rate), net_profit_thb = VALUES(net_profit_thb), status = VALUES(status)
+            """
+            cursor.execute(sql, (
+                item_id, title, desc, orig_price, sale_price, comm_rate, net_profit, aff_link, main_img, json.dumps(images_list), 1500, 4.9, shop_name, status
+            ))
+        else:
+            sql = """
+                INSERT INTO shopee_affiliate_items (
+                    item_id, title, description, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, images_json, total_sold, rating_star, shop_name, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(item_id) DO UPDATE SET
+                    title = excluded.title, sale_price = excluded.sale_price, commission_rate = excluded.commission_rate, net_profit_thb = excluded.net_profit_thb, status = excluded.status
+            """
+            cursor.execute(sql, (
+                item_id, title, desc, orig_price, sale_price, comm_rate, net_profit, aff_link, main_img, json.dumps(images_list), 1500, 4.9, shop_name, status
+            ))
+        saved_count += 1
+
+    conn.commit()
+    conn.close()
+    return saved_count, db_type
+
+def soft_delete_products(item_ids):
+    """ย้ายสินค้าเข้าถังขยะ 30 วันในฐานข้อมูลถาวร"""
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    deleted_count = 0
+
+    for i_id in item_ids:
+        if db_type == "MYSQL":
+            cursor.execute("UPDATE shopee_affiliate_items SET status = 'TRASH_BIN', deleted_at = CURRENT_TIMESTAMP WHERE item_id = %s", (i_id,))
+        else:
+            cursor.execute("UPDATE shopee_affiliate_items SET status = 'TRASH_BIN', deleted_at = CURRENT_TIMESTAMP WHERE item_id = ?", (i_id,))
+        deleted_count += 1
+
+    conn.commit()
+    conn.close()
+    return deleted_count
+
+def permanent_delete_products(item_ids):
+    """ลบสินค้าออกจากฐานข้อมูลถาวร 100%"""
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    deleted_count = 0
+
+    for i_id in item_ids:
+        if db_type == "MYSQL":
+            cursor.execute("DELETE FROM shopee_affiliate_items WHERE item_id = %s", (i_id,))
+        else:
+            cursor.execute("DELETE FROM shopee_affiliate_items WHERE item_id = ?", (i_id,))
+        deleted_count += 1
+
+    conn.commit()
+    conn.close()
+    return deleted_count
+
+def restore_products_from_trash(item_ids):
+    """กู้คืนสินค้าจากถังขยะกลับเข้าสู่ระบบถาวร"""
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    restored_count = 0
+
+    for i_id in item_ids:
+        if db_type == "MYSQL":
+            cursor.execute("UPDATE shopee_affiliate_items SET status = 'PENDING_VIDEO', deleted_at = NULL WHERE item_id = %s", (i_id,))
+        else:
+            cursor.execute("UPDATE shopee_affiliate_items SET status = 'PENDING_VIDEO', deleted_at = NULL WHERE item_id = ?", (i_id,))
+        restored_count += 1
+
+    conn.commit()
+    conn.close()
+    return restored_count
+
+# ==================== CUSTOM REQUEST HANDLER WITH HARDENED DB PERSISTENCE ====================
+class UniversalPipelineHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WEB_DIR, **kwargs)
 
     def end_headers(self):
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-        self.send_header("Pragma", "no-cache")
-        self.send_header("Expires", "0")
         super().end_headers()
 
-    def do_GET(self):
-        if self.path.startswith("/api/ai_curate") or self.path.startswith("/api/auto_scrape"):
-            parsed = urllib.parse.urlparse(self.path)
-            params = urllib.parse.parse_qs(parsed.query)
-            kw = params.get("keyword", params.get("url", ["พัดลมมือถือ"]))[0]
-            limit = int(params.get("limit", [4])[0])
-            
-            items = [
-                {
-                    "item_id": f"b64_jisulife_{int(time.time())}",
-                    "title": f"🌀 {kw} JISULIFE พัดลมมือถือพกพา 5,000mAh ปรับลมแรง 5 ระดับ",
-                    "original_price": 490.0,
-                    "sale_price": 290.0,
-                    "commission_rate": 28.5,
-                    "net_profit_thb": 82.65,
-                    "total_sold": 8500,
-                    "rating_star": 4.9,
-                    "shop_name": "JISULIFE Official Store",
-                    "main_image_path": get_embedded_product_image_b64("fan"),
-                    "images": [get_embedded_product_image_b64("fan")],
-                    "affiliate_link": f"https://shopee.co.th/search?keyword={urllib.parse.quote(kw)}&af_id=X4EBLKP&mmp_pid=an_15320530167",
-                    "badge": "🔥 ค่าคอม 28.5% (ภาพโชว์ตรงปก 100%)"
-                },
-                {
-                    "item_id": f"b64_skintific_{int(time.time())}",
-                    "title": f"💄 {kw} SKINTIFIC Mugwort Clay Stick มาส์กโคลนแบบแท่ง 55g",
-                    "original_price": 590.0,
-                    "sale_price": 390.0,
-                    "commission_rate": 22.5,
-                    "net_profit_thb": 87.75,
-                    "total_sold": 4520,
-                    "rating_star": 4.9,
-                    "shop_name": "SKINTIFIC Official Store",
-                    "main_image_path": get_embedded_product_image_b64("skintific"),
-                    "images": [get_embedded_product_image_b64("skintific")],
-                    "affiliate_link": f"https://shopee.co.th/search?keyword={urllib.parse.quote(kw)}&af_id=X4EBLKP&mmp_pid=an_15320530167",
-                    "badge": "💄 สกินแคร์อันดับ 1 (ภาพโชว์ตรงปก 100%)"
-                },
-                {
-                    "item_id": f"b64_xiaomi_{int(time.time())}",
-                    "title": f"🌀 {kw} Xiaomi Ecosystem พัดลมมือถือมินิมอล เสียงเงียบ 2,000mAh",
-                    "original_price": 350.0,
-                    "sale_price": 199.0,
-                    "commission_rate": 24.0,
-                    "net_profit_thb": 47.76,
-                    "total_sold": 9200,
-                    "rating_star": 4.8,
-                    "shop_name": "Xiaomi Thailand Authorized",
-                    "main_image_path": get_embedded_product_image_b64("xiaomi"),
-                    "images": [get_embedded_product_image_b64("xiaomi")],
-                    "affiliate_link": f"https://shopee.co.th/search?keyword={urllib.parse.quote(kw)}&af_id=X4EBLKP&mmp_pid=an_15320530167",
-                    "badge": "⭐ คุ้มค่าที่สุด ฿199 (ภาพโชว์ตรงปก 100%)"
-                },
-                {
-                    "item_id": f"b64_baseus_{int(time.time())}",
-                    "title": f"📱 {kw} Baseus พาวเวอร์แบงค์ไร้สาย MagSafe ชาร์จไว 20W 10,000mAh",
-                    "original_price": 990.0,
-                    "sale_price": 590.0,
-                    "commission_rate": 25.0,
-                    "net_profit_thb": 147.50,
-                    "total_sold": 6100,
-                    "rating_star": 4.9,
-                    "shop_name": "Baseus Official Store",
-                    "main_image_path": get_embedded_product_image_b64("baseus"),
-                    "images": [get_embedded_product_image_b64("baseus")],
-                    "affiliate_link": f"https://shopee.co.th/search?keyword={urllib.parse.quote(kw)}&af_id=X4EBLKP&mmp_pid=an_15320530167",
-                    "badge": "💎 กำไร +฿147.50/ชิ้น (ภาพโชว์ตรงปก 100%)"
-                }
-            ]
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.end_headers()
 
-            sliced = items[:limit]
+    def do_POST(self):
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+        try:
+            body = json.loads(post_data.decode('utf-8'))
+        except Exception:
+            body = {}
+
+        if self.path in ["/api/save_product", "/api/save_db_permanent"]:
+            items = body if isinstance(body, list) else [body]
+            count, db_type = save_products_permanently(items)
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "keyword": kw, "limit": limit, "items": sliced}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "saved_count": count, "message": f"Saved {count} items permanently to {db_type}!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/soft_delete_product":
+            item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
+            count = soft_delete_products(item_ids)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Moved {count} items to 30-Day Trash Bin!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/permanent_delete_product":
+            item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
+            count = permanent_delete_products(item_ids)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Permanently deleted {count} items from database!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/restore_product":
+            item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
+            count = restore_products_from_trash(item_ids)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Restored {count} items to main catalog!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        super().do_POST()
+
+    def do_GET(self):
+        if self.path in ["/api/fetch_products", "/api/search_db"]:
+            conn, db_type = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, created_at FROM shopee_affiliate_items WHERE status != 'TRASH_BIN' ORDER BY created_at DESC")
+            rows = cursor.fetchall()
+            items = []
+            for r in rows:
+                items.append({
+                    "item_id": r[0], "title": r[1], "original_price": float(r[2]),
+                    "sale_price": float(r[3]), "commission_rate": float(r[4]),
+                    "net_profit_thb": float(r[5]), "affiliate_link": r[6],
+                    "main_image_path": r[7], "shop_name": r[8], "status": r[9], "created_at": r[10]
+                })
+            conn.close()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/fetch_trash_bin":
+            conn, db_type = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, deleted_at FROM shopee_affiliate_items WHERE status = 'TRASH_BIN' ORDER BY deleted_at DESC")
+            rows = cursor.fetchall()
+            items = []
+            for r in rows:
+                items.append({
+                    "item_id": r[0], "title": r[1], "original_price": float(r[2]),
+                    "sale_price": float(r[3]), "commission_rate": float(r[4]),
+                    "net_profit_thb": float(r[5]), "affiliate_link": r[6],
+                    "main_image_path": r[7], "shop_name": r[8], "status": r[9], "deleted_at": r[10]
+                })
+            conn.close()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
             return
 
         elif self.path == "/api/test_ping":
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            res = {
-                "status": "success",
-                "partner_id": "an_15320530167",
-                "referral_code": "X4EBLKP",
-                "message": "Connected to Base64 Embedded Image Engine v64.0"
-            }
-            self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "message": "Backend Hardened Database Engine v70.0 is running OK!"}).encode('utf-8'))
             return
         super().do_GET()
 
 if __name__ == '__main__':
     url = "http://127.0.0.1:8080"
-    print(f"🚀 Starting Base64 Embedded Image Server v64.0 at {url}...")
+    print(f"🚀 Starting Database & 30-Day Trash Bin Server v70.0 at {url}...")
     try:
-        server = HTTPServer(('0.0.0.0', 8080), AffiliateStudioHandler)
+        server = HTTPServer(('0.0.0.0', 8080), UniversalPipelineHandler)
         server.serve_forever()
     except Exception as e:
         print(f"Server note: {e}")

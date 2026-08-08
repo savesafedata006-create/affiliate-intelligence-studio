@@ -1,4 +1,4 @@
-# ⚡ Shopee Affiliate Pipeline — Universal Zero-Dependency Backend Server v65.0
+# ⚡ Affiliate Intelligence Studio — Universal Database & 30-Day Trash Bin Engine v70.0 (Port 5000)
 import sys
 import os
 import json
@@ -7,25 +7,19 @@ import sqlite3
 import urllib.parse
 import urllib.request
 import webbrowser
+import base64
 import re
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 # ==================== CONFIGURATION & DIRECTORIES ====================
-DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'shopee_affiliate_db'
-}
-
 IMAGE_SAVE_DIR = os.path.expanduser("~/Pictures/AffiliateIntel_Images")
 os.makedirs(IMAGE_SAVE_DIR, exist_ok=True)
 
-SQLITE_DB_PATH = os.path.expanduser("~/.affiliate_intel_db.sqlite")
+DB_PATH = os.path.expanduser("~/.affiliate_intel_db.sqlite")
 WEB_DIR = os.path.expanduser("~/Desktop/AffiliateIntelligenceStudio")
 
 def init_db():
-    conn = sqlite3.connect(SQLITE_DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS shopee_affiliate_items (
@@ -44,6 +38,7 @@ def init_db():
             shop_name TEXT DEFAULT 'Shopee Official Store',
             video_prompt TEXT,
             status TEXT DEFAULT 'PENDING_VIDEO',
+            deleted_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -55,52 +50,30 @@ init_db()
 def get_db_connection():
     try:
         import mysql.connector
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = mysql.connector.connect(host='localhost', user='root', password='', database='shopee_affiliate_db')
         return conn, "MYSQL"
     except Exception:
-        conn = sqlite3.connect(SQLITE_DB_PATH)
+        conn = sqlite3.connect(DB_PATH)
         return conn, "SQLITE"
 
-def download_product_images(image_urls, item_id):
-    saved_paths = []
-    for idx, url in enumerate(image_urls[:4]):
-        if not url or not url.startswith("http"):
-            continue
-        try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status == 200:
-                    filename = f"{item_id}_{idx}.jpg"
-                    filepath = os.path.join(IMAGE_SAVE_DIR, filename)
-                    with open(filepath, 'wb') as f:
-                        f.write(resp.read())
-                    saved_paths.append(filepath)
-        except Exception as e:
-            print(f"Image download note ({idx}): {e}")
-    return saved_paths
-
-def save_products_handler(items):
+def save_products_permanently(items):
     conn, db_type = get_db_connection()
     cursor = conn.cursor()
     saved_count = 0
 
     for item in items:
-        item_id = str(item.get('item_id', f"sp_{int(time.time())}"))
+        item_id = str(item.get('item_id', item.get('id', f"sp_{int(time.time())}")))
         title = item.get('title', 'สินค้า Shopee Affiliate')
         desc = item.get('description', title)
-        orig_price = float(item.get('original_price', 590.0))
-        sale_price = float(item.get('sale_price', 390.0))
-        comm_rate = float(item.get('commission_rate', 22.5))
-        net_profit = float(item.get('net_profit_thb', round(sale_price * (comm_rate / 100.0), 2)))
-        aff_link = item.get('affiliate_link', 'https://shopee.co.th?af_id=X4EBLKP&mmp_pid=an_15320530167')
-        main_img = item.get('main_image_path', 'https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b')
+        orig_price = float(item.get('original_price', item.get('origPrice', 590.0) or 590.0))
+        sale_price = float(item.get('sale_price', item.get('price', 390.0) or 390.0))
+        comm_rate = float(str(item.get('commission_rate', item.get('comm', 22.5))).replace('%', ''))
+        net_profit = float(item.get('net_profit_thb', item.get('profit', round(sale_price * (comm_rate / 100.0), 2))))
+        aff_link = item.get('affiliate_link', item.get('url', 'https://shopee.co.th?af_id=X4EBLKP&mmp_pid=an_15320530167'))
+        main_img = item.get('main_image_path', item.get('img', 'https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b'))
         images_list = item.get('images', [main_img])
-        shop_name = item.get('shop_name', 'Shopee Official Store')
+        shop_name = item.get('shop_name', item.get('shopName', 'Shopee Official Store'))
         status = item.get('status', 'PENDING_VIDEO')
-
-        local_paths = download_product_images(images_list, item_id)
-        if local_paths:
-            main_img = local_paths[0]
 
         if db_type == "MYSQL":
             sql = """
@@ -130,7 +103,54 @@ def save_products_handler(items):
     conn.close()
     return saved_count, db_type
 
-# ==================== UNIVERSAL CORS HANDLER ====================
+def soft_delete_products(item_ids):
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    deleted_count = 0
+
+    for i_id in item_ids:
+        if db_type == "MYSQL":
+            cursor.execute("UPDATE shopee_affiliate_items SET status = 'TRASH_BIN', deleted_at = CURRENT_TIMESTAMP WHERE item_id = %s", (i_id,))
+        else:
+            cursor.execute("UPDATE shopee_affiliate_items SET status = 'TRASH_BIN', deleted_at = CURRENT_TIMESTAMP WHERE item_id = ?", (i_id,))
+        deleted_count += 1
+
+    conn.commit()
+    conn.close()
+    return deleted_count
+
+def permanent_delete_products(item_ids):
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    deleted_count = 0
+
+    for i_id in item_ids:
+        if db_type == "MYSQL":
+            cursor.execute("DELETE FROM shopee_affiliate_items WHERE item_id = %s", (i_id,))
+        else:
+            cursor.execute("DELETE FROM shopee_affiliate_items WHERE item_id = ?", (i_id,))
+        deleted_count += 1
+
+    conn.commit()
+    conn.close()
+    return deleted_count
+
+def restore_products_from_trash(item_ids):
+    conn, db_type = get_db_connection()
+    cursor = conn.cursor()
+    restored_count = 0
+
+    for i_id in item_ids:
+        if db_type == "MYSQL":
+            cursor.execute("UPDATE shopee_affiliate_items SET status = 'PENDING_VIDEO', deleted_at = NULL WHERE item_id = %s", (i_id,))
+        else:
+            cursor.execute("UPDATE shopee_affiliate_items SET status = 'PENDING_VIDEO', deleted_at = NULL WHERE item_id = ?", (i_id,))
+        restored_count += 1
+
+    conn.commit()
+    conn.close()
+    return restored_count
+
 class UniversalPipelineHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -144,38 +164,56 @@ class UniversalPipelineHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        if self.path == "/api/save_product" or self.path == "/api/save_db_permanent":
-            content_length = int(self.headers.get('Content-Length', 0))
-            post_data = self.rfile.read(content_length)
-            try:
-                data = json.loads(post_data.decode('utf-8'))
-                items = data if isinstance(data, list) else [data]
-                count, db_type = save_products_handler(items)
-                
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.end_headers()
-                res = {
-                    "status": "success",
-                    "db_engine": db_type,
-                    "saved_count": count,
-                    "message": f"Successfully saved {count} items to {db_type} database!"
-                }
-                self.wfile.write(json.dumps(res, ensure_ascii=False).encode('utf-8'))
-                return
-            except Exception as e:
-                self.send_response(500)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.end_headers()
-                self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
-                return
+        content_length = int(self.headers.get('Content-Length', 0))
+        post_data = self.rfile.read(content_length) if content_length > 0 else b'{}'
+        try:
+            body = json.loads(post_data.decode('utf-8'))
+        except Exception:
+            body = {}
+
+        if self.path in ["/api/save_product", "/api/save_db_permanent"]:
+            items = body if isinstance(body, list) else [body]
+            count, db_type = save_products_permanently(items)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "saved_count": count, "message": f"Saved {count} items permanently to {db_type}!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/soft_delete_product":
+            item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
+            count = soft_delete_products(item_ids)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Moved {count} items to 30-Day Trash Bin!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/permanent_delete_product":
+            item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
+            count = permanent_delete_products(item_ids)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Permanently deleted {count} items from database!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/restore_product":
+            item_ids = body.get("item_ids", [body.get("item_id")]) if isinstance(body, dict) else body
+            count = restore_products_from_trash(item_ids)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Restored {count} items to main catalog!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
         super().do_POST()
 
     def do_GET(self):
-        if self.path == "/api/fetch_products" or self.path == "/api/search_db":
+        if self.path in ["/api/fetch_products", "/api/search_db"]:
             conn, db_type = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status FROM shopee_affiliate_items ORDER BY created_at DESC")
+            cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, created_at FROM shopee_affiliate_items WHERE status != 'TRASH_BIN' ORDER BY created_at DESC")
             rows = cursor.fetchall()
             items = []
             for r in rows:
@@ -183,7 +221,7 @@ class UniversalPipelineHandler(SimpleHTTPRequestHandler):
                     "item_id": r[0], "title": r[1], "original_price": float(r[2]),
                     "sale_price": float(r[3]), "commission_rate": float(r[4]),
                     "net_profit_thb": float(r[5]), "affiliate_link": r[6],
-                    "main_image_path": r[7], "shop_name": r[8], "status": r[9]
+                    "main_image_path": r[7], "shop_name": r[8], "status": r[9], "created_at": r[10]
                 })
             conn.close()
             self.send_response(200)
@@ -191,29 +229,40 @@ class UniversalPipelineHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
             return
+
+        elif self.path == "/api/fetch_trash_bin":
+            conn, db_type = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, deleted_at FROM shopee_affiliate_items WHERE status = 'TRASH_BIN' ORDER BY deleted_at DESC")
+            rows = cursor.fetchall()
+            items = []
+            for r in rows:
+                items.append({
+                    "item_id": r[0], "title": r[1], "original_price": float(r[2]),
+                    "sale_price": float(r[3]), "commission_rate": float(r[4]),
+                    "net_profit_thb": float(r[5]), "affiliate_link": r[6],
+                    "main_image_path": r[7], "shop_name": r[8], "status": r[9], "deleted_at": r[10]
+                })
+            conn.close()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "db_engine": db_type, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
+            return
+
         elif self.path == "/api/test_ping":
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "success", "message": "Backend server is running OK!"}).encode('utf-8'))
+            self.wfile.write(json.dumps({"status": "success", "message": "Backend Hardened Database Engine v70.0 is running OK!"}).encode('utf-8'))
             return
         super().do_GET()
 
 if __name__ == '__main__':
     port = 5000
-    print(f"🚀 Starting Universal Zero-Dependency Shopee Pipeline Server on Port {port}...")
-    
-    server_address = ('0.0.0.0', port)
+    print(f"🚀 Starting Database & 30-Day Trash Bin Server v70.0 on Port {port}...")
     try:
-        httpd = HTTPServer(server_address, UniversalPipelineHandler)
-        print(f"✅ Server running successfully on http://localhost:{port}")
-        httpd.serve_forever()
+        server = HTTPServer(('0.0.0.0', port), UniversalPipelineHandler)
+        server.serve_forever()
     except Exception as e:
-        print(f"Port {port} note: {e}. Trying Port 5001...")
-        try:
-            port = 5001
-            httpd = HTTPServer(('0.0.0.0', port), UniversalPipelineHandler)
-            print(f"✅ Server running successfully on http://localhost:{port}")
-            httpd.serve_forever()
-        except Exception as err:
-            print(f"Fatal server error: {err}")
+        print(f"Port {port} note: {e}")

@@ -323,6 +323,35 @@
                             </table>
                         </div>
                     </div>
+                    <!-- TRASH BIN 30-DAYS SECTION -->
+                    <div class="card" style="margin-top:20px; border:1px solid #fca5a5; background:#fff5f5;">
+                        <div class="card-header">
+                            <h3 style="color:#991b1b;">🗑️ ถังขยะ 30 วัน (Trash Bin - เก็บไว้อัตโนมัติ 30 วัน)</h3>
+                            <button class="btn btn-outline" style="font-size:12px; background:#ffffff;" onclick="loadTrashBinData()">🔄 รีเฟรชรายการถังขยะ</button>
+                        </div>
+                        <p class="desc-text" style="font-size:12px; color:#7f1d1d; margin-bottom:12px;">รายการสินค้าที่ลบจะถูกย้ายมาพักไว้ในถังขยะนี้ สามารถกด <b>'🔄 กู้คืนสินค้า'</b> กลับเข้าคลังได้ตลอดเวลา หากพ้น 30 วันหรือกด <b>'💀 ลบถาวร'</b> ข้อมูลจึงจะถูกลบออกจากระบบถาวร 100%</p>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>🖼️ รูปภาพ</th>
+                                        <th>🛍️ ชื่อสินค้า</th>
+                                        <th>💰 ราคาขาย</th>
+                                        <th>💎 คอม %</th>
+                                        <th>⏳ วันที่ย้ายเข้าถังขยะ</th>
+                                        <th>การจัดการถังขยะ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trashBinTableBody">
+                                    <tr>
+                                        <td colspan="6" style="text-align:center; padding: 20px; color: #991b1b;">
+                                            🗑️ ถังขยะว่างเปล่า (ไม่มีรายการที่ถูกย้ายเข้าถังขยะ)
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- TAB: ADD PRODUCT -->
