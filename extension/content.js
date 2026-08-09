@@ -750,4 +750,117 @@
         }
         return set;
     }
+
+    // ========================================================
+    // 📤 MY COLLECTION AUTO-FILL HELPER (affiliate.shopee.co.th)
+    // ========================================================
+    if (window.location.hostname.includes('affiliate.shopee.co.th')) {
+        initMyCollectionAutoFillHelper();
+    }
+
+    function initMyCollectionAutoFillHelper() {
+        let queue = [];
+        let currentIdx = 0;
+
+        try {
+            queue = JSON.parse(localStorage.getItem('collection_queue') || '[]');
+            currentIdx = parseInt(localStorage.getItem('collection_queue_idx') || '0');
+        } catch (e) {}
+
+        if (!queue || queue.length === 0) return;
+
+        const widget = document.createElement('div');
+        widget.id = 'shopeeCollectionHelperWidget';
+        widget.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 999999;
+            background: #0f172a;
+            color: #ffffff;
+            border: 2px solid #ee4d2d;
+            border-radius: 14px;
+            padding: 14px 18px;
+            width: 310px;
+            font-family: 'Kanit', -apple-system, sans-serif;
+            box-shadow: 0 20px 50px rgba(238,77,45,0.4);
+        `;
+
+        function renderWidgetContent() {
+            const item = queue[currentIdx];
+            if (!item) {
+                widget.innerHTML = `
+                    <div style="font-weight:700; color:#10b981; margin-bottom:6px;">🎉 เพิ่มสินค้าครบทุกชิ้นแล้ว!</div>
+                    <button id="btnFinishQueue" style="width:100%; background:#334155; color:#fff; border:none; padding:8px; border-radius:8px; cursor:pointer; font-size:12px;">✖ ปิดผู้ช่วย</button>
+                `;
+                document.getElementById('btnFinishQueue')?.addEventListener('click', () => {
+                    localStorage.removeItem('collection_queue');
+                    widget.remove();
+                });
+                return;
+            }
+
+            widget.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:#ee4d2d; font-size:13px;">📤 My Collection Assistant</strong>
+                    <span style="font-size:11px; background:#ee4d2d22; color:#ee4d2d; padding:2px 8px; border-radius:10px; font-weight:700;">${currentIdx + 1}/${queue.length}</span>
+                </div>
+                <div style="font-size:12px; color:#e2e8f0; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title}</div>
+                <div style="font-size:11px; color:#10b981; margin-bottom:10px;">฿${item.price} | คอม ${item.comm}% | กำไร +฿${parseFloat(item.profit||0).toFixed(0)}</div>
+
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    <button id="btnAutoPasteLink" style="background:linear-gradient(135deg,#ee4d2d,#ff7337); color:#fff; border:none; padding:9px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">⚡ หยอดลิงก์ใส่ช่องออโต้</button>
+                    <div style="display:flex; gap:6px;">
+                        <button id="btnCopyOnly" style="flex:1; background:#0284c7; color:#fff; border:none; padding:7px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">📋 ก๊อปลิงก์</button>
+                        <button id="btnNextItem" style="flex:1; background:#334155; color:#fff; border:none; padding:7px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">⏩ ข้ามชิ้นถัดไป</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('btnAutoPasteLink')?.addEventListener('click', () => autoFillLinkToPage(item.link));
+            document.getElementById('btnCopyOnly')?.addEventListener('click', () => {
+                navigator.clipboard.writeText(item.link);
+                showToast("📋 คัดลอกลิงก์สำเร็จ! วางในช่องได้เลยครับ", "#0284c7");
+            });
+            document.getElementById('btnNextItem')?.addEventListener('click', () => {
+                currentIdx++;
+                localStorage.setItem('collection_queue_idx', currentIdx.toString());
+                renderWidgetContent();
+            });
+        }
+
+        function autoFillLinkToPage(linkUrl) {
+            // Find input on My Collection page
+            const inputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type])'));
+            let targetInput = inputs.find(inp => 
+                inp.placeholder?.includes('http') || 
+                inp.placeholder?.includes('ลิงก์') || 
+                inp.placeholder?.includes('link') || 
+                inp.placeholder?.includes('URL') ||
+                inp.value.includes('shopee')
+            ) || inputs[0];
+
+            if (targetInput) {
+                targetInput.focus();
+                targetInput.value = linkUrl;
+                targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+                showToast("⚡ หยอดลิงก์เรียบร้อย! กด 'เพิ่มสินค้า' ได้เลยครับ", "#10b981");
+
+                // Auto advance queue index after 2 seconds
+                setTimeout(() => {
+                    currentIdx++;
+                    localStorage.setItem('collection_queue_idx', currentIdx.toString());
+                    renderWidgetContent();
+                }, 2000);
+            } else {
+                navigator.clipboard.writeText(linkUrl);
+                showToast("📋 ก๊อปลิงก์แล้ว! กรุณากดช่องวางบนหน้าเว็บครับ", "#0284c7");
+            }
+        }
+
+        document.body.appendChild(widget);
+        renderWidgetContent();
+    }
 })();
+
