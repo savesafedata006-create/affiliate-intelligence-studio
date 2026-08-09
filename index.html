@@ -41,8 +41,7 @@
 
                 <div class="menu-group-title">📌 2. 🔎 สินค้า & คลัง DB</div>
                 <button class="nav-item" onclick="switchTab('addproduct')">🔎 ค้นหา & นำเข้าสินค้าใหม่</button>
-                <button class="nav-item" onclick="switchTab('centraldb')">🗄️ คลัง DB กลาง (SQLite)</button>
-                <button class="nav-item" onclick="switchTab('catalog')">🛒 คลังสินค้าคัดสรร 12 มิติ</button>
+                <button class="nav-item" onclick="switchTab('centraldb')">🗄️ คลังสินค้า & DB กลาง (SQLite)</button>
 
                 <div class="menu-group-title">📌 3. 🎬 สตูดิโอ AI & Content</div>
                 <button class="nav-item" onclick="switchTab('flowvideo')">🤖 AI Video Creator (7-Layer)</button>
@@ -71,58 +70,30 @@
             </header>
 
             <div class="container" id="contentArea">
-                <!-- TAB: CENTRAL DATABASE EXPLORER -->
+                <!-- TAB: UNIFIED PRODUCT VAULT (merged centraldb + catalog) -->
                 <section id="tab-centraldb" class="tab-page active">
+
+                    <!-- Search & Filter Bar -->
                     <div class="card bg-gradient-card" style="margin-bottom:16px;">
                         <div class="card-header">
-                            <h3>📊 โครงสร้างจัดเก็บข้อมูลอย่างเป็นระเบียบ 3 ชั้น (Structured Data 3-Layers)</h3>
-                            <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="saveCatalogToSqlitePermanent()">💾 บันทึกระเบียบลงฐานข้อมูลถาวร</button>
-                        </div>
-                        <p class="desc-text" style="font-size:13px; margin-bottom:12px;">ระบบทำการจัดระเบียบข้อมูลสินค้าออกเป็น 3 ชั้น เพื่อความถาวร ค้นหาง่าย และส่งต่อทำคลิป AI 9:16 อัตโนมัติ:</p>
-
-                        <div class="stats-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
-                            <div class="card" style="padding:12px; background:#f0fdf4; border:1px solid #bbf7d0;">
-                                <strong style="color:#166534; font-size:13px;">1️⃣ ฐานข้อมูลกลาง SQLite (Relational DB)</strong>
-                                <p style="font-size:11px; color:#15803d; margin-top:4px;">
-                                    <code>~/.affiliate_intel_db.sqlite</code><br>
-                                    เก็บ 12 มิติข้อมูล (ราคา/คอม%/กำไรบาท/ลิงก์) มี Primary Key กำกับ
-                                </p>
-                            </div>
-                            <div class="card" style="padding:12px; background:#eff6ff; border:1px solid #bfdbfe;">
-                                <strong style="color:#1e40af; font-size:13px;">2️⃣ คลังไฟล์รูปภาพ Mac (Asset Registry)</strong>
-                                <p style="font-size:11px; color:#1d4ed8; margin-top:4px;">
-                                    <code>~/Pictures/AffiliateIntel_Images/</code><br>
-                                    ตั้งชื่อไฟล์เป็นระเบียบ <code>{item_id}_0.jpg</code> ไม่ปนกัน 100%
-                                </p>
-                            </div>
-                            <div class="card" style="padding:12px; background:#faf5ff; border:1px solid #e9d5ff;">
-                                <strong style="color:#6b21a8; font-size:13px;">3️⃣ ไฟล์ส่งออกทำคลิป AI (Export Payload)</strong>
-                                <p style="font-size:11px; color:#7e22ce; margin-top:4px;">
-                                    <code>~/Desktop/to_google_flow.json</code><br>
-                                    จัดชุดข้อมูลสำเร็จรูปพร้อมส่งต่อสร้างคลิป 9:16 บน Shopee VDO
-                                </p>
+                            <h3>🗄️ คลังสินค้า & DB กลาง — ค้นหา, จัดการ, และส่งต่อสตูดิโอ AI</h3>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button class="btn btn-primary" style="background:#059669; border-color:#059669; font-weight:700;" onclick="manualRefreshFromDb()">🔄 ซิงค์ DB ล่าสุด</button>
+                                <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="saveCatalogToSqlitePermanent()">💾 บันทึกลง SQLite ถาวร</button>
+                                <button class="btn btn-rose" onclick="deleteSelectedCatalogItems()">🗑️ ลบที่เลือก (<span id="selectedCountBadge">0</span>)</button>
+                                <button class="btn btn-rose" style="background:#991b1b;" onclick="deleteAllCatalogItemsWithConfirmation()">🔥 ลบทั้งหมด</button>
+                                <button class="btn btn-rose" style="background:#991b1b;" onclick="purgeJunkFromCentralDb()">🧹 ล้างขยะอัตโนมัติ</button>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="card bg-gradient-card">
-                        <div class="card-header">
-                            <h3>🗄️ หน้าค้นหาและสำรวจฐานข้อมูลกลาง SQLite (Central Database Explorer)</h3>
-                            <div style="display:flex; gap:8px;">
-                                <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="searchCentralDbLive()">🔎 ค้นหาเรียลไทม์</button>
-                                <button class="btn btn-rose" style="background:#991b1b;" onclick="purgeJunkFromCentralDb()">🧹 ล้างรายการขยะอัตโนมัติ</button>
-                            </div>
-                        </div>
-                        <p class="desc-text" style="font-size:14px;">ค้นหา ค้นคลัง และกรองสินค้าทั้งหมดที่บันทึกไว้ในฐานข้อมูลกลาง <code>~/.affiliate_intel_db.sqlite</code> บนดิสก์ Mac ของคุณ</p>
-
-                        <div class="form-grid" style="margin-top:16px;">
+                        <!-- Search filters -->
+                        <div class="form-grid" style="margin-top:12px;">
                             <div class="form-row">
                                 <div class="form-group" style="flex:3;">
-                                    <label>🔍 คีย์เวิร์ดค้นหาในฐานข้อมูลกลาง (ชื่อสินค้า / ร้านค้า / รายละเอียด):</label>
+                                    <label>🔍 ค้นหาสินค้า (Keyword ชื่อ / ร้านค้า / รายละเอียด):</label>
                                     <input type="text" id="inpDbSearchQuery" class="form-input" placeholder="พิมพ์ชื่อสินค้า เช่น พัดลมมือถือ, SKINTIFIC..." onkeyup="searchCentralDbLive()">
                                 </div>
                                 <div class="form-group" style="flex:1;">
-                                    <label>💎 ขั้นต่ำค่าคอม %:</label>
+                                    <label>💮 ขั้นต่ำค่าคอม %:</label>
                                     <select id="inpDbMinComm" class="form-select" onchange="searchCentralDbLive()">
                                         <option value="0">ทั้งหมด (All %)</option>
                                         <option value="20">20% ขึ้นไป</option>
@@ -133,8 +104,8 @@
                                 <div class="form-group" style="flex:1;">
                                     <label>📊 เรียงลำดับตาม:</label>
                                     <select id="inpDbSortBy" class="form-select" onchange="searchCentralDbLive()">
-                                        <option value="net_profit_thb">💵 กำไรต่อชิ้นสูงสุด (฿)</option>
-                                        <option value="commission_rate">💎 ค่าคอมมิชชันสูงสุด (%)</option>
+                                        <option value="net_profit_thb">💵 กำไร/ชิ้นสูงสุด (฿)</option>
+                                        <option value="commission_rate">💮 ค่าคอมสูงสุด (%)</option>
                                         <option value="total_sold">📦 ยอดขายสูงสุด</option>
                                         <option value="created_at">📅 ล่าสุดที่บันทึก</option>
                                     </select>
@@ -143,32 +114,65 @@
                         </div>
                     </div>
 
-                    <div class="card" style="margin-top:16px;">
+                    <!-- Unified Product Table (12-dimension) -->
+                    <div class="card">
                         <div class="card-header">
-                            <h3 id="dbSearchResultTitle">📋 รายการสินค้าในฐานข้อมูลกลาง (กำลังโหลด...)</h3>
-                            <button class="btn btn-primary" onclick="importSelectedDbItemToCatalog()">📥 ดึงรายการที่เลือกเข้าตระกร้าใช้งาน</button>
+                            <h3 id="dbSearchResultTitle">📋 รายการสินค้าทั้งหมด (กำลังโหลด...)</h3>
+                            <button class="btn btn-primary" onclick="importSelectedDbItemToCatalog()">📥 ดึงที่เลือกเข้าตะกร้าใช้งาน</button>
                         </div>
                         <div class="table-responsive">
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th>🖼️ รูปภาพ</th>
-                                        <th>🛍️ ชื่อสินค้า & ร้านค้า</th>
-                                        <th>💰 ราคาขาย</th>
-                                        <th>💎 ค่าคอม %</th>
-                                        <th>💵 กำไรสุทธิ (฿)</th>
-                                        <th>📦 ยอดขาย & ดาว</th>
-                                        <th>สถานะจัดเก็บ</th>
-                                        <th>การจัดการ</th>
+                                        <th style="width:38px; text-align:center;"><input type="checkbox" id="chkSelectAllCatalog" onchange="toggleSelectAllCatalog(this.checked)"></th>
+                                        <th style="width:70px; text-align:center;">🖼️ รูป</th>
+                                        <th>🛗 ชื่อสินค้า & ร้านค้า</th>
+                                        <th style="width:90px;">💰 ราคา</th>
+                                        <th style="width:80px; text-align:center;">💮 คอม %</th>
+                                        <th style="width:90px; text-align:center;">💵 กำไร/ชิ้น</th>
+                                        <th style="width:80px; text-align:center;">📦 ยอดขาย</th>
+                                        <th style="width:150px;">🔗 ลิงก์ Affiliate</th>
+                                        <th style="width:130px;">📁 รูป Mac</th>
+                                        <th style="width:200px; text-align:center;">การจัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody id="centralDbTableBody">
-                                    <!-- Dynamic SQLite Rows -->
+                                    <!-- populated by searchCentralDbLive() -->
+                                </tbody>
+                                <tbody id="catalogTableBody" style="display:none;">
+                                    <!-- legacy compat -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Trash Bin 30-days -->
+                    <div class="card" style="margin-top:20px; border:1px solid #fca5a5; background:#fff5f5;">
+                        <div class="card-header">
+                            <h3 style="color:#991b1b;">🗑️ ถังขยะ 30 วัน (Trash Bin)</h3>
+                            <button class="btn btn-outline" style="font-size:12px; background:#ffffff;" onclick="loadTrashBinData()">🔄 รีเฟรชถังขยะ</button>
+                        </div>
+                        <p class="desc-text" style="font-size:12px; color:#7f1d1d; margin-bottom:12px;">รายการที่ลบจะถูกย้ายมาพักไว้ที่นี้ก่อน — กด <b>'🔄 กู้คืน'</b> แล้วกลับเข้าคลัง | พ้น 30 วันหรือกด <b>'💀 ลบถาวร'</b> จึงลบออกจากระบบถาวร</p>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>🖼️ รูปภาพ</th>
+                                        <th>🛗 ชื่อสินค้า</th>
+                                        <th>💰 ราคาขาย</th>
+                                        <th>💮 คอม %</th>
+                                        <th>⏳ วันที่ย้ายเข้าถังขยะ</th>
+                                        <th>การจัดการถังขยะ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trashBinTableBody">
+                                    <tr><td colspan="6" style="text-align:center; padding:20px; color:#991b1b;">🗑️ ถังขยะว่างเปล่า</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </section>
+
 
                 <!-- ytworkflow tabs removed (redundant, no nav links) -->
                 <section id="tab-ytworkflow4" class="tab-page" style="display:none !important;"><!-- REMOVED -->
@@ -264,8 +268,10 @@
                     </div>
                 </section>
 
-                <!-- TAB: RICH DETAILED CATALOG -->
-                <section id="tab-catalog" class="tab-page">
+
+                <!-- tab-catalog merged into tab-centraldb above -->
+                <section id="tab-catalog" style="display:none;"></section>
+
                     <div class="card">
                         <div class="card-header">
                             <h3>📋 ข้อมูลสินค้าเชิงลึกในคอลเล็คชั่น (12 รายการมิติข้อมูล: รูปภาพ/ราคา/ค่าคอม%/กำไรบาท/ยอดขาย/ดาว)</h3>
