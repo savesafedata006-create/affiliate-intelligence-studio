@@ -48,6 +48,7 @@
                 <button class="nav-item" onclick="switchTab('storyboard')">🎨 Motion Storyboard Studio</button>
                 <button class="nav-item" onclick="switchTab('assetvault')">📤 Creative Asset Vault</button>
                 <button class="nav-item" onclick="switchTab('contenthub')">📢 Content Creator Hub</button>
+                <button class="nav-item" onclick="switchTab('tiktok')" style="background:linear-gradient(135deg,#010101,#1a1a2e); color:#fff; border-left:3px solid #ff0050;">🎵 TikTok Ads Creator</button>
 
                 <div class="menu-group-title">📌 4. 🔴 Live & ระบบ</div>
                 <button class="nav-item" onclick="switchTab('live')">🔴 ไลฟ์สด 24/7 Auto Stream</button>
@@ -805,6 +806,125 @@
                 <!-- legacy IDs kept for backward compatibility -->
                 <section id="tab-shopeevdo" style="display:none;"></section>
                 <section id="tab-captions" style="display:none;"></section>
+
+                <!-- TAB: TIKTOK ADS CREATOR -->
+                <section id="tab-tiktok" class="tab-page" style="display:none;">
+                    <div class="card" style="background:linear-gradient(135deg,#0a0a0a,#1a0a2e); border:1px solid #ff0050;">
+                        <div class="card-header" style="border-bottom:1px solid #ff005033;">
+                            <h3 style="color:#ff0050;">🎵 TikTok Ads Creator — สร้างโฆษณาสไตล์ TikTok ในไม่กี่คลิก!</h3>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <button class="btn" onclick="loadTikTokProductsFromDb()" style="background:#ff0050;border:none;color:#fff;font-weight:700;">🔄 โหลดสินค้าจาก DB</button>
+                                <button class="btn" onclick="window.open('https://www.tiktok.com/upload','_blank')" style="background:#010101;border:1px solid #ff0050;color:#ff0050;font-weight:700;">🚀 เปิด TikTok Upload</button>
+                                <button class="btn" onclick="window.open('https://ads.tiktok.com','_blank')" style="background:#010101;border:1px solid #69c9d0;color:#69c9d0;font-weight:700;">📊 TikTok Ads Manager</button>
+                            </div>
+                        </div>
+
+                        <!-- Style Selector -->
+                        <div style="padding:20px;">
+                            <div style="margin-bottom:16px;">
+                                <div style="font-size:13px;color:#94a3b8;margin-bottom:10px;font-weight:600;">🎨 เลือกสไตล์โฆษณา TikTok:</div>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button onclick="selectTikTokStyle('hook')" id="tts_hook" class="tts-btn active-tts" style="padding:8px 14px;border-radius:20px;border:2px solid #ff0050;background:#ff005022;color:#ff0050;font-weight:700;cursor:pointer;font-size:12px;">⚡ Hook 3-Sec Stop-Scroll</button>
+                                    <button onclick="selectTikTokStyle('flashsale')" id="tts_flashsale" class="tts-btn" style="padding:8px 14px;border-radius:20px;border:2px solid #ff9500;background:transparent;color:#ff9500;font-weight:700;cursor:pointer;font-size:12px;">💥 Flash Sale Explosion</button>
+                                    <button onclick="selectTikTokStyle('review')" id="tts_review" class="tts-btn" style="padding:8px 14px;border-radius:20px;border:2px solid #69c9d0;background:transparent;color:#69c9d0;font-weight:700;cursor:pointer;font-size:12px;">🗣️ UGC Review Style</button>
+                                    <button onclick="selectTikTokStyle('before_after')" id="tts_before_after" class="tts-btn" style="padding:8px 14px;border-radius:20px;border:2px solid #a855f7;background:transparent;color:#a855f7;font-weight:700;cursor:pointer;font-size:12px;">✨ Before-After Reveal</button>
+                                    <button onclick="selectTikTokStyle('trending')" id="tts_trending" class="tts-btn" style="padding:8px 14px;border-radius:20px;border:2px solid #10b981;background:transparent;color:#10b981;font-weight:700;cursor:pointer;font-size:12px;">🔥 Trending Sound Ad</button>
+                                </div>
+                            </div>
+
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="tiktokCreatorGrid">
+                                <!-- Left: Product Selector -->
+                                <div>
+                                    <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;font-weight:600;">🛍️ สินค้าที่จะทำโฆษณา:</div>
+                                    <select id="tiktokProductSelect" onchange="onTikTokProductChange()" style="width:100%;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:8px 12px;font-size:12px;font-family:'Kanit',sans-serif;margin-bottom:10px;">
+                                        <option value="">-- กด 🔄 โหลดสินค้าจาก DB ก่อน --</option>
+                                    </select>
+                                    <div id="tiktokProductPreview" style="background:#1e293b;border-radius:10px;padding:12px;min-height:80px;display:flex;align-items:center;justify-content:center;">
+                                        <span style="color:#475569;font-size:12px;">เลือกสินค้าเพื่อดูตัวอย่าง</span>
+                                    </div>
+                                </div>
+                                <!-- Right: Ad Settings -->
+                                <div>
+                                    <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;font-weight:600;">⚙️ ตั้งค่าโฆษณา:</div>
+                                    <div style="display:flex;flex-direction:column;gap:8px;">
+                                        <div>
+                                            <label style="font-size:11px;color:#64748b;">⏱️ ความยาวคลิป:</label>
+                                            <select id="tiktokDuration" style="width:100%;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px;font-size:12px;font-family:'Kanit',sans-serif;">
+                                                <option value="15">15 วินาที (แนะนำ)</option>
+                                                <option value="30">30 วินาที</option>
+                                                <option value="60">60 วินาที</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="font-size:11px;color:#64748b;">🎵 สไตล์เสียง:</label>
+                                            <select id="tiktokSound" style="width:100%;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px;font-size:12px;font-family:'Kanit',sans-serif;">
+                                                <option value="upbeat">🎶 Upbeat / Energetic</option>
+                                                <option value="trending">🔥 Trending TikTok Sound</option>
+                                                <option value="dramatic">🎭 Dramatic Reveal</option>
+                                                <option value="calm">🌿 Calm & Elegant</option>
+                                                <option value="none">🔇 ไม่มีเสียงดนตรี</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style="font-size:11px;color:#64748b;">🌏 ภาษา Caption:</label>
+                                            <select id="tiktokLang" style="width:100%;background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px;font-size:12px;font-family:'Kanit',sans-serif;">
+                                                <option value="th">🇹🇭 ภาษาไทย</option>
+                                                <option value="en">🇬🇧 English</option>
+                                                <option value="th_en">🇹🇭+🇬🇧 ไทย+อังกฤษ</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Generate Button -->
+                            <div style="margin:16px 0;">
+                                <button onclick="generateTikTokAd()" style="width:100%;background:linear-gradient(135deg,#ff0050,#ff4d7d);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">⚡ สร้างสคริปต์ + Prompt + Caption TikTok!</button>
+                            </div>
+
+                            <!-- Output Area -->
+                            <div id="tiktokOutputArea" style="display:none;">
+                                <!-- Scene Script -->
+                                <div style="background:#0f172a;border:1px solid #ff005044;border-radius:12px;padding:16px;margin-bottom:12px;">
+                                    <div style="font-size:12px;color:#ff0050;font-weight:700;margin-bottom:10px;">🎬 สคริปต์ Shot-by-Shot (ส่งให้คนตัดต่อหรือทำ AI Video):</div>
+                                    <div id="tiktokScriptOutput" style="font-size:12px;color:#e2e8f0;line-height:1.8;white-space:pre-line;"></div>
+                                </div>
+
+                                <!-- Google Flow Prompt -->
+                                <div style="background:#0f172a;border:1px solid #7c3aed44;border-radius:12px;padding:16px;margin-bottom:12px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                        <div style="font-size:12px;color:#a855f7;font-weight:700;">✨ Google Flow / Veo3 Prompt (AI สร้างวิดีโอให้):</div>
+                                        <button onclick="copyTikTokPrompt()" style="background:#7c3aed;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;">📋 ก๊อป</button>
+                                    </div>
+                                    <textarea id="tiktokFlowPrompt" style="width:100%;background:#1e293b;color:#c4b5fd;border:1px solid #7c3aed44;border-radius:8px;padding:10px;font-size:11px;font-family:'Kanit',sans-serif;resize:vertical;min-height:90px;box-sizing:border-box;"></textarea>
+                                </div>
+
+                                <!-- Caption + Hashtags -->
+                                <div style="background:#0f172a;border:1px solid #ff005044;border-radius:12px;padding:16px;margin-bottom:12px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                        <div style="font-size:12px;color:#ff0050;font-weight:700;">📝 Caption + Hashtag พร้อมโพสต์ TikTok:</div>
+                                        <button onclick="copyTikTokCaption()" style="background:#ff0050;color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;">📋 ก๊อป</button>
+                                    </div>
+                                    <textarea id="tiktokCaption" style="width:100%;background:#1e293b;color:#e2e8f0;border:1px solid #ff005044;border-radius:8px;padding:10px;font-size:12px;font-family:'Kanit',sans-serif;resize:vertical;min-height:100px;box-sizing:border-box;"></textarea>
+                                </div>
+
+                                <!-- Canva Brief -->
+                                <div style="background:#0f172a;border:1px solid #10b98144;border-radius:12px;padding:16px;margin-bottom:12px;">
+                                    <div style="font-size:12px;color:#10b981;font-weight:700;margin-bottom:8px;">🎨 Canva / CapCut Brief (ทำ Motion Graphic เอง):</div>
+                                    <div id="tiktokCanvaBrief" style="font-size:11px;color:#94a3b8;line-height:1.8;white-space:pre-line;"></div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button onclick="copyTikTokCaption()" style="flex:1;min-width:140px;background:linear-gradient(135deg,#ff0050,#ff4d7d);color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">📋 ก๊อปแคปชัน</button>
+                                    <button onclick="window.open('https://www.tiktok.com/upload','_blank')" style="background:#010101;border:1px solid #ff0050;color:#ff0050;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;">🎵 อัปโหลด TikTok</button>
+                                    <button onclick="window.open('https://www.canva.com/create/videos/','_blank')" style="background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;">🎨 เปิด Canva</button>
+                                    <button onclick="window.open('https://www.capcut.com','_blank')" style="background:#010101;border:1px solid #69c9d0;color:#69c9d0;border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;">✂️ เปิด CapCut</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 <!-- TAB: SETTINGS & ACCOUNTS MANAGER -->
                 <section id="tab-settings" class="tab-page">

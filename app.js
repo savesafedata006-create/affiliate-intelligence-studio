@@ -2462,3 +2462,159 @@ function copyText(id) {
         alert("📋 คัดลอกข้อความแล้ว!");
     });
 }
+
+// ==============================
+// 🎵 TIKTOK ADS CREATOR ENGINE
+// ==============================
+let currentTikTokStyle = 'hook';
+let tiktokProductsList = [];
+
+function selectTikTokStyle(style) {
+    currentTikTokStyle = style;
+    document.querySelectorAll('.tts-btn').forEach(btn => {
+        btn.classList.remove('active-tts');
+        btn.style.background = 'transparent';
+    });
+    const btn = document.getElementById(`tts_${style}`);
+    if (btn) {
+        btn.classList.add('active-tts');
+        if (style === 'hook') { btn.style.background = '#ff005022'; btn.style.borderColor = '#ff0050'; btn.style.color = '#ff0050'; }
+        else if (style === 'flashsale') { btn.style.background = '#ff950022'; btn.style.borderColor = '#ff9500'; btn.style.color = '#ff9500'; }
+        else if (style === 'review') { btn.style.background = '#69c9d022'; btn.style.borderColor = '#69c9d0'; btn.style.color = '#69c9d0'; }
+        else if (style === 'before_after') { btn.style.background = '#a855f722'; btn.style.borderColor = '#a855f7'; btn.style.color = '#a855f7'; }
+        else if (style === 'trending') { btn.style.background = '#10b98122'; btn.style.borderColor = '#10b981'; btn.style.color = '#10b981'; }
+    }
+}
+
+function loadTikTokProductsFromDb() {
+    fetch('/api/get_central_db_products')
+        .then(res => res.json())
+        .then(data => {
+            const products = data.products || data || [];
+            tiktokProductsList = products;
+            const select = document.getElementById('tiktokProductSelect');
+            if (!select) return;
+            if (products.length === 0) {
+                select.innerHTML = '<option value="">⚠️ ไม่พบสินค้าใน DB (ดึงสินค้าจาก Extension ก่อน)</option>';
+                return;
+            }
+            select.innerHTML = '<option value="">-- เลือกสินค้าจาก DB (${products.length} รายการ) --</option>' +
+                products.map((p, i) => `<option value="${i}">[฿${p.sale_price || p.price || 0} | คอม ${p.commission_rate || p.comm || 0}%] ${(p.title || '').substring(0, 45)}...</option>`).join('');
+            
+            showNotification(`✅ โหลดสินค้าจาก DB เรียบร้อย ${products.length} รายการ`, 'success');
+        })
+        .catch(err => {
+            console.error(err);
+            alert("⚠️ ไม่สามารถดึงสินค้าจาก DB ได้");
+        });
+}
+
+function onTikTokProductChange() {
+    const select = document.getElementById('tiktokProductSelect');
+    const preview = document.getElementById('tiktokProductPreview');
+    if (!select || !preview) return;
+    const idx = select.value;
+    if (idx === '') {
+        preview.innerHTML = '<span style="color:#475569;font-size:12px;">เลือกสินค้าเพื่อดูตัวอย่าง</span>';
+        return;
+    }
+    const item = tiktokProductsList[idx];
+    if (!item) return;
+
+    preview.innerHTML = `
+        <div style="display:flex;gap:12px;align-items:center;width:100%;">
+            <img src="${item.main_image_path || item.img || 'https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492'}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" />
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</div>
+                <div style="font-size:11px;color:#38bdf8;margin-top:2px;">฿${item.sale_price || item.price} | คอม ${item.commission_rate || item.comm}% | กำไร +฿${item.net_profit_thb || item.profit || 0}</div>
+                <div style="font-size:10px;color:#94a3b8;">🏪 ${item.shop_name || 'Shopee Shop'}</div>
+            </div>
+        </div>
+    `;
+}
+
+function generateTikTokAd() {
+    const select = document.getElementById('tiktokProductSelect');
+    if (!select || select.value === '') {
+        alert("⚠️ กรุณาเลือกสินค้าก่อนครับ");
+        return;
+    }
+    const idx = parseInt(select.value);
+    const item = tiktokProductsList[idx];
+    if (!item) return;
+
+    const duration = document.getElementById('tiktokDuration')?.value || '15';
+    const sound = document.getElementById('tiktokSound')?.value || 'upbeat';
+    const title = item.title || '';
+    const price = item.sale_price || item.price || 0;
+    const comm = item.commission_rate || item.comm || 0;
+    const profit = parseFloat(item.net_profit_thb || item.profit || 0).toFixed(0);
+    const affLink = item.affiliate_link || item.url || '';
+
+    // Generate script based on style
+    let scriptOutput = "";
+    let flowPrompt = "";
+    let captionOutput = "";
+    let canvaBrief = "";
+
+    const shortTitle = title.replace(/\[.*?\]|\(.*?\)|-?\d+%/g, '').trim().substring(0, 25);
+
+    if (currentTikTokStyle === 'hook') {
+        scriptOutput = `⏱️ 0 - 3s (STOP SCROLL HOOK):\n🎥 Visual: ช็อตซูมเข้าเร็วสินค้าแบบ Motion Zoom + แสงกระพริบ\n🗣️ Voice/Text: "อย่าเพิ่งเลื่อนผ่าน! ถ้าคุณกำลังตามหา ${shortTitle} แนะนำอันนี้เลย!"\n\n` +
+            `⏱️ 3 - 10s (PRODUCT DEMO):\n🎥 Visual: โชว์มุม HD ของสินค้า 3 Angle ตัดต่อ 0.8s ต่อช็อต\n🗣️ Voice/Text: "ของแท้ 100% ราคาแค่ ฿${price} สั่งวันนี้ได้ส่วนลดเพิ่ม!"\n\n` +
+            `⏱️ 10 - ${duration}s (CALL TO ACTION):\n🎥 Visual: ลูกศรชี้ลงไปที่ตะกร้าเหลือง / ลิงก์โปรไฟล์\n🗣️ Voice/Text: "กดจิ้มที่ลิงก์ตรงหน้าโปรไฟล์ หรือตะกร้าเหลืองสั่งได้เลยด่วน!"`;
+
+        flowPrompt = `Vertical 9:16 high energy TikTok commercial, fast-paced motion graphics, product floating "${shortTitle}", glowing neon aura, 3D text pop-ups "฿${price}", flash transitions, dramatic zoom, ultra realistic lighting, 4k render, trend style`;
+
+        captionOutput = `🔥 ห้ามเลื่อนผ่าน! ${shortTitle} ราคาพิเศษแค่ ฿${price} เท่านั้น! 💥\n\nกดสั่งซื้อที่ลิงก์หน้าโปรไฟล์ได้เลยครับ 👇\n🔗 ${affLink}\n\n#tiktokthailand #ช้อปปี้ #รีวิวสินค้า #TikTokshop #ของดีบอกต่อ #ลดราคา`;
+
+        canvaBrief = `1. เปิด Canva เลือก Video (9:16)\n2. ใส่เอฟเฟกต์ Motion Zoom 0.5s แรก + เพิ่มอักษรสี neon สีเหลือง/ชมพู\n3. ใส่เอฟเฟกต์ Pop Sound ตอนโชว์ราคา ฿${price}`;
+    } else if (currentTikTokStyle === 'flashsale') {
+        scriptOutput = `⏱️ 0 - 3s (FLASH SALE WARNING):\n🎥 Visual: แบนเนอร์ Flash Sale แดงส้มส่องแสง + ตัวเลข countdown วิ่ง\n🗣️ Voice/Text: "นาทีทอง! ${shortTitle} ลดราคาเดือดเหลือแค่ ฿${price}!"\n\n` +
+            `⏱️ 3 - 10s (PROMOTION DETAILS):\n🎥 Visual: โชว์ยอดขายและรีวิว 5 ดาวการันตีคุณภาพ\n🗣️ Voice/Text: "ปกติแพงกว่านี้เยอะ วันนี้จัดโปรคอมเด็ด ค่าจัดส่งฟรี!"\n\n` +
+            `⏱️ 10 - ${duration}s (URGENCY CTA):\n🎥 Visual: ปุ่ม BUY NOW เด้งรัวๆ\n🗣️ Voice/Text: "ของมีจำนวนจำกัด รีบกดใส่ตะกร้าก่อนหมดโปรนะ!"`;
+
+        flowPrompt = `Vertical 9:16 TikTok Flash Sale advert, bold yellow and orange text explosions, product mockup of "${shortTitle}", dynamic camera shake, sparkling particle effects, bright promotional billboard aesthetic`;
+
+        captionOutput = `💥 FLASH SALE ด่วน! ${shortTitle} เหลือเพียง ฿${price} ช้าหมดอดนะ!\n\n🛒 สั่งซื้อทันทีคลิก: ${affLink}\n\n#FlashSale #Shopee #โปรโมชั่น #ของมันต้องมี #ลดราคาพิเศษ`;
+
+        canvaBrief = `1. ใช้โทนสี ส้ม-แดง-เหลือง Shopee Style\n2. เพิ่ม Element "Sale Stamp" แปะมุมขวาบน\n3. ใส่เพลงจังหวะเร็ว Fast Beat`;
+    } else {
+        scriptOutput = `⏱️ 0 - 3s (UGC REVIEW HOOK):\n🎥 Visual: คนถือสินค้าใช้จริง พร้อมขึ้น Text "รีวิวตรงๆ..."\n🗣️ Voice/Text: "ลองใช้ ${shortTitle} มา 1 อาทิตย์เต็ม ผลลัพธ์เป็นยังไงมาดู!"\n\n` +
+            `⏱️ 3 - 10s (BENEFITS & RESULT):\n🎥 Visual: ซูมรายละเอียดสินค้า เผยจุดเด่น 3 อย่าง\n🗣️ Voice/Text: "ใช้ง่าย คุ้มค่า คุณภาพเกินราคา ฿${price} มากๆ"\n\n` +
+            `⏱️ 10 - ${duration}s (RECOMMENDATION):\n🎥 Visual: ชี้ไปที่ช่องทางสั่งซื้อ\n🗣️ Voice/Text: "ใครสนใจแปะพิกัดไว้ในลิงก์แล้วนะ ไปตำกันได้เลย!"`;
+
+        flowPrompt = `Vertical 9:16 UGC style review video, clean product demonstration of "${shortTitle}", soft aesthetic lighting, modern typography overlays, smooth camera pan`;
+
+        captionOutput = `✨ รีวิวเต็มๆ ${shortTitle} คุ้มค่าเกินราคา ฿${price} มากๆ ไปลองเลย!\n\n📍 พิกัดสั่งซื้อ: ${affLink}\n\n#รีวิวช้อปปี้ #ใช้ดีบอกต่อ #TikTokรีวิว #ของดีต้องลอง`;
+
+        canvaBrief = `1. ใช้ฟอนต์น่ารักมินิมอล\n2. เน้นการโชว์ภาพสินค้า HD สลับมุมมอง\n3. ใส่เพลง Acoustic ชิวๆ`;
+    }
+
+    document.getElementById('tiktokScriptOutput').innerText = scriptOutput;
+    document.getElementById('tiktokFlowPrompt').value = flowPrompt;
+    document.getElementById('tiktokCaption').value = captionOutput;
+    document.getElementById('tiktokCanvaBrief').innerText = canvaBrief;
+
+    document.getElementById('tiktokOutputArea').style.display = 'block';
+    document.getElementById('tiktokOutputArea').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyTikTokPrompt() {
+    const el = document.getElementById('tiktokFlowPrompt');
+    if (el) {
+        navigator.clipboard.writeText(el.value).then(() => {
+            showNotification('✅ คัดลอก Google Flow Prompt เรียบร้อยแล้ว!', 'success');
+        });
+    }
+}
+
+function copyTikTokCaption() {
+    const el = document.getElementById('tiktokCaption');
+    if (el) {
+        navigator.clipboard.writeText(el.value).then(() => {
+            showNotification('✅ คัดลอก Caption + Hashtag TikTok เรียบร้อยแล้ว!', 'success');
+        });
+    }
+}
+
