@@ -122,7 +122,7 @@ except Exception as e:
 
 def save_product_images(image_urls, item_id):
     saved_paths = []
-    for idx, url in enumerate(image_urls[:4]):
+    for idx, url in enumerate(image_urls[:10]):
         if not url:
             continue
         filename = f"{item_id}_{idx}.jpg"
@@ -215,17 +215,20 @@ def db_save_products(items):
 
         local_paths = save_product_images(images_list, item_id)
         if local_paths:
-            main_img = local_paths[0]
+            http_imgs = [f"/product_images/{os.path.basename(p)}" for p in local_paths]
+            main_img = http_imgs[0]
+        else:
+            http_imgs = images_list
 
         sql = """
             INSERT INTO shopee_affiliate_items (
                 item_id, title, description, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, images_json, total_sold, rating_star, shop_name, status
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(item_id) DO UPDATE SET
-                title = excluded.title, sale_price = excluded.sale_price, commission_rate = excluded.commission_rate, net_profit_thb = excluded.net_profit_thb, shop_name = excluded.shop_name, main_image_path = excluded.main_image_path, status = excluded.status
+                title = excluded.title, sale_price = excluded.sale_price, commission_rate = excluded.commission_rate, net_profit_thb = excluded.net_profit_thb, shop_name = excluded.shop_name, main_image_path = excluded.main_image_path, images_json = excluded.images_json, status = excluded.status
         """
         cursor.execute(sql, (
-            item_id, title, desc, orig_price, sale_price, comm_rate, net_profit, aff_link, main_img, json.dumps(images_list), 1500, 4.9, shop_name, status
+            item_id, title, desc, orig_price, sale_price, comm_rate, net_profit, aff_link, main_img, json.dumps(http_imgs), 1500, 4.9, shop_name, status
         ))
         saved_count += 1
 
@@ -427,11 +430,22 @@ class SingleMasterServerHandler(SimpleHTTPRequestHandler):
                 else:
                     img_url = "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b"
 
+                # Parse images_json array
+                images_arr = [img_url]
+                if r[11]:
+                    try:
+                        parsed = json.loads(r[11])
+                        if isinstance(parsed, list) and len(parsed) > 0:
+                            images_arr = parsed
+                    except Exception:
+                        pass
+
                 items.append({
                     "item_id": r[0], "title": r[1], "original_price": float(r[2]),
                     "sale_price": float(r[3]), "commission_rate": float(r[4]),
                     "net_profit_thb": float(r[5]), "affiliate_link": r[6],
-                    "main_image_path": img_url, "shop_name": r[8], "status": r[9], "created_at": r[10]
+                    "main_image_path": img_url, "img": img_url, "images": images_arr,
+                    "shop_name": r[8], "status": r[9], "created_at": r[10]
                 })
             conn.close()
             self.send_response(200)

@@ -98,33 +98,55 @@
         });
     }
 
+    function cleanShopeeHDImageUrl(rawUrl) {
+        if (!rawUrl) return "";
+        let url = rawUrl.trim();
+        if (url.startsWith("//")) url = "https:" + url;
+        url = url.replace(/_tn(?:\.jpg|\.png)?$/i, "")
+                 .replace(/_tn$/i, "")
+                 .replace(/@resize_[^?#]+/i, "");
+        return url;
+    }
+
     // Helper: Extract ALL Multi-Image Gallery URLs for a product card or page
     async function extractProductGalleryImages(container) {
         const gallery = [];
-        if (!container) return gallery;
-
-        // Query all product images, gallery thumbnails, and main slider images
-        const imgEls = container.querySelectorAll("img[src*='susercontent.com'], img[src*='file/'], .product-carousel img, img[srcset]");
         const urlsSet = new Set();
+        const root = container || document.body;
 
+        // 1. Scan <img> elements
+        const imgEls = root.querySelectorAll("img");
         for (const img of imgEls) {
-            let src = img.src || img.getAttribute("srcset") || "";
-            if (src && !urlsSet.has(src) && (src.includes("susercontent") || src.includes("file/"))) {
-                urlsSet.add(src);
-                // Try canvas conversion for main images
-                if (gallery.length < 2) {
-                    const dataUri = await getImageBase64(img);
-                    gallery.push(dataUri || src);
-                } else {
-                    gallery.push(src);
-                }
+            let src = img.currentSrc || img.src || img.getAttribute("srcset") || "";
+            if (!src) continue;
+            let hdUrl = cleanShopeeHDImageUrl(src);
+            if ((hdUrl.includes("susercontent") || hdUrl.includes("file/")) && !urlsSet.has(hdUrl) && !hdUrl.includes("avatar") && !hdUrl.includes("icon") && !hdUrl.includes("logo")) {
+                urlsSet.add(hdUrl);
+                gallery.push(hdUrl);
             }
-            if (gallery.length >= 8) break;
+            if (gallery.length >= 10) break;
+        }
+
+        // 2. Scan background-image elements for gallery thumbnails
+        if (gallery.length < 6) {
+            const bgEls = root.querySelectorAll("[style*='background-image'], [style*='susercontent']");
+            for (const el of bgEls) {
+                const bg = el.style.backgroundImage || "";
+                const match = bg.match(/url\(['"]?(.*?)['"]?\)/);
+                if (match && match[1]) {
+                    let hdUrl = cleanShopeeHDImageUrl(match[1]);
+                    if ((hdUrl.includes("susercontent") || hdUrl.includes("file/")) && !urlsSet.has(hdUrl) && !hdUrl.includes("avatar") && !hdUrl.includes("icon")) {
+                        urlsSet.add(hdUrl);
+                        gallery.push(hdUrl);
+                    }
+                }
+                if (gallery.length >= 10) break;
+            }
         }
 
         if (gallery.length === 0) {
-            const mainImg = container.querySelector("img");
-            if (mainImg) gallery.push(mainImg.src);
+            const mainImg = root.querySelector("img");
+            if (mainImg && mainImg.src) gallery.push(cleanShopeeHDImageUrl(mainImg.src));
         }
 
         return gallery;

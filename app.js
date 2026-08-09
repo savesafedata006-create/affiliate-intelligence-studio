@@ -374,13 +374,16 @@ function renderCentralDbTable(items) {
 
         const safeTitle = title.replace(/"/g, '&quot;');
 
+        const imgCount = (item.images && Array.isArray(item.images)) ? item.images.length : 1;
+
         return `
         <tr>
             <td style="text-align:center; padding:4px;">
                 <input type="checkbox" class="catalog-select-chk" data-idx="${idx}" onchange="updateSelectedCount()">
             </td>
             <td style="padding:4px; text-align:center;">
-                <img src="${imgSrc}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; display:block; margin:0 auto;" onerror="this.src='https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492'">
+                <img src="${imgSrc}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; display:block; margin:0 auto; cursor:pointer;" title="🖼️ คลิกเปิดสไลด์คลังภาพ HD (${imgCount} ภาพ)" onclick="openCarouselModal('${item.item_id}')" onerror="this.src='https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492'">
+                <span class="badge badge-purple" style="font-size:9px; padding:1px 4px; margin-top:2px; display:inline-block; cursor:pointer;" onclick="openCarouselModal('${item.item_id}')">🖼️ ${imgCount} ภาพ</span>
             </td>
             <td style="padding:6px 8px;">
                 <div class="prod-title-box" title="${safeTitle}">${title}</div>
