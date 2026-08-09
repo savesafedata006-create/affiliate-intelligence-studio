@@ -1527,9 +1527,412 @@ function toggleLive() {
 
 document.addEventListener("DOMContentLoaded", () => {
     loadCatalogFromStorage();
-    renderCatalog();
-    searchCentralDbLive();
-    generateGoogleFlowPrompt();
-    generateShopeeVDOPack();
-    generateCaptions();
+    refreshStudioProductList();
+    loadCreativeAssets();
 });
+
+let flowCurrentProduct = null;
+let sbCurrentProduct = null;
+let allCreativeAssets = [];
+
+function refreshStudioProductList() {
+    fetch('/api/fetch_products')
+        .then(res => res.json())
+        .then(data => {
+            const pickers = [
+                document.getElementById('studioProductPicker'),
+                document.getElementById('flowProdPicker'),
+                document.getElementById('sbProdPicker'),
+                document.getElementById('vaultProdPicker')
+            ];
+            if (!data.items) return;
+            pickers.forEach(picker => {
+                if (!picker) return;
+                picker.innerHTML = '<option value="">-- เลือกสินค้าจากคลัง DB --</option>';
+                data.items.forEach((item, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = idx;
+                    const shortTitle = item.title.replace(/\n/g, ' ').substring(0, 45);
+                    opt.textContent = `${idx + 1}. ${shortTitle} | ฿${item.sale_price} | คอม ${item.commission_rate}%`;
+                    opt.dataset.item = JSON.stringify(item);
+                    picker.appendChild(opt);
+                });
+            });
+        })
+        .catch(() => {});
+}
+
+// ==================== 🤖 AI VIDEO CREATOR (GOOGLE FLOW 7-LAYER) ====================
+function loadFlowProduct(selectedIdx) {
+    const picker = document.getElementById('flowProdPicker');
+    if (!picker || selectedIdx === '') {
+        document.getElementById('flowProdPreviewCard').style.display = 'none';
+        flowCurrentProduct = null;
+        return;
+    }
+    const opt = picker.options[picker.selectedIndex];
+    if (!opt || !opt.dataset.item) return;
+
+    const item = JSON.parse(opt.dataset.item);
+    flowCurrentProduct = item;
+
+    const card = document.getElementById('flowProdPreviewCard');
+    card.style.display = 'flex';
+
+    const img = document.getElementById('flowProdImg');
+    if (img) {
+        let imgSrc = item.main_image_path || '';
+        if (imgSrc && !imgSrc.startsWith('data:') && !imgSrc.startsWith('http')) {
+            imgSrc = `/product_images/${imgSrc.split('/').pop()}`;
+        }
+        img.src = imgSrc || '';
+        img.onerror = () => img.src = '';
+    }
+
+    const titleEl = document.getElementById('flowProdTitle');
+    if (titleEl) titleEl.textContent = item.title.replace(/\n/g, ' ');
+
+    const priceEl = document.getElementById('flowProdPrice');
+    if (priceEl) priceEl.textContent = `💰 ฿${parseFloat(item.sale_price).toFixed(0)}`;
+
+    const commEl = document.getElementById('flowProdComm');
+    if (commEl) commEl.textContent = `💎 คอม ${item.commission_rate}%`;
+
+    const profitEl = document.getElementById('flowProdProfit');
+    if (profitEl) profitEl.textContent = `🤑 กำไร ฿${parseFloat(item.net_profit_thb || 0).toFixed(0)}`;
+
+    generateFlowVideoPackage();
+}
+
+function generateFlowVideoPackage() {
+    const p = flowCurrentProduct || studioCurrentProduct;
+    const style = document.getElementById('flowStylePicker')?.value || 'cinematic';
+    const voiceTone = document.getElementById('flowVoicePicker')?.value || 'urgent';
+    const acc = accountsData[currentAccountId] || accountsData["acc_1"];
+
+    const title = p ? p.title.replace(/\n/g, ' ').substring(0, 50) : "สินค้า Shopee ยอดฮิต";
+    const price = p ? `฿${parseFloat(p.sale_price).toFixed(0)}` : "ราคาพิเศษ";
+    const commPct = p ? `${p.commission_rate}%` : "25%";
+
+    let camera = "Vertical 9:16 portrait orientation. Slow push-in tracking shot, smooth 60fps cinematic movement.";
+    let styleText = "Ultra-realistic 8K commercial photography, studio lighting, hyper-detailed product textures.";
+
+    if (style === 'lifestyle') {
+        camera = "Vertical 9:16 portrait. Handheld slow-pan tracking camera, shallow depth of field.";
+        styleText = "Natural daylight lifestyle atmosphere, warm pastel color grade, highly authentic review style.";
+    } else if (style === 'unboxing') {
+        camera = "Vertical 9:16 macro shot. 360-degree slow orbit around product with crisp rack focus.";
+        styleText = "Minimalist studio backdrop, softbox diffused lighting, sleek metallic specular highlights.";
+    } else if (style === 'vibrant') {
+        camera = "Vertical 9:16 portrait. Dynamic whip-pan zoom, fast motion graphics overlay.";
+        styleText = "Vibrant saturated colors, neon accent glow, high energy sales video aesthetic.";
+    }
+
+    const visualPrompt = `[Camera & Motion]: ${camera}\n[Subject]: ${title}\n[Environment & Physics]: Clean professional setting, product positioned front and center, pristine state.\n[Lighting & Grade]: ${styleText}\n[Audio Specs]: Synchronized crisp voiceover audio stream.`;
+
+    const negativePrompt = "blurry, low resolution, distorted text, bad framing, watermark, logos, grain, dark shadows, plastic artifacts, extra limbs, NSFW";
+
+    let hook = `หยุดดูก่อน! 🛑 ใครกำลังตามหา "${title.substring(0, 22)}..." ด่วนเลยครับ!`;
+    let body = `✅ ตัวนี้ยอดฮิตมาก! ราคาเพียง ${price} เท่านั้น${p && p.commission_rate ? ` ได้คอมสูง ${commPct}` : ''} คุณภาพจัดเต็ม ส่งไวถึงบ้านแน่นอนครับ`;
+    let cta = `👉 พิกัดกดที่ตะกร้าเหลืองซ้ายล่างได้เลยครับ หรือ หน้าโปรไฟล์ ${acc.storefront}`;
+
+    if (voiceTone === 'friendly') {
+        hook = `แวะมาป้ายยาครับ 😊 สินค้าชิ้นนี้ "${title.substring(0, 22)}..." ใช้ดีจนต้องบอกต่อ!`;
+        body = `ราคาน่ารักมากแค่ ${price} ครับ ใช้งานง่าย สะดวกสบาย ตอบโจทย์ชีวิตประจำวันสุดๆ`;
+        cta = `ชอบก็กดช้อปได้ที่ตะกร้าเหลืองซ้ายล่าง หรือ ลิงก์หน้าร้าน ${acc.storefront} เลยครับ 👍`;
+    } else if (voiceTone === 'expert') {
+        hook = `เจาะลึกรีวิวสินค้ามาแรง! 🏆 "${title.substring(0, 25)}..." ทำไมคนถึงแห่ซื้อกันเต็มโซเชียล?`;
+        body = `จากข้อมูลวัสดุและประสิทธิภาพถือว่าคุ้มค่าเกินราคา ${price} มากครับ คัดสรรสินค้าแท้ 100%`;
+        cta = `พิกัดตะกร้าเหลืองซ้ายล่างตรวจสอบคูปองลดเพิ่ม หรือ หน้าร้าน ${acc.storefront}`;
+    }
+
+    const txtVisual = document.getElementById('flowTxtVisual');
+    const txtNeg = document.getElementById('flowTxtNegative');
+    const txtHook = document.getElementById('flowTxtHook');
+    const txtBody = document.getElementById('flowTxtBody');
+    const txtCTA = document.getElementById('flowTxtCTA');
+
+    if (txtVisual) txtVisual.value = visualPrompt;
+    if (txtNeg) txtNeg.value = negativePrompt;
+    if (txtHook) txtHook.value = hook;
+    if (txtBody) txtBody.value = body;
+    if (txtCTA) txtCTA.value = cta;
+}
+
+function copyFlowPackage() {
+    const visual = document.getElementById('flowTxtVisual')?.value || '';
+    const neg = document.getElementById('flowTxtNegative')?.value || '';
+    const hook = document.getElementById('flowTxtHook')?.value || '';
+    const body = document.getElementById('flowTxtBody')?.value || '';
+    const cta = document.getElementById('flowTxtCTA')?.value || '';
+
+    const pkg = `🎬 [Google Flow Veo 7-Layer Visual Prompt 9:16]:\n${visual}\n\n🚫 [Negative Prompt]:\n${neg}\n\n🎙️ [Voice Script (0-3s Hook)]: ${hook}\n📦 [Voice Script (3-15s Body)]: ${body}\n👉 [Voice Script (15-20s CTA)]: ${cta}`;
+
+    navigator.clipboard.writeText(pkg).then(() => {
+        alert("📋 คัดลอกแพ็กเกจ Google Flow ทั้งหมดเรียบร้อยแล้ว!");
+    });
+}
+
+function saveFlowPackageToVault() {
+    const p = flowCurrentProduct || studioCurrentProduct;
+    const visual = document.getElementById('flowTxtVisual')?.value || '';
+    const hook = document.getElementById('flowTxtHook')?.value || '';
+    const body = document.getElementById('flowTxtBody')?.value || '';
+    const cta = document.getElementById('flowTxtCTA')?.value || '';
+
+    const payload = {
+        item_id: p ? p.item_id : "UNKNOWN",
+        item_title: p ? p.title : "สินค้าสร้างพรอมต์ Google Flow",
+        asset_type: "prompt",
+        asset_url: "N/A (Prompt Package)",
+        thumbnail_url: p ? (p.main_image_path || '') : '',
+        platform: "google_flow",
+        prompt_used: visual,
+        script_used: `[Hook]: ${hook}\n[Body]: ${body}\n[CTA]: ${cta}`
+    };
+
+    fetch('/api/save_creative_asset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert("💾 บันทึกแพ็กเกจพรอมต์ & สคริปต์ลง Creative Vault เรียบร้อยแล้ว!");
+        switchTab('assetvault');
+        loadCreativeAssets();
+    });
+}
+
+// ==================== 🎨 MOTION GRAPHICS STORYBOARD STUDIO ====================
+function loadStoryboardProduct(selectedIdx) {
+    const picker = document.getElementById('sbProdPicker');
+    if (!picker || selectedIdx === '') {
+        sbCurrentProduct = null;
+        return;
+    }
+    const opt = picker.options[picker.selectedIndex];
+    if (!opt || !opt.dataset.item) return;
+
+    sbCurrentProduct = JSON.parse(opt.dataset.item);
+    generateStoryboard();
+}
+
+function generateStoryboard() {
+    const p = sbCurrentProduct || flowCurrentProduct || studioCurrentProduct;
+    const acc = accountsData[currentAccountId] || accountsData["acc_1"];
+
+    const title = p ? p.title.replace(/\n/g, ' ').substring(0, 50) : "สินค้าสุดคูล";
+    const price = p ? `฿${parseFloat(p.sale_price).toFixed(0)}` : "ราคาพิเศษ";
+    const origPrice = p && p.original_price > p.sale_price ? `฿${parseFloat(p.original_price).toFixed(0)}` : "";
+
+    const p1 = `Vertical 9:16 portrait. Extreme macro close-up shot of ${title}. Camera rapidly snaps into focus with intense studio backlighting, high detail, 60fps motion blur effect.`;
+    const v1 = `หยุดดูก่อน! 🛑 ถ้ายังหา "${title.substring(0, 22)}..." อยู่ล่ะก็ คลิปนี้ตอบโจทย์คุณแน่นอน!`;
+
+    const p2 = `Vertical 9:16 portrait. Smooth 360-degree camera orbit around ${title}. Floating clean white studio background, soft shadows, 8K ultra-realistic rendering.`;
+    const v2 = `เปิดตัวด้วยราคาโปรสุดช็อก! จากปกติ ${origPrice || '฿990'} ลดเหลือเพียง ${price} บาทเท่านั้นครับ!`;
+
+    const p3 = `Vertical 9:16 portrait. Lifestyle action shot showing ${title} being actively used in a modern clean home environment. Warm natural lighting, depth of field.`;
+    const v3 = `ใช้งานสะดวกมาก วัสดุพรีเมียม ตอบโจทย์ไลฟ์สไตล์ ยอดขายสูงถล่มทลายส่งไวถึงมือ 100% ครับ!`;
+
+    const p4 = `Vertical 9:16 portrait. Motion graphic layout showing ${title} on right, glowing discount tag on left, vibrant yellow shopping bag icon animated at bottom left.`;
+    const v4 = `กดสั่งซื้อที่ตะกร้าเหลืองซ้ายล่างเลยครับ! หรือ พิกัดกดที่หน้าร้าน ${acc.storefront} ด่วนก่อนหมดโปร!`;
+
+    const elP1 = document.getElementById('sbPrompt1');
+    const elV1 = document.getElementById('sbVoice1');
+    const elP2 = document.getElementById('sbPrompt2');
+    const elV2 = document.getElementById('sbVoice2');
+    const elP3 = document.getElementById('sbPrompt3');
+    const elV3 = document.getElementById('sbVoice3');
+    const elP4 = document.getElementById('sbPrompt4');
+    const elV4 = document.getElementById('sbVoice4');
+
+    if (elP1) elP1.value = p1;
+    if (elV1) elV1.value = v1;
+    if (elP2) elP2.value = p2;
+    if (elV2) elV2.value = v2;
+    if (elP3) elP3.value = p3;
+    if (elV3) elV3.value = v3;
+    if (elP4) elP4.value = p4;
+    if (elV4) elV4.value = v4;
+}
+
+function copyFullStoryboard() {
+    const p1 = document.getElementById('sbPrompt1')?.value || '';
+    const v1 = document.getElementById('sbVoice1')?.value || '';
+    const p2 = document.getElementById('sbPrompt2')?.value || '';
+    const v2 = document.getElementById('sbVoice2')?.value || '';
+    const p3 = document.getElementById('sbPrompt3')?.value || '';
+    const v3 = document.getElementById('sbVoice3')?.value || '';
+    const p4 = document.getElementById('sbPrompt4')?.value || '';
+    const v4 = document.getElementById('sbVoice4')?.value || '';
+
+    const sbText = `🎨 [MOTION GRAPHICS STORYBOARD 4 SCENES]\n` +
+        `=========================================\n\n` +
+        `🎬 SCENE 1: HOOK (0 - 3s) [Hard Cut]\n🎥 Prompt: ${p1}\n🎙️ Voice: ${v1}\n\n` +
+        `🔍 SCENE 2: REVEAL (3 - 8s) [Dissolve]\n🎥 Prompt: ${p2}\n🎙️ Voice: ${v2}\n\n` +
+        `🌟 SCENE 3: BENEFIT (8 - 15s) [Slide Left]\n🎥 Prompt: ${p3}\n🎙️ Voice: ${v3}\n\n` +
+        `🛒 SCENE 4: CTA (15 - 20s) [Fade to Black]\n🎥 Prompt: ${p4}\n🎙️ Voice: ${v4}`;
+
+    navigator.clipboard.writeText(sbText).then(() => {
+        alert("📋 คัดลอก Storyboard ทั้งหมด 4 ฉากเรียบร้อยแล้ว!");
+    });
+}
+
+function saveStoryboardToVault() {
+    const p = sbCurrentProduct || flowCurrentProduct || studioCurrentProduct;
+    const p1 = document.getElementById('sbPrompt1')?.value || '';
+    const v1 = document.getElementById('sbVoice1')?.value || '';
+
+    const payload = {
+        item_id: p ? p.item_id : "UNKNOWN",
+        item_title: p ? p.title : "Storyboard 4 Scenes",
+        asset_type: "motion",
+        asset_url: "N/A (Storyboard Script)",
+        thumbnail_url: p ? (p.main_image_path || '') : '',
+        platform: "google_flow",
+        prompt_used: `Scene 1: ${p1}`,
+        script_used: `Scene 1 Voice: ${v1}`
+    };
+
+    fetch('/api/save_creative_asset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(() => {
+        alert("💾 บันทึก Storyboard 4 ฉากลง Creative Vault เรียบร้อยแล้ว!");
+        switchTab('assetvault');
+        loadCreativeAssets();
+    });
+}
+
+// ==================== 📤 CREATIVE ASSET VAULT ====================
+function submitCreativeAsset(e) {
+    e.preventDefault();
+    const prodPicker = document.getElementById('vaultProdPicker');
+    const assetType = document.getElementById('vaultAssetType').value;
+    const platform = document.getElementById('vaultPlatform').value;
+    const assetUrl = document.getElementById('vaultAssetUrl').value.trim();
+    const thumbUrl = document.getElementById('vaultThumbUrl').value.trim();
+    const notes = document.getElementById('vaultPromptNotes').value.trim();
+
+    let item_id = "CUSTOM";
+    let item_title = "ผลงานอิสระ";
+
+    if (prodPicker && prodPicker.selectedIndex > 0) {
+        const opt = prodPicker.options[prodPicker.selectedIndex];
+        if (opt && opt.dataset.item) {
+            const item = JSON.parse(opt.dataset.item);
+            item_id = item.item_id;
+            item_title = item.title;
+        }
+    }
+
+    const payload = {
+        item_id: item_id,
+        item_title: item_title,
+        asset_type: assetType,
+        asset_url: assetUrl,
+        thumbnail_url: thumbUrl,
+        platform: platform,
+        prompt_used: notes,
+        script_used: ""
+    };
+
+    fetch('/api/save_creative_asset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert("✅ อัปโหลดและบันทึกผลงานลง Creative Vault เรียบร้อยแล้ว!");
+        document.getElementById('vaultAssetUrl').value = '';
+        document.getElementById('vaultThumbUrl').value = '';
+        document.getElementById('vaultPromptNotes').value = '';
+        loadCreativeAssets();
+    });
+}
+
+function loadCreativeAssets() {
+    fetch('/api/fetch_creative_assets')
+        .then(r => r.json())
+        .then(data => {
+            if (data.assets) {
+                allCreativeAssets = data.assets;
+                renderCreativeAssetsGrid(allCreativeAssets);
+            }
+        })
+        .catch(() => {});
+}
+
+function filterCreativeAssets() {
+    const filter = document.getElementById('vaultFilterType')?.value || 'all';
+    if (filter === 'all') {
+        renderCreativeAssetsGrid(allCreativeAssets);
+    } else {
+        const filtered = allCreativeAssets.filter(a => a.asset_type === filter);
+        renderCreativeAssetsGrid(filtered);
+    }
+}
+
+function renderCreativeAssetsGrid(assets) {
+    const grid = document.getElementById('vaultAssetGrid');
+    if (!grid) return;
+
+    if (!assets || assets.length === 0) {
+        grid.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; grid-column: 1 / -1;">ยังไม่มีผลงานบันทึกในคลัง กดบันทึกผลงานด้านบนเพื่อเริ่มต้น!</div>`;
+        return;
+    }
+
+    grid.innerHTML = assets.map(a => {
+        const typeBadge = a.asset_type === 'video' ? '🎥 วิดีโอ' :
+                          a.asset_type === 'motion' ? '🎨 Motion' :
+                          a.asset_type === 'image' ? '🖼️ ภาพนิ่ง' : '📝 พรอมต์';
+        const dateStr = a.created_at ? new Date(a.created_at).toLocaleDateString('th-TH') : '';
+        const shortTitle = a.item_title ? a.item_title.replace(/\n/g, ' ').substring(0, 35) : 'ไม่ระบุสินค้า';
+
+        return `
+            <div class="card" style="background:#0f172a; border:1px solid #334155; padding:12px; display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:11px; background:#0284c722; color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:700;">${typeBadge}</span>
+                        <span style="font-size:11px; color:#64748b;">${dateStr}</span>
+                    </div>
+                    <div style="font-size:12px; font-weight:700; color:#f1f5f9; margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${shortTitle}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:8px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                        ${a.prompt_used || 'ไม่มีบันทึก Prompt'}
+                    </div>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:10px;">
+                    ${a.asset_url && a.asset_url.startsWith('http') ? `<button onclick="window.open('${a.asset_url}','_blank')" style="flex:1; font-size:11px; background:#0284c7; color:#fff; border:none; padding:4px; border-radius:4px; cursor:pointer;">🔗 เปิดไฟล์</button>` : ''}
+                    <button onclick="navigator.clipboard.writeText('${(a.prompt_used || '').replace(/'/g, "\\'")}'); alert('📋 คัดลอก Prompt แล้ว!');" style="flex:1; font-size:11px; background:#475569; color:#fff; border:none; padding:4px; border-radius:4px; cursor:pointer;">📋 ก๊อป Prompt</button>
+                    <button onclick="deleteCreativeAsset('${a.asset_id}')" style="font-size:11px; background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">🗑️</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function deleteCreativeAsset(assetId) {
+    if (!confirm("ต้องการลบผลงานนี้ออกจาก Creative Vault หรือไม่?")) return;
+    fetch('/api/delete_creative_asset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ asset_id: assetId })
+    })
+    .then(r => r.json())
+    .then(() => {
+        loadCreativeAssets();
+    });
+}
+
+function copyText(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    navigator.clipboard.writeText(el.value).then(() => {
+        alert("📋 คัดลอกข้อความแล้ว!");
+    });
+}

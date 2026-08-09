@@ -47,10 +47,14 @@
                 <button class="nav-item" onclick="switchTab('catalog')">🛒 คลังตารางสินค้าคัดสรร & สไลด์ภาพ</button>
 
                 <div class="menu-group-title">📌 4. 🎬 สตูดิโอทำคลิป AI & Export</div>
+                <button class="nav-item" onclick="switchTab('flowvideo')">🤖 1. AI Video Creator (Google Flow/Veo)</button>
+                <button class="nav-item" onclick="switchTab('storyboard')">🎨 2. Motion Graphics Storyboard Studio</button>
+                <button class="nav-item" onclick="switchTab('assetvault')">📤 3. คลังเก็บผลงาน (Creative Vault)</button>
                 <button class="nav-item" onclick="switchTab('prompt')">🎬 พรอมต์ Google Flow 9:16 & พากย์เสียง</button>
                 <button class="nav-item" onclick="switchTab('shopeevdo')">🎥 Shopee VDO Studio & สูตรทำเงิน</button>
             </nav>
         </aside>
+
 
         <!-- Main Content Area -->
         <main class="main-content">
@@ -469,6 +473,282 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- TAB: GOOGLE FLOW VEO AI VIDEO CREATOR -->
+                <section id="tab-flowvideo" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🤖 1. AI Video Creator — สร้างพรอมต์ 7-Layer & สคริปต์ส่ง Google Flow</h3>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-primary" onclick="generateFlowVideoPackage()">✨ เจนพรอมต์ & สคริปต์ AI</button>
+                                <button class="btn btn-outline" onclick="copyFlowPackage()">📋 คัดลอกทั้งแพ็กเกจ</button>
+                            </div>
+                        </div>
+
+                        <!-- Product Selector & Controls -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">🛒 เลือกสินค้า & สไตล์วิดีโอ</div>
+                            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; margin-bottom:12px;">
+                                <div>
+                                    <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">สินค้าในคลัง DB:</label>
+                                    <select id="flowProdPicker" onchange="loadFlowProduct(this.value)" style="width:100%; background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:8px; border-radius:8px; font-size:13px;">
+                                        <option value="">-- เลือกสินค้าจากคลัง --</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">🎬 สไตล์วิดีโอ (Video Style):</label>
+                                    <select id="flowStylePicker" onchange="generateFlowVideoPackage()" style="width:100%; background:#0f172a; color:#f1f5f9; border:1px solid #475569; padding:8px; border-radius:8px; font-size:12px;">
+                                        <option value="cinematic">🎬 Cinematic 8K Commercial Shot</option>
+                                        <option value="lifestyle">📸 Ultra-realistic Lifestyle Review</option>
+                                        <option value="unboxing">📦 360° Studio Unboxing Showcase</option>
+                                        <option value="vibrant">⚡ Vibrant TikTok High-Energy Sales</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">🎙️ โทนเสียงพากย์ (Voiceover Tone):</label>
+                                    <select id="flowVoicePicker" onchange="generateFlowVideoPackage()" style="width:100%; background:#0f172a; color:#f1f5f9; border:1px solid #475569; padding:8px; border-radius:8px; font-size:12px;">
+                                        <option value="urgent">🔥 เร่งด่วน / เชียร์ขายแรง</option>
+                                        <option value="friendly">💬 เพื่อนบอกต่อ / เล่าชิวๆ</option>
+                                        <option value="expert">🏆 รีวิวเชิงลึก / ผู้เชี่ยวชาญ</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Preview Card -->
+                            <div id="flowProdPreviewCard" style="display:none; background:#0f172a; border-radius:10px; padding:12px; gap:12px; align-items:center;">
+                                <img id="flowProdImg" src="" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid #334155;">
+                                <div style="flex:1; min-width:0;">
+                                    <div id="flowProdTitle" style="font-size:13px; font-weight:700; color:#f1f5f9; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                                    <div style="display:flex; gap:8px; margin-top:4px;">
+                                        <span id="flowProdPrice" style="font-size:11px; background:#059669; color:#fff; padding:2px 6px; border-radius:4px; font-weight:700;"></span>
+                                        <span id="flowProdComm" style="font-size:11px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-weight:700;"></span>
+                                        <span id="flowProdProfit" style="font-size:11px; background:#ee4d2d; color:#fff; padding:2px 6px; border-radius:4px; font-weight:700;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Generated Content Boxes -->
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>🎬 7-Layer Visual Prompt (คัดลอกส่ง Google Flow Directorial Brief):</label>
+                                <textarea id="flowTxtVisual" class="form-input code-text" rows="4" readonly></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>🚫 Negative Prompt (สิ่งห้ามมีในคลิป):</label>
+                                <textarea id="flowTxtNegative" class="form-input code-text" rows="2" readonly></textarea>
+                            </div>
+                            <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                                <div class="form-group">
+                                    <label>🎙️ Hook (0-3s ดึงดูด):</label>
+                                    <textarea id="flowTxtHook" class="form-input" rows="3" readonly></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>📦 Body Script (3-15s เสนอจุดเด่น):</label>
+                                    <textarea id="flowTxtBody" class="form-input" rows="3" readonly></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>👉 CTA Script (15-20s ชี้พิกัด):</label>
+                                    <textarea id="flowTxtCTA" class="form-input" rows="3" readonly></textarea>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; gap:10px; margin-top:10px;">
+                                <button class="btn btn-primary" style="flex:1;" onclick="copyFlowPackage()">📋 คัดลอกแพ็กเกจ Google Flow ทั้งหมด</button>
+                                <button class="btn btn-outline" onclick="saveFlowPackageToVault()">💾 บันทึกลง Creative Vault</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: MOTION GRAPHICS STORYBOARD STUDIO -->
+                <section id="tab-storyboard" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🎨 2. Motion Graphics Storyboard Studio (Image-to-Video 4-Scenes Breakdown)</h3>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-primary" onclick="generateStoryboard()">✨ สร้าง Storyboard 4 ฉาก</button>
+                                <button class="btn btn-outline" onclick="copyFullStoryboard()">📋 คัดลอก Storyboard ทั้งหมด</button>
+                            </div>
+                        </div>
+
+                        <!-- Product Selector -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:14px; margin-bottom:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:8px;">📸 เลือกสินค้าที่จะทำ Motion Graphic Storyboard</div>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <select id="sbProdPicker" onchange="loadStoryboardProduct(this.value)" style="flex:1; background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:8px; border-radius:8px; font-size:13px;">
+                                    <option value="">-- เลือกสินค้าจากคลัง DB --</option>
+                                </select>
+                                <button class="btn btn-outline" onclick="refreshStudioProductList()" style="font-size:12px; white-space:nowrap;">🔄 รีเฟรช</button>
+                            </div>
+                        </div>
+
+                        <!-- Storyboard 4 Scenes Grid -->
+                        <div id="storyboardContainer" style="display:flex; flex-direction:column; gap:16px;">
+                            <!-- Scene 1 -->
+                            <div class="card" style="background:#0f172a; border:1px solid #334155; padding:14px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <h4 style="color:#ee4d2d; font-size:14px; margin:0;">🎬 SCENE 1: HOOK — ดึงดูดหยุดสายตา (0 - 3 วินาที)</h4>
+                                    <span style="font-size:11px; background:#ee4d2d22; color:#ee4d2d; padding:2px 8px; border-radius:4px; font-weight:700;">✂️ Hard Cut Transition</span>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎥 Google Flow Image-to-Video Prompt:</label>
+                                        <textarea id="sbPrompt1" class="form-input code-text" rows="3" readonly></textarea>
+                                        <button class="btn btn-outline" style="font-size:11px; padding:4px 8px; margin-top:4px;" onclick="copyText('sbPrompt1')">📋 คัดลอก Prompt ฉาก 1</button>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎙️ เสียงพากย์ (Voiceover Script):</label>
+                                        <textarea id="sbVoice1" class="form-input" rows="3" readonly></textarea>
+                                        <button class="btn btn-outline" style="font-size:11px; padding:4px 8px; margin-top:4px;" onclick="copyText('sbVoice1')">📋 คัดลอก เสียงพากย์ฉาก 1</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Scene 2 -->
+                            <div class="card" style="background:#0f172a; border:1px solid #334155; padding:14px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <h4 style="color:#38bdf8; font-size:14px; margin:0;">🔍 SCENE 2: PRODUCT REVEAL — เปิดตัวสินค้า 360° (3 - 8 วินาที)</h4>
+                                    <span style="font-size:11px; background:#0284c722; color:#38bdf8; padding:2px 8px; border-radius:4px; font-weight:700;">✂️ Smooth Dissolve</span>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎥 Google Flow Image-to-Video Prompt:</label>
+                                        <textarea id="sbPrompt2" class="form-input code-text" rows="3" readonly></textarea>
+                                        <button class="btn btn-outline" style="font-size:11px; padding:4px 8px; margin-top:4px;" onclick="copyText('sbPrompt2')">📋 คัดลอก Prompt ฉาก 2</button>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎙️ เสียงพากย์ (Voiceover Script):</label>
+                                        <textarea id="sbVoice2" class="form-input" rows="3" readonly></textarea>
+                                        <button class="btn btn-outline" style="font-size:11px; padding:4px 8px; margin-top:4px;" onclick="copyText('sbVoice2')">📋 คัดลอก เสียงพากย์ฉาก 2</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Scene 3 -->
+                            <div class="card" style="background:#0f172a; border:1px solid #334155; padding:14px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <h4 style="color:#a855f7; font-size:14px; margin:0;">🌟 SCENE 3: BENEFIT SHOWCASE — โชว์จุดเด่นการใช้งาน (8 - 15 วินาที)</h4>
+                                    <span style="font-size:11px; background:#a855f722; color:#a855f7; padding:2px 8px; border-radius:4px; font-weight:700;">✂️ Slide Left Transition</span>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎥 Google Flow Image-to-Video Prompt:</label>
+                                        <textarea id="sbPrompt3" class="form-input code-text" rows="3" readonly></textarea>
+                                        <button class="btn btn-outline" style="font-size:11px; padding:4px 8px; margin-top:4px;" onclick="copyText('sbPrompt3')">📋 คัดลอก Prompt ฉาก 3</button>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎙️ เสียงพากย์ (Voiceover Script):</label>
+                                        <textarea id="sbVoice3" class="form-input" rows="3" readonly></textarea>
+                                        <button class="btn btn-outline" style="font-size:11px; padding:4px 8px; margin-top:4px;" onclick="copyText('sbVoice3')">📋 คัดลอก เสียงพากย์ฉาก 3</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Scene 4 -->
+                            <div class="card" style="background:#0f172a; border:1px solid #334155; padding:14px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <h4 style="color:#22c55e; font-size:14px; margin:0;">🛒 SCENE 4: CALL TO ACTION — ชี้ตะกร้าปิดการขาย (15 - 20 วินาที)</h4>
+                                    <span style="font-size:11px; background:#22c55e22; color:#22c55e; padding:2px 8px; border-radius:4px; font-weight:700;">✂️ Fade to Black</span>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎥 Google Flow Image-to-Video Prompt:</label>
+                                        <textarea id="sbPrompt4" class="form-input code-text" rows="3" readonly></textarea>
+                                        <button class="btn btn-outline" style="font-size:11px; padding:4px 8px; margin-top:4px;" onclick="copyText('sbPrompt4')">📋 คัดลอก Prompt ฉาก 4</button>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎙️ เสียงพากย์ (Voiceover Script):</label>
+                                        <textarea id="sbVoice4" class="form-input" rows="3" readonly></textarea>
+                                        <button class="btn btn-outline" style="font-size:11px; padding:4px 8px; margin-top:4px;" onclick="copyText('sbVoice4')">📋 คัดลอก เสียงพากย์ฉาก 4</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:16px; display:flex; gap:10px;">
+                            <button class="btn btn-primary" style="flex:1;" onclick="copyFullStoryboard()">📋 คัดลอก Storyboard ทั้งหมด 4 ฉาก (ส่งช่างตัดต่อ/AI)</button>
+                            <button class="btn btn-outline" onclick="saveStoryboardToVault()">💾 บันทึกลง Creative Vault</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: CREATIVE ASSET VAULT -->
+                <section id="tab-assetvault" class="tab-page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>📤 3. คลังเก็บผลงานคลิป & ภาพ AI (Creative Asset Vault)</h3>
+                            <button class="btn btn-primary" onclick="loadCreativeAssets()">🔄 โหลดผลงานทั้งหมด</button>
+                        </div>
+
+                        <!-- Upload Box -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:20px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">📤 บันทึก / อัปโหลดผลงานสำเร็จเข้าระบบ</div>
+                            <form onsubmit="submitCreativeAsset(event)" class="form-grid">
+                                <div class="form-row" style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🛍️ สินค้าที่เกี่ยวข้อง:</label>
+                                        <select id="vaultProdPicker" class="form-input" style="background:#0f172a; color:#38bdf8; font-size:12px;" required>
+                                            <option value="">-- เลือกสินค้า --</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🎞️ ประเภทผลงาน:</label>
+                                        <select id="vaultAssetType" class="form-input" style="background:#0f172a; font-size:12px;">
+                                            <option value="video">🎥 วิดีโอ MP4 / MOV</option>
+                                            <option value="motion">🎨 Motion Graphic</option>
+                                            <option value="image">🖼️ ภาพนิ่ง HD / Render</option>
+                                            <option value="prompt">📝 พรอมต์ + สคริปต์ที่สำเร็จ</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🌐 Platform ที่จะใช้:</label>
+                                        <select id="vaultPlatform" class="form-input" style="background:#0f172a; font-size:12px;">
+                                            <option value="google_flow">🌐 Google Flow / Veo</option>
+                                            <option value="shopee_vdo">🟠 Shopee VDO</option>
+                                            <option value="tiktok">🖤 TikTok Shop</option>
+                                            <option value="reels">📘 Facebook Reels</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🔗 URL / Path ของไฟล์:</label>
+                                        <input type="text" id="vaultAssetUrl" class="form-input" placeholder="http://... หรือ /path/to/video.mp4" required>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🖼️ Thumbnail URL (ถ้ามี):</label>
+                                        <input type="text" id="vaultThumbUrl" class="form-input" placeholder="http://... หรือ URL รูปภาพ">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size:11px; color:#94a3b8;">📝 Prompt หรือบันทึกโน้ตที่ใช้สร้าง:</label>
+                                    <textarea id="vaultPromptNotes" class="form-input" rows="2" placeholder="ใส่ Prompt ที่ใช้ใน Google Flow หรือหมายเหตุเพิ่มเติม"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">💾 อัปโหลด & บันทึกเข้าระบบ SQLite</button>
+                            </form>
+                        </div>
+
+                        <!-- Filter Strip & Asset Grid -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h4 style="font-size:14px; color:#f1f5f9; margin:0;">🗂️ รายการผลงานในคลัง DB กลาง</h4>
+                            <div style="display:flex; gap:8px;">
+                                <select id="vaultFilterType" onchange="filterCreativeAssets()" style="background:#0f172a; color:#f1f5f9; border:1px solid #475569; padding:4px 10px; border-radius:6px; font-size:12px;">
+                                    <option value="all">ทั้งหมด ทุกประเภท</option>
+                                    <option value="video">🎥 วิดีโอ</option>
+                                    <option value="motion">🎨 Motion Graphic</option>
+                                    <option value="image">🖼️ ภาพนิ่ง</option>
+                                    <option value="prompt">📝 พรอมต์</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="vaultAssetGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:14px;">
+                            <div style="text-align:center; padding:30px; color:#64748b; grid-column: 1 / -1;">ยังไม่มีผลงานบันทึกในคลัง กดบันทึกผลงานด้านบนเพื่อเริ่มต้น!</div>
+                        </div>
+                    </div>
+                </section>
+
 
 
                 <!-- TAB: SHOPEE VDO STUDIO -->

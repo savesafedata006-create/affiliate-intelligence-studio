@@ -45,10 +45,70 @@ def init_single_unified_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS creative_assets (
+            asset_id TEXT PRIMARY KEY,
+            item_id TEXT,
+            item_title TEXT,
+            asset_type TEXT DEFAULT 'video',
+            asset_url TEXT,
+            thumbnail_url TEXT,
+            platform TEXT DEFAULT 'google_flow',
+            prompt_used TEXT,
+            script_used TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
     conn.commit()
     conn.close()
 
 init_single_unified_db()
+
+def db_save_creative_asset(data):
+    conn = get_single_db_connection()
+    cursor = conn.cursor()
+    asset_id = data.get("asset_id") or f"asset_{int(time.time()*1000)}"
+    cursor.execute("""
+        INSERT OR REPLACE INTO creative_assets 
+        (asset_id, item_id, item_title, asset_type, asset_url, thumbnail_url, platform, prompt_used, script_used, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    """, (
+        asset_id,
+        data.get("item_id", ""),
+        data.get("item_title", ""),
+        data.get("asset_type", "video"),
+        data.get("asset_url", ""),
+        data.get("thumbnail_url", ""),
+        data.get("platform", "google_flow"),
+        data.get("prompt_used", ""),
+        data.get("script_used", "")
+    ))
+    conn.commit()
+    conn.close()
+    return asset_id
+
+def db_fetch_creative_assets():
+    conn = get_single_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT asset_id, item_id, item_title, asset_type, asset_url, thumbnail_url, platform, prompt_used, script_used, created_at FROM creative_assets ORDER BY created_at DESC")
+    rows = cursor.fetchall()
+    assets = []
+    for r in rows:
+        assets.append({
+            "asset_id": r[0], "item_id": r[1], "item_title": r[2],
+            "asset_type": r[3], "asset_url": r[4], "thumbnail_url": r[5],
+            "platform": r[6], "prompt_used": r[7], "script_used": r[8], "created_at": r[9]
+        })
+    conn.close()
+    return assets
+
+def db_delete_creative_asset(asset_id):
+    conn = get_single_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM creative_assets WHERE asset_id = ?", (asset_id,))
+    conn.commit()
+    conn.close()
+
 
 def get_single_db_connection():
     return sqlite3.connect(UNIFIED_DB_PATH)
@@ -309,7 +369,26 @@ class SingleMasterServerHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "success", "count": count, "message": f"Restored {count} items in master DB!"}, ensure_ascii=False).encode('utf-8'))
             return
 
+        elif self.path == "/api/save_creative_asset":
+            asset_id = db_save_creative_asset(body if isinstance(body, dict) else {})
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "asset_id": asset_id, "message": "Saved creative asset to SQLite DB!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
+        elif self.path == "/api/delete_creative_asset":
+            asset_id = body.get("asset_id") if isinstance(body, dict) else ""
+            if asset_id:
+                db_delete_creative_asset(asset_id)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "message": "Deleted creative asset from SQLite DB!"}, ensure_ascii=False).encode('utf-8'))
+            return
+
         super().do_POST()
+
 
     def do_GET(self):
         # Serve local product images via /product_images/ route
@@ -380,6 +459,15 @@ class SingleMasterServerHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"status": "success", "db_file": UNIFIED_DB_PATH, "count": len(items), "items": items}, ensure_ascii=False).encode('utf-8'))
             return
+
+        elif self.path == "/api/fetch_creative_assets":
+            assets = db_fetch_creative_assets()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "count": len(assets), "assets": assets}, ensure_ascii=False).encode('utf-8'))
+            return
+
 
         elif self.path == "/api/test_ping":
             self.send_response(200)
