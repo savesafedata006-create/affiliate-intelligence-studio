@@ -359,38 +359,51 @@ function renderCentralDbTable(items) {
     if (titleEl) titleEl.innerText = `📋 ผลการค้นหาในฐานข้อมูลกลาง: พบ ${items.length} รายการ (~/.affiliate_intel_db.sqlite)`;
 
     if (items.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" style="text-align:center; padding: 40px; color: var(--text-muted);">
-                    🗄️ ไม่พบข้อมูลสินค้าตรงกับเงื่อนไขค้นหาในฐานข้อมูลกลาง SQLite
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted);">🗄️ ไม่พบสินค้าตรงกับเงื่อนไขค้นหา</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = items.map((item, idx) => `
+    tbody.innerHTML = items.map((item, idx) => {
+        const title    = item.title || '';
+        const shop     = item.shop_name || 'Shopee Store';
+        const affLink  = item.affiliate_link || item.product_link || '#';
+        const macPath  = item.main_image_path || '';
+        const shortLink = affLink.length > 25 ? affLink.substring(0, 23) + '…' : affLink;
+        const shortPath = macPath.length > 18 ? '…' + macPath.slice(-16) : macPath;
+        const imgSrc   = item.main_image_path || item.img || 'https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492';
+
+        const safeTitle = title.replace(/"/g, '&quot;');
+
+        return `
         <tr>
-            <td>
-                <img src="${item.main_image_path || item.img || 'https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492'}" class="prod-thumb" alt="Thumb" onerror="this.src='https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492'">
+            <td style="text-align:center; padding:4px;">
+                <input type="checkbox" class="catalog-select-chk" data-idx="${idx}" onchange="updateSelectedCount()">
             </td>
-            <td>
-                <strong style="color:var(--text-main); font-size:13px;">${item.title}</strong><br>
-                <small style="color:var(--text-muted);">🏪 ${item.shop_name || 'Shopee Store'}</small>
+            <td style="padding:4px; text-align:center;">
+                <img src="${imgSrc}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1; display:block; margin:0 auto;" onerror="this.src='https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492'">
             </td>
-            <td><strong style="color:#0284c7;">฿${item.sale_price || item.price}</strong></td>
-            <td><strong style="color:#047857;">${item.commission_rate || item.comm}%</strong></td>
-            <td><strong style="color:#059669; font-size:14px;">+฿${item.net_profit_thb || item.profit}</strong></td>
-            <td><small style="color:var(--text-muted);">${item.total_sold || 1200} ชิ้น | ${item.rating_star || '4.9'}⭐</small></td>
-            <td><span class="badge badge-green">💾 บันทึกถาวร</span></td>
-            <td>
-                <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                    <button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="importSelectedDbItemToCatalog(${idx})">📥 ดึงเข้าตระกร้า</button>
-                    <button class="btn btn-rose" style="padding:4px 8px; font-size:11px; background:#991b1b;" onclick="deleteItemFromCentralDb('${item.item_id}')">🗑️ ลบออก</button>
+            <td style="padding:6px 8px;">
+                <div class="prod-title-box" title="${safeTitle}">${title}</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">🏪 ${shop}</div>
+            </td>
+            <td style="padding:4px 6px;"><strong style="color:#0284c7; font-size:13px;">฿${item.sale_price || item.price || '-'}</strong></td>
+            <td style="padding:4px 6px; text-align:center;"><strong style="color:#047857; font-size:13px;">${item.commission_rate || item.comm || '-'}%</strong></td>
+            <td style="padding:4px 6px; text-align:center;"><strong style="color:#059669; font-size:13px;">+฿${item.net_profit_thb || item.profit || '-'}</strong></td>
+            <td style="padding:4px 6px; text-align:center;"><small style="color:var(--text-muted); font-size:11px; line-height:1.3; display:block;">${item.total_sold || 1200} ชิ้น<br>${item.rating_star || '4.9'}⭐</small></td>
+            <td style="padding:4px 6px; overflow:hidden;">
+                <a href="${affLink}" target="_blank" style="font-size:11px; color:#38bdf8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;" title="${affLink}">${shortLink}</a>
+            </td>
+            <td style="padding:4px 6px; overflow:hidden;">
+                <span style="font-size:10px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;" title="${macPath}">${shortPath || '—'}</span>
+            </td>
+            <td style="padding:4px 6px; text-align:center;">
+                <div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">
+                    <button class="btn btn-primary" style="padding:3px 7px; font-size:11px;" onclick="importSelectedDbItemToCatalog(${idx})">📥 ดึง</button>
+                    <button class="btn btn-rose" style="padding:3px 7px; font-size:11px; background:#991b1b;" onclick="deleteItemFromCentralDb('${item.item_id}')">🗑️ ลบ</button>
                 </div>
             </td>
-        </tr>
-    `).join("");
+        </tr>`;
+    }).join("");
 }
 
 function deleteItemFromCentralDb(itemId) {
