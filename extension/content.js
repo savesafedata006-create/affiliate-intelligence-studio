@@ -355,8 +355,7 @@
         await new Promise(r => setTimeout(r, 1200));
 
         const cards = document.querySelectorAll("a[href*='/product/'], a[href*='-i.'], .shopee-search-item-result__item");
-        let scraped = 0;
-        const seenTitlesSet = new Set();
+        const seenNormTitlesList = [];
 
         for (let i = 0; i < cards.length && scraped < count; i++) {
             const card = cards[i];
@@ -365,8 +364,20 @@
 
             // ✅ FRONT-END DEDUPLICATION — ข้ามรายการที่ดึงไปแล้วในรอบนี้ 100%
             if (!isValidProductTitle(cleanTitle)) continue;
-            if (seenTitlesSet.has(cleanTitle)) continue;
-            seenTitlesSet.add(cleanTitle);
+
+            // 🏆 AI SMART FILTER — สแกนความคล้ายของชื่อสินค้าบนหน้าจอ หากเป็นสินค้าชนิดเดียวกันจะเลือกเฉพาะชิ้นแรกที่ดีที่สุดและข้ามการไฮไลท์ตัวซ้ำ!
+            const normTitle = cleanTitleForMatching(cleanTitle);
+            let isDuplicateOnScreen = false;
+            for (const existingNorm of seenNormTitlesList) {
+                if (computeStringSimilarity(normTitle, existingNorm) > 0.65) {
+                    isDuplicateOnScreen = true;
+                    break;
+                }
+            }
+            if (isDuplicateOnScreen) {
+                continue;
+            }
+            seenNormTitlesList.push(normTitle);
 
             // ✅ CHECK IF ALREADY IN DB — ข้ามสินค้าที่มีใน DB แล้วอัตโนมัติ
             if (isProductAlreadyInDB(cleanTitle)) {
@@ -513,11 +524,15 @@
             showToast(`✅ บันทึกสินค้า ${items.length} รายการ เข้า DB เรียบร้อยแล้ว!`, "#059669");
             resetSelectionState();
 
-            // 🚀 Auto-Open / Focus Web App tab if checkbox is checked
+            // 🚀 Smart Focus or Open Web App tab (If tab exists, switch focus; if not, open new)
             if (document.getElementById("chkAutoOpenWeb")?.checked) {
                 setTimeout(() => {
-                    window.open("http://127.0.0.1:8080/#catalog", "_blank");
-                }, 400);
+                    try {
+                        chrome.runtime.sendMessage({ action: "FOCUS_OR_OPEN_APP_TAB", url: "http://127.0.0.1:8080/#centraldb" });
+                    } catch (e) {
+                        window.open("http://127.0.0.1:8080/#centraldb", "_blank");
+                    }
+                }, 300);
             }
         })
         .catch(err => {
@@ -591,5 +606,41 @@
         toast.innerText = msg;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3500);
+    }
+
+    function cleanTitleForMatching(t) {
+        if (!t) return "";
+        let s = t.replace(/-?\d+%/g, "")
+                 .replace(/\[.*?\]|\(.*?\)|【.*?】/g, "")
+                 .replace(/฿\s*\d+.*/g, "")
+                 .replace(/ร้านไทย|พร้อมส่ง|ขายดี|ช้อปปี้ถูกชัวร์|ราคาโรงงาน|โปรเด็ด|ขั้นต่ำ\s*\d+\s*ชิ้น/gi, "")
+                 .replace(/[^\w\s\u0E00-\u0E7F]/g, " ")
+                 .trim().toLowerCase();
+        return s.replace(/\s+/g, " ");
+    }
+
+    function computeStringSimilarity(s1, s2) {
+        if (!s1 || !s2) return 0;
+        if (s1 === s2) return 1.0;
+        const longer = s1.length > s2.length ? s1 : s2;
+        const shorter = s1.length > s2.length ? s2 : s1;
+        if (longer.length === 0) return 1.0;
+
+        if (shorter.length >= 8 && longer.includes(shorter)) return 0.85;
+
+        const bigrams1 = getBigrams(s1);
+        const bigrams2 = getBigrams(s2);
+        if (bigrams1.size === 0 || bigrams2.size === 0) return 0;
+        let intersection = 0;
+        bigrams1.forEach(bg => { if (bigrams2.has(bg)) intersection++; });
+        return (2.0 * intersection) / (bigrams1.size + bigrams2.size);
+    }
+
+    function getBigrams(str) {
+        const set = new Set();
+        for (let i = 0; i < str.length - 1; i++) {
+            set.add(str.substring(i, i + 2));
+        }
+        return set;
     }
 })();

@@ -5,8 +5,12 @@
   "description": "Chrome Extension ดึงข้อมูลสินค้า ภาพ และลิงก์ Affiliate จาก Shopee เข้าฐานข้อมูล Python MySQL",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "host_permissions": [
     "https://shopee.co.th/*",
     "https://*.shopee.co.th/*",
