@@ -258,16 +258,49 @@
                 status: "PENDING_VIDEO"
             });
 
+            // ✅ HIGHLIGHT BORDER & BADGE OVERLAY — กรอบไฮไลท์สีเขียวสดใสบอกรายการที่ถูกเลือก
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.style.outline = "4px solid #10b981";
+            card.style.outlineOffset = "-4px";
+            card.style.boxShadow = "0 0 16px rgba(16, 185, 129, 0.7)";
+            card.style.transition = "all 0.3s ease";
+            card.dataset.autoScraped = "true";
+
+            // สร้างป้ายบอกลำดับ #1, #2...
+            if (!card.querySelector(".ext-selected-badge")) {
+                const badge = document.createElement("div");
+                badge.className = "ext-selected-badge";
+                badge.style.cssText = `
+                    position: absolute;
+                    top: 6px;
+                    left: 6px;
+                    z-index: 9999;
+                    background: #10b981;
+                    color: #ffffff;
+                    font-size: 11px;
+                    font-weight: 700;
+                    padding: 3px 8px;
+                    border-radius: 6px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                    font-family: sans-serif;
+                `;
+                badge.innerText = `✅ ดึงออโต้ #${scraped + 1}`;
+                if (window.getComputedStyle(card).position === 'static') {
+                    card.style.position = 'relative';
+                }
+                card.appendChild(badge);
+            }
+
             scraped++;
             selCountText.innerText = selectedProductsMap.size;
 
-            const randomDelay = Math.floor(Math.random() * 1200) + 1000;
+            const randomDelay = Math.floor(Math.random() * 1000) + 800;
             await new Promise(r => setTimeout(r, randomDelay));
         }
 
         btnAuto.innerText = "🤖 2. ดึงออโต้";
         btnAuto.disabled = false;
-        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${scraped} รายการพร้อมคลังหลายรูปภาพ!`, "#059669");
+        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${scraped} รายการพร้อมกรอบเขียวไฮไลท์!`, "#059669");
     }
 
     async function submitSelectedProductsToDB() {
@@ -337,6 +370,15 @@
         selCountText.innerText = "0";
         btnSubmit.innerText = "📌 ส่งเข้า Python DB (0 ชิ้น)";
         btnSubmit.disabled = false;
+
+        // Clear visual borders and badges
+        document.querySelectorAll("[data-auto-scraped]").forEach(card => {
+            card.style.outline = "none";
+            card.style.boxShadow = "none";
+            delete card.dataset.autoScraped;
+        });
+        document.querySelectorAll(".ext-selected-badge").forEach(b => b.remove());
+
         if (isPickModeActive) togglePickMode();
     }
 
