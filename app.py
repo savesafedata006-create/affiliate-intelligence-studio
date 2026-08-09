@@ -53,22 +53,41 @@ init_single_unified_db()
 def get_single_db_connection():
     return sqlite3.connect(UNIFIED_DB_PATH)
 
-def download_product_images(image_urls, item_id):
+def save_product_images(image_urls, item_id):
     saved_paths = []
     for idx, url in enumerate(image_urls[:4]):
-        if not url or not url.startswith("http"):
+        if not url:
             continue
-        try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status == 200:
-                    filename = f"{item_id}_{idx}.jpg"
-                    filepath = os.path.join(IMAGE_SAVE_DIR, filename)
-                    with open(filepath, 'wb') as f:
-                        f.write(resp.read())
-                    saved_paths.append(filepath)
-        except Exception as e:
-            print(f"Image download note ({idx}): {e}")
+        filename = f"{item_id}_{idx}.jpg"
+        filepath = os.path.join(IMAGE_SAVE_DIR, filename)
+
+        # Handle Base64 Data URI
+        if url.startswith("data:image/"):
+            try:
+                header, base64_data = url.split(",", 1)
+                img_bytes = base64.b64decode(base64_data)
+                with open(filepath, 'wb') as f:
+                    f.write(img_bytes)
+                saved_paths.append(filepath)
+                continue
+            except Exception as e:
+                print(f"Base64 decode note ({idx}): {e}")
+
+        # Handle HTTP URL download
+        if url.startswith("http"):
+            try:
+                req = urllib.request.Request(url, headers={
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Referer': 'https://shopee.co.th/'
+                })
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    if resp.status == 200:
+                        with open(filepath, 'wb') as f:
+                            f.write(resp.read())
+                        saved_paths.append(filepath)
+            except Exception as e:
+                print(f"HTTP download note ({idx}): {e}")
+
     return saved_paths
 
 def db_save_products(items):
@@ -90,7 +109,7 @@ def db_save_products(items):
         shop_name = item.get('shop_name', item.get('shopName', 'Shopee Official Store'))
         status = item.get('status', 'PENDING_VIDEO')
 
-        local_paths = download_product_images(images_list, item_id)
+        local_paths = save_product_images(images_list, item_id)
         if local_paths:
             main_img = local_paths[0]
 
@@ -99,7 +118,7 @@ def db_save_products(items):
                 item_id, title, description, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, images_json, total_sold, rating_star, shop_name, status
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(item_id) DO UPDATE SET
-                title = excluded.title, sale_price = excluded.sale_price, commission_rate = excluded.commission_rate, net_profit_thb = excluded.net_profit_thb, shop_name = excluded.shop_name, status = excluded.status
+                title = excluded.title, sale_price = excluded.sale_price, commission_rate = excluded.commission_rate, net_profit_thb = excluded.net_profit_thb, shop_name = excluded.shop_name, main_image_path = excluded.main_image_path, status = excluded.status
         """
         cursor.execute(sql, (
             item_id, title, desc, orig_price, sale_price, comm_rate, net_profit, aff_link, main_img, json.dumps(images_list), 1500, 4.9, shop_name, status
@@ -206,18 +225,47 @@ class SingleMasterServerHandler(SimpleHTTPRequestHandler):
         super().do_POST()
 
     def do_GET(self):
+        # Serve local product images via /product_images/ route
+        if self.path.startswith("/product_images/"):
+            filename = self.path.replace("/product_images/", "")
+            filepath = os.path.join(IMAGE_SAVE_DIR, filename)
+            if os.path.exists(filepath):
+                self.send_response(200)
+                self.send_header("Content-Type", "image/jpeg")
+                self.send_header("Cache-Control", "public, max-age=86400")
+                self.end_headers()
+                with open(filepath, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+            else:
+                self.send_response(404)
+                self.end_headers()
+                return
+
         if self.path in ["/api/fetch_products", "/api/search_db"]:
             conn = get_single_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, created_at FROM shopee_affiliate_items WHERE status != 'TRASH_BIN' ORDER BY created_at DESC")
+            cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, created_at, images_json FROM shopee_affiliate_items WHERE status != 'TRASH_BIN' ORDER BY created_at DESC")
             rows = cursor.fetchall()
             items = []
             for r in rows:
+                raw_img = r[7] or ""
+                # Convert local file path to HTTP-served URL
+                if raw_img and raw_img.startswith("/") and not raw_img.startswith("/Users"):
+                    img_url = raw_img
+                elif raw_img and (raw_img.startswith("/Users") or raw_img.startswith("~")):
+                    filename = os.path.basename(raw_img)
+                    img_url = f"/product_images/{filename}"
+                elif raw_img and raw_img.startswith("http"):
+                    img_url = raw_img
+                else:
+                    img_url = "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b"
+
                 items.append({
                     "item_id": r[0], "title": r[1], "original_price": float(r[2]),
                     "sale_price": float(r[3]), "commission_rate": float(r[4]),
                     "net_profit_thb": float(r[5]), "affiliate_link": r[6],
-                    "main_image_path": r[7], "shop_name": r[8], "status": r[9], "created_at": r[10]
+                    "main_image_path": img_url, "shop_name": r[8], "status": r[9], "created_at": r[10]
                 })
             conn.close()
             self.send_response(200)

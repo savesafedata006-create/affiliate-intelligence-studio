@@ -466,13 +466,15 @@ function renderCatalog(filterCategory = "ALL") {
         const rawLink = item.url || `https://s.shopee.co.th/20uSXcvwRR?af_id=${currentAcc.refCode}&mmp_pid=${currentAcc.id}`;
         const localImgPath = item.localImgPath || `~/Pictures/AffiliateIntel_Images/${item.id}_0.jpg`;
 
+        const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 24 24' fill='none' stroke='%23ee4d2d' stroke-width='1.5'><rect x='2' y='3' width='20' height='14' rx='2'/><path d='M8 21h8M12 17v4'/><circle cx='12' cy='10' r='3'/></svg>";
+
         return `
             <tr>
                 <td style="text-align:center;">
                     <input type="checkbox" class="chkCatalogItem" value="${item.id}" onchange="updateSelectedCountBadge()">
                 </td>
                 <td>
-                    <img src="${imgSrc}" class="prod-thumb" alt="Product Image" title="คลิกเปิดสไลด์โชว์คลังภาพ" onclick="openCarouselModal('${item.id}')" onerror="this.src='https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b'">
+                    <img src="${imgSrc}" class="prod-thumb" alt="Product Image" title="คลิกเปิดสไลด์โชว์คลังภาพ" onclick="openCarouselModal('${item.id}')" onerror="this.onerror=null; this.src='${fallbackSvg}';">
                 </td>
                 <td>
                     <strong style="color:var(--text-main); font-size:13px;">${item.title}</strong><br>

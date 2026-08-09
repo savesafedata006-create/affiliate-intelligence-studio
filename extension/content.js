@@ -1,12 +1,33 @@
-// ⚡ Shopee Affiliate Data Extractor v2.0 — Interactive Multi-Mode & Anti-Ban Chrome Extension
+// ⚡ Shopee Affiliate Data Extractor v3.0 — Image Data URI & Multi-Mode Extension
 (function () {
-    console.log("⚡ Shopee Affiliate Data Extractor v2.0 Content Script Active");
+    console.log("⚡ Shopee Affiliate Data Extractor v3.0 Active");
 
     if (document.getElementById("shopeeExtractorControlPanel")) return;
 
     let isPickModeActive = false;
-    let isAntiBanActive = true;
     let selectedProductsMap = new Map();
+
+    // Helper: Convert Image Element or URL to Base64 Data URI via Canvas
+    function getImageBase64(imgEl) {
+        return new Promise((resolve) => {
+            if (!imgEl || !imgEl.src) {
+                resolve("");
+                return;
+            }
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = imgEl.naturalWidth || imgEl.width || 300;
+                canvas.height = imgEl.naturalHeight || imgEl.height || 300;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+                const dataURL = canvas.toDataURL("image/jpeg", 0.85);
+                resolve(dataURL);
+            } catch (e) {
+                // Fallback if cross-origin canvas block occurs
+                resolve(imgEl.src);
+            }
+        });
+    }
 
     // Create Floating Control Panel Toolbar
     const panel = document.createElement("div");
@@ -32,8 +53,8 @@
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong style="font-size:14px; color:#38bdf8;">🛍️ Shopee Extractor v2.0</strong>
-            <span id="extStatusBadge" style="font-size:10px; background:#059669; color:#fff; padding:2px 8px; border-radius:10px; font-weight:600;">🛡️ โหมดกันแบน ON</span>
+            <strong style="font-size:14px; color:#38bdf8;">🛍️ Shopee Extractor v3.0</strong>
+            <span id="extStatusBadge" style="font-size:10px; background:#059669; color:#fff; padding:2px 8px; border-radius:10px; font-weight:600;">🖼️ ดึงรูป HD ON</span>
         </div>
 
         <div style="display:flex; gap:6px;">
@@ -59,14 +80,12 @@
 
     document.body.appendChild(panel);
 
-    // DOM Elements
     const btnPick = document.getElementById("btnTogglePickMode");
     const btnAuto = document.getElementById("btnAutoExtract");
     const btnSubmit = document.getElementById("btnSubmitSelected");
     const selCountText = document.getElementById("selCountText");
     const selAutoCount = document.getElementById("selAutoCount");
 
-    // Event Listeners
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
     btnSubmit.addEventListener("click", submitSelectedProductsToDB);
@@ -106,7 +125,7 @@
         }
     }
 
-    function handleMouseClickSelect(e) {
+    async function handleMouseClickSelect(e) {
         if (!isPickModeActive) return;
         const card = e.target.closest("a, .shopee-search-item-result__item, [data-sqp]");
         if (card) {
@@ -116,7 +135,9 @@
             const title = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "สินค้า Shopee";
             const priceText = card.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "390";
             const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 390.0;
-            const img = card.querySelector("img")?.src || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
+            const imgEl = card.querySelector("img");
+            const imgSrc = imgEl?.src || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
+            const imgDataUri = await getImageBase64(imgEl);
             const href = card.href || window.location.href;
 
             const itemKey = `pick_${title.substring(0, 15)}`;
@@ -132,14 +153,14 @@
                     original_price: Math.round(price * 1.4),
                     commission_rate: 22.5,
                     net_profit_thb: Math.round(price * 0.225 * 100) / 100,
-                    main_image_path: img,
-                    images: [img],
+                    main_image_path: imgDataUri || imgSrc,
+                    images: [imgDataUri || imgSrc],
                     affiliate_link: href.includes('?') ? `${href}&af_id=X4EBLKP&mmp_pid=an_15320530167` : `${href}?af_id=X4EBLKP&mmp_pid=an_15320530167`,
                     shop_name: "Shopee Official Store",
                     status: "PENDING_VIDEO"
                 });
                 card.style.outline = "4px solid #10b981";
-                showToast(`✅ เลือก '${title.substring(0, 15)}...' เรียบร้อยแล้ว`, "#059669");
+                showToast(`✅ เลือก '${title.substring(0, 15)}...' พร้อมรูปภาพ HD เรียบร้อยแล้ว`, "#059669");
             }
 
             selCountText.innerText = selectedProductsMap.size;
@@ -151,9 +172,8 @@
         btnAuto.innerText = "⏳ กำลังดึง...";
         btnAuto.disabled = true;
 
-        showToast(`🛡️ เริ่มดึงออโต้ ${count} รายการ (เปิดโหมดกันแบน สุ่มเวลา human-like delay)...`, "#0284c7");
+        showToast(`🛡️ เริ่มดึงออโต้ ${count} รายการพร้อมรูปภาพ HD...`, "#0284c7");
 
-        // Simulate anti-ban human scroll down
         window.scrollBy({ top: 400, behavior: 'smooth' });
         await new Promise(r => setTimeout(r, 1200));
 
@@ -167,7 +187,9 @@
 
             const priceText = card.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "290";
             const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 290.0;
-            const img = card.querySelector("img")?.src || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
+            const imgEl = card.querySelector("img");
+            const imgSrc = imgEl?.src || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
+            const imgDataUri = await getImageBase64(imgEl);
             const href = card.href || window.location.href;
 
             const itemKey = `auto_${i}`;
@@ -178,8 +200,8 @@
                 original_price: Math.round(price * 1.4),
                 commission_rate: 25.0,
                 net_profit_thb: Math.round(price * 0.25 * 100) / 100,
-                main_image_path: img,
-                images: [img],
+                main_image_path: imgDataUri || imgSrc,
+                images: [imgDataUri || imgSrc],
                 affiliate_link: href.includes('?') ? `${href}&af_id=X4EBLKP&mmp_pid=an_15320530167` : `${href}?af_id=X4EBLKP&mmp_pid=an_15320530167`,
                 shop_name: "Shopee Official Mall",
                 status: "PENDING_VIDEO"
@@ -188,20 +210,18 @@
             scraped++;
             selCountText.innerText = selectedProductsMap.size;
 
-            // Anti-ban random jitter delay (1.2s - 2.5s)
-            const randomDelay = Math.floor(Math.random() * 1300) + 1200;
+            const randomDelay = Math.floor(Math.random() * 1200) + 1000;
             await new Promise(r => setTimeout(r, randomDelay));
         }
 
         btnAuto.innerText = "🤖 2. ดึงออโต้";
         btnAuto.disabled = false;
-        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${scraped} รายการ! กดปุ่มสีส้มเพื่อบันทึกลง DB`, "#059669");
+        showToast(`✅ สกัดข้อมูลออโต้พร้อมรูปภาพสำเร็จ ${scraped} รายการ!`, "#059669");
     }
 
     async function submitSelectedProductsToDB() {
         if (selectedProductsMap.size === 0) {
-            // If empty, extract current page single product
-            extractCurrentSinglePageProduct();
+            await extractCurrentSinglePageProduct();
             return;
         }
 
@@ -209,18 +229,16 @@
         btnSubmit.innerText = "⏳ กำลังส่งลง DB...";
         btnSubmit.disabled = true;
 
-        const endpoints = [
-            "http://127.0.0.1:8080/api/save_product"
-        ];
-
-        sendBatchToBackend(endpoints, 0, items);
+        sendBatchToBackend(["http://127.0.0.1:8080/api/save_product"], 0, items);
     }
 
-    function extractCurrentSinglePageProduct() {
+    async function extractCurrentSinglePageProduct() {
         const title = document.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || document.title;
         const priceText = document.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "390";
         const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 390.0;
-        const img = document.querySelector("img[src*='susercontent.com']")?.src || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
+        const imgEl = document.querySelector("img[src*='susercontent.com']");
+        const imgSrc = imgEl?.src || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
+        const imgDataUri = await getImageBase64(imgEl);
         const url = window.location.href;
 
         const singleItem = {
@@ -230,19 +248,19 @@
             original_price: Math.round(price * 1.4),
             commission_rate: 22.5,
             net_profit_thb: Math.round(price * 0.225 * 100) / 100,
-            main_image_path: img,
-            images: [img],
+            main_image_path: imgDataUri || imgSrc,
+            images: [imgDataUri || imgSrc],
             affiliate_link: `${url.split('?')[0]}?af_id=X4EBLKP&mmp_pid=an_15320530167`,
             shop_name: "Shopee Official Store",
             status: "PENDING_VIDEO"
         };
 
-        sendBatchToBackend(["http://localhost:5000/api/save_product", "http://127.0.0.1:8080/api/save_db_permanent"], 0, [singleItem]);
+        sendBatchToBackend(["http://127.0.0.1:8080/api/save_product"], 0, [singleItem]);
     }
 
     function sendBatchToBackend(urls, index, items) {
         if (index >= urls.length) {
-            showToast(`✅ บันทึกสินค้า ${items.length} รายการลงคลังเรียบร้อยแล้ว!`, "#059669");
+            showToast(`✅ บันทึกสินค้า ${items.length} รายการลง DB เรียบร้อยแล้ว!`, "#059669");
             resetSelectionState();
             return;
         }
@@ -254,7 +272,7 @@
         })
         .then(res => res.json())
         .then(data => {
-            showToast(`✅ บันทึกสินค้า ${items.length} รายการ เข้า Python DB เรียบร้อยแล้ว!`, "#059669");
+            showToast(`✅ บันทึกสินค้า ${items.length} รายการ เข้า Master DB บน Port 8080 เรียบร้อยแล้ว!`, "#059669");
             resetSelectionState();
         })
         .catch(err => {
