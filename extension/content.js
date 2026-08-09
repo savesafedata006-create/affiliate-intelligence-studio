@@ -163,15 +163,22 @@
             <button id="btnAutoExtract" style="flex:1; background:#334155; color:#fff; border:none; padding:8px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">🤖 2. ดึงออโต้</button>
         </div>
 
-        <div style="display:flex; align-items:center; justify-content:space-between; background:#1e293b; padding:6px 10px; border-radius:8px;">
-            <label style="font-size:11px; color:#94a3b8;">🔢 โควต้าดึงออโต้:</label>
-            <select id="selAutoCount" style="background:#0f172a; color:#fff; border:1px solid #475569; padding:2px 6px; border-radius:6px; font-size:11px;">
-                <option value="2">2 รายการ</option>
-                <option value="4" selected>4 รายการ</option>
-                <option value="6">6 รายการ</option>
-                <option value="8">8 รายการ</option>
-                <option value="10">10 รายการ</option>
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#1e293b; padding:6px 10px; border-radius:8px; gap:6px;">
+            <label style="font-size:11px; color:#94a3b8; white-space:nowrap;">🔢 จำนวนดึงออโต้:</label>
+            <input type="number" id="inpAutoQuota" min="1" max="100" value="10" placeholder="พิมพ์ระบุจำนวน เช่น 15, 30" style="background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:700; width:70px; text-align:center;">
+            <select id="selAutoPreset" style="background:#0f172a; color:#fff; border:1px solid #475569; padding:4px 4px; border-radius:6px; font-size:11px; cursor:pointer;" onchange="if(this.value)document.getElementById('inpAutoQuota').value=this.value">
+                <option value="">เลือกเร็ว</option>
+                <option value="4">4 ชิ้น</option>
+                <option value="10" selected>10 ชิ้น</option>
+                <option value="20">20 ชิ้น</option>
+                <option value="30">30 ชิ้น</option>
+                <option value="50">50 ชิ้น (Max)</option>
             </select>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; background:#1e293b; padding:4px 10px; border-radius:6px;">
+            <span>🛡️ ระบบป้องกันการตรวจจับ Anti-Ban</span>
+            <span style="color:#10b981; font-weight:700;">🟢 ACTIVE</span>
         </div>
 
         <button id="btnSubmitSelected" style="background:linear-gradient(135deg, #ee4d2d, #ff7337); color:#fff; border:none; padding:10px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(238,77,45,0.4);">
@@ -185,7 +192,7 @@
     const btnAuto = document.getElementById("btnAutoExtract");
     const btnSubmit = document.getElementById("btnSubmitSelected");
     const selCountText = document.getElementById("selCountText");
-    const selAutoCount = document.getElementById("selAutoCount");
+    const inpAutoQuota = document.getElementById("inpAutoQuota");
 
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
@@ -287,11 +294,11 @@
     }
 
     async function runAutoScrapeMode() {
-        const count = parseInt(selAutoCount.value) || 4;
+        const count = parseInt(document.getElementById("inpAutoQuota")?.value) || 10;
         btnAuto.innerText = "⏳ กำลังดึง...";
         btnAuto.disabled = true;
 
-        showToast(`🛡️ เริ่มดึงออโต้ ${count} รายการพร้อมคลังหลายรูปภาพ...`, "#0284c7");
+        showToast(`🛡️ เริ่มดึงออโต้ ${count} รายการ (เปิดระบบป้องกัน Anti-Ban)...`, "#0284c7");
 
         window.scrollBy({ top: 400, behavior: 'smooth' });
         await new Promise(r => setTimeout(r, 1200));
@@ -382,13 +389,20 @@
             scraped++;
             selCountText.innerText = selectedProductsMap.size;
 
-            const randomDelay = Math.floor(Math.random() * 1000) + 800;
-            await new Promise(r => setTimeout(r, randomDelay));
+            // 🛡️ ANTI-BAN HUMAN-LIKE JITTER DELAY — สุ่มดีเลย์แบบมนุษย์ป้องกันการโดนบล็อก (1.2s - 2.5s)
+            const antiBanDelay = Math.floor(Math.random() * 1300) + 1200;
+            await new Promise(r => setTimeout(r, antiBanDelay));
+
+            // พักสายตา 2.5 วินาที ทุกๆ 10 สินค้า (จำลองพฤติกรรมมนุษย์)
+            if (scraped % 10 === 0 && scraped < count) {
+                showToast(`🛡️ Anti-Ban: พักจำลองพฤติกรรมมนุษย์ 2.5 วินาที...`, "#0284c7");
+                await new Promise(r => setTimeout(r, 2500));
+            }
         }
 
         btnAuto.innerText = "🤖 2. ดึงออโต้";
         btnAuto.disabled = false;
-        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${scraped} รายการพร้อมกรอบเขียวไฮไลท์!`, "#059669");
+        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${scraped} รายการ!`, "#059669");
     }
 
     async function submitSelectedProductsToDB() {
