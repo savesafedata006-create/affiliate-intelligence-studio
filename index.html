@@ -298,7 +298,7 @@
                         <div class="card-header">
                             <h3>📋 ข้อมูลสินค้าเชิงลึกในคอลเล็คชั่น (12 รายการมิติข้อมูล: รูปภาพ/ราคา/ค่าคอม%/กำไรบาท/ยอดขาย/ดาว)</h3>
                             <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                <button class="btn btn-primary" style="background:#0284c7; border-color:#0284c7;" onclick="loadCatalogFromStorage()">🔄 โหลดรายการล่าสุดจาก DB (Sync Live)</button>
+                                <button class="btn btn-primary" style="background:#059669; border-color:#059669; font-weight:700;" onclick="manualRefreshFromDb()">🔄 ซิงค์ข้อมูลล่าสุดจาก DB (Refresh Live DB)</button>
                                 <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="saveCatalogToSqlitePermanent()">💾 บันทึกข้อมูลเข้าฐานข้อมูล SQLite ถาวร</button>
                                 <button class="btn btn-rose" onclick="deleteSelectedCatalogItems()">🗑️ ลบเฉพาะรายการที่เลือก (<span id="selectedCountBadge">0</span>)</button>
                                 <button class="btn btn-rose" style="background:#991b1b;" onclick="deleteAllCatalogItemsWithConfirmation()">🔥 ลบสินค้าทั้งหมด (Delete All)</button>

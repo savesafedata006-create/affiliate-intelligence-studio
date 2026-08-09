@@ -192,6 +192,13 @@
             <span style="color:#10b981; font-weight:700;">🟢 ACTIVE</span>
         </div>
 
+        <div style="display:flex; align-items:center; background:#1e293b; padding:4px 10px; border-radius:6px;">
+            <label style="font-size:11px; color:#38bdf8; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                <input type="checkbox" id="chkAutoOpenWeb" checked style="cursor:pointer;"> 
+                🚀 ส่งเข้า DB แล้วเปิด/สลับไปหน้าเว็บทันที
+            </label>
+        </div>
+
         <div style="display:flex; gap:6px;">
             <button id="btnSubmitSelected" style="flex:2; background:linear-gradient(135deg, #ee4d2d, #ff7337); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(238,77,45,0.4);">
                 📌 ส่งเข้า DB (<span id="selCountText">0</span>)
@@ -478,8 +485,15 @@
         })
         .then(res => res.json())
         .then(data => {
-            showToast(`✅ บันทึกสินค้า ${items.length} รายการ พร้อมคลังหลายรูปภาพเข้า DB เรียบร้อยแล้ว!`, "#059669");
+            showToast(`✅ บันทึกสินค้า ${items.length} รายการ เข้า DB เรียบร้อยแล้ว!`, "#059669");
             resetSelectionState();
+
+            // 🚀 Auto-Open / Focus Web App tab if checkbox is checked
+            if (document.getElementById("chkAutoOpenWeb")?.checked) {
+                setTimeout(() => {
+                    window.open("http://127.0.0.1:8080/#catalog", "_blank");
+                }, 400);
+            }
         })
         .catch(err => {
             sendBatchToBackend(urls, index + 1, items);

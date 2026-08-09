@@ -195,6 +195,7 @@ function loadCatalogFromStorage(callback) {
                 renderCatalog();
                 if (callback) callback();
             } else {
+                catalogData = [];
                 renderCatalog();
                 if (callback) callback();
             }
@@ -205,6 +206,31 @@ function loadCatalogFromStorage(callback) {
             if (callback) callback();
         });
 }
+
+function manualRefreshFromDb() {
+    loadCatalogFromStorage(() => {
+        searchCentralDbLive();
+        const toast = document.createElement("div");
+        toast.style.cssText = "position:fixed; bottom:20px; right:20px; z-index:99999; background:#059669; color:#fff; padding:10px 18px; border-radius:10px; font-weight:700; box-shadow:0 10px 25px rgba(0,0,0,0.3);";
+        toast.innerText = `🔄 ซิงค์ข้อมูลเรียลไทม์สำเร็จ! โหลดข้อมูลแล้ว ${catalogData.length} รายการ`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+    });
+}
+
+// Auto Real-time DB Sync Polling every 4 seconds
+setInterval(() => {
+    fetch('/api/fetch_products')
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.items && data.items.length !== catalogData.length) {
+                console.log("🔄 Real-time DB update detected!");
+                loadCatalogFromStorage();
+                searchCentralDbLive();
+            }
+        })
+        .catch(err => {});
+}, 4000);
 
 function saveCatalogToStorage() {
     try {
