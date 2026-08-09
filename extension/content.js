@@ -177,7 +177,10 @@
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <strong style="font-size:14px; color:#38bdf8;">🛍️ Shopee Extractor v4.0</strong>
-            <span id="extStatusBadge" style="font-size:10px; background:#059669; color:#fff; padding:2px 8px; border-radius:10px; font-weight:600;">🖼️ คลังหลายภาพ ON</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <span id="extStatusBadge" style="font-size:10px; background:#059669; color:#fff; padding:2px 6px; border-radius:10px; font-weight:600;">🖼️ HD ON</span>
+                <button id="btnMinimizePanel" style="background:#334155; color:#cbd5e1; border:none; width:22px; height:22px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="พับเก็บแผงควบคุม (Minimize)">➖</button>
+            </div>
         </div>
 
         <div style="display:flex; gap:6px;">
@@ -234,14 +237,63 @@
 
     document.body.appendChild(panel);
 
+    // Create Small Floating Trigger Pill for Minimized Mode
+    const triggerPill = document.createElement("div");
+    triggerPill.id = "shopeeExtractorTriggerPill";
+    triggerPill.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 999999;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #38bdf8;
+        border: 1.5px solid #0284c7;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-family: 'Kanit', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        gap: 6px;
+        backdrop-filter: blur(10px);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    `;
+    triggerPill.innerHTML = `🛍️ Extractor <span id="pillCountBadge" style="background:#ee4d2d; color:#fff; font-size:10px; padding:2px 7px; border-radius:10px; font-weight:800;">0</span> ⚡`;
+    document.body.appendChild(triggerPill);
+
     const btnPick = document.getElementById("btnTogglePickMode");
     const btnAuto = document.getElementById("btnAutoExtract");
     const btnSubmit = document.getElementById("btnSubmitSelected");
     const btnCopyLinks = document.getElementById("btnCopyLinks");
     const btnResetAll = document.getElementById("btnResetAll");
+    const btnMinimizePanel = document.getElementById("btnMinimizePanel");
     let selCountText = document.getElementById("selCountText");
+    const pillCountBadge = document.getElementById("pillCountBadge");
     const inpAutoQuota = document.getElementById("inpAutoQuota");
     const selExtCategory = document.getElementById("selExtCategory");
+
+    function collapsePanel() {
+        panel.style.display = "none";
+        triggerPill.style.display = "flex";
+        sessionStorage.setItem("shopee_ext_panel_collapsed", "true");
+    }
+
+    function expandPanel() {
+        panel.style.display = "flex";
+        triggerPill.style.display = "none";
+        sessionStorage.setItem("shopee_ext_panel_collapsed", "false");
+    }
+
+    if (btnMinimizePanel) btnMinimizePanel.addEventListener("click", collapsePanel);
+    if (triggerPill) triggerPill.addEventListener("click", expandPanel);
+
+    // Restore user preferred state
+    if (sessionStorage.getItem("shopee_ext_panel_collapsed") === "true") {
+        collapsePanel();
+    }
 
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
@@ -340,8 +392,12 @@
                 showToast(`✅ เลือก '${title.substring(0, 15)}...' พร้อมคลัง ${gallery.length} ภาพเรียบร้อยแล้ว`, "#059669");
             }
 
-            selCountText.innerText = selectedProductsMap.size;
-        }
+    function updateExtSelectionCount() {
+        const size = selectedProductsMap.size;
+        const countEl = document.getElementById("selCountText");
+        const pillEl = document.getElementById("pillCountBadge");
+        if (countEl) countEl.innerText = size;
+        if (pillEl) pillEl.innerText = size;
     }
 
     async function runAutoScrapeMode() {
@@ -449,7 +505,7 @@
             }
 
             scraped++;
-            selCountText.innerText = selectedProductsMap.size;
+            updateExtSelectionCount();
 
             // 🛡️ ANTI-BAN HUMAN-LIKE JITTER DELAY — สุ่มดีเลย์แบบมนุษย์ป้องกันการโดนบล็อก (1.2s - 2.5s)
             const antiBanDelay = Math.floor(Math.random() * 1300) + 1200;
