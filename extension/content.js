@@ -6,6 +6,76 @@
 
     let isPickModeActive = false;
     let selectedProductsMap = new Map();
+    let extractedTitlesInServerDB = new Set();
+
+    function syncExistingProductsFromDB() {
+        fetch("http://127.0.0.1:8080/api/fetch_products")
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.items) {
+                    extractedTitlesInServerDB.clear();
+                    data.items.forEach(item => {
+                        if (item.title) {
+                            extractedTitlesInServerDB.add(item.title.trim());
+                        }
+                    });
+                    console.log(`⚡ Extension synced ${extractedTitlesInServerDB.size} existing DB products!`);
+                    markAlreadyExtractedProductsOnPage();
+                }
+            })
+            .catch(err => console.log("DB sync note:", err));
+    }
+
+    function isProductAlreadyInDB(title) {
+        if (!title) return false;
+        const clean = title.replace(/\n/g, ' ').trim();
+        return extractedTitlesInServerDB.has(clean);
+    }
+
+    function markCardAsAlreadyExtracted(card) {
+        if (!card) return;
+        card.style.outline = "2px dashed #0284c7";
+        card.style.outlineOffset = "-2px";
+        card.style.opacity = "0.75";
+        
+        if (!card.querySelector(".ext-already-badge")) {
+            const badge = document.createElement("div");
+            badge.className = "ext-already-badge";
+            badge.style.cssText = `
+                position: absolute;
+                top: 6px;
+                right: 6px;
+                z-index: 9999;
+                background: #0284c7;
+                color: #ffffff;
+                font-size: 10px;
+                font-weight: 700;
+                padding: 2px 6px;
+                border-radius: 6px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                font-family: sans-serif;
+            `;
+            badge.innerText = "📦 มีใน DB แล้ว";
+            if (window.getComputedStyle(card).position === 'static') {
+                card.style.position = 'relative';
+            }
+            card.appendChild(badge);
+        }
+    }
+
+    function markAlreadyExtractedProductsOnPage() {
+        const cards = document.querySelectorAll("a[href*='/product/'], a[href*='-i.'], .shopee-search-item-result__item");
+        cards.forEach(card => {
+            const rawTitle = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
+            const cleanTitle = rawTitle.replace(/\n/g, ' ').trim();
+            if (cleanTitle && isProductAlreadyInDB(cleanTitle)) {
+                markCardAsAlreadyExtracted(card);
+            }
+        });
+    }
+
+    // Run DB sync on extension start
+    syncExistingProductsFromDB();
 
     // Helper: Convert Image Element or URL to Base64 Data URI
     function getImageBase64(imgEl) {
@@ -177,6 +247,10 @@
                 showToast("⚠️ องค์ประกอบนี้ไม่ใช่สินค้า กรุณาคลิกเลือกตัวสินค้าครับ", "#eab308");
                 return;
             }
+            if (isProductAlreadyInDB(title)) {
+                markCardAsAlreadyExtracted(card);
+                showToast(`📦 สินค้า '${title.substring(0, 15)}...' มีในฐานข้อมูลอยู่แล้ว`, "#0284c7");
+            }
             const priceText = card.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "390";
             const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 390.0;
             
@@ -235,6 +309,12 @@
             if (!isValidProductTitle(cleanTitle)) continue;
             if (seenTitlesSet.has(cleanTitle)) continue;
             seenTitlesSet.add(cleanTitle);
+
+            // ✅ CHECK IF ALREADY IN DB — ข้ามสินค้าที่มีใน DB แล้วอัตโนมัติ
+            if (isProductAlreadyInDB(cleanTitle)) {
+                markCardAsAlreadyExtracted(card);
+                continue;
+            }
 
             const priceText = card.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "290";
             const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 290.0;
