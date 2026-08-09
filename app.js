@@ -402,11 +402,123 @@ function renderCentralDbTable(items) {
             <td style="padding:4px 6px; text-align:center;">
                 <div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">
                     <button class="btn btn-primary" style="padding:3px 7px; font-size:11px;" onclick="importSelectedDbItemToCatalog(${idx})">📥 ดึง</button>
+                    <button style="padding:3px 7px; font-size:11px; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700;" onclick="openShopeeVdoCreator(${idx})">🎬 VDO</button>
                     <button class="btn btn-rose" style="padding:3px 7px; font-size:11px; background:#991b1b;" onclick="deleteItemFromCentralDb('${item.item_id}')">🗑️ ลบ</button>
                 </div>
             </td>
         </tr>`;
     }).join("");
+}
+
+// ==============================
+// 🎬 SHOPEE VDO CREATOR LAUNCHER
+// ==============================
+function openShopeeVdoCreator(idx) {
+    const item = centralDbResults[idx];
+    if (!item) return;
+    const title = item.title || '';
+    const price = item.sale_price || item.price || 0;
+    const comm = item.commission_rate || item.comm || 0;
+    const profit = parseFloat(item.net_profit_thb || item.profit || 0).toFixed(0);
+    const affLink = item.affiliate_link || item.url || '';
+    const images = item.images || [];
+    const rating = item.rating_star || '4.9';
+    const sold = item.total_sold || 1200;
+    const script = generateVdoScript(title, price, comm, profit, rating, sold);
+    const hashtags = generateVdoHashtags(title);
+    const existing = document.getElementById('vdoCreatorModal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'vdoCreatorModal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;';
+    const imgThumbsHtml = images.slice(0,6).map((img,i) =>
+        `<img src="${img}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:2px solid ${i===0?'#a855f7':'#334155'};cursor:pointer;" />`
+    ).join('');
+    modal.innerHTML = `
+    <div style="background:#0f172a;border:1px solid #7c3aed;border-radius:20px;padding:28px 32px;max-width:620px;width:94%;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(124,58,237,0.35);font-family:'Kanit',sans-serif;color:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h3 style="color:#a855f7;margin:0;font-size:18px;">🎬 สร้างคลิปขาย + ลง Shopee VDO</h3>
+            <button onclick="document.getElementById('vdoCreatorModal').remove()" style="background:#334155;color:#fff;border:none;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px;">✖</button>
+        </div>
+        <div style="background:#1e293b;border-radius:12px;padding:12px 16px;margin-bottom:12px;">
+            <div style="font-size:13px;color:#e2e8f0;font-weight:600;margin-bottom:4px;">${title.substring(0,60)}${title.length>60?'...':''}</div>
+            <div style="display:flex;gap:12px;font-size:12px;flex-wrap:wrap;">
+                <span style="color:#38bdf8;">฿${price}</span>
+                <span style="color:#10b981;">คอม ${comm}%</span>
+                <span style="color:#f59e0b;">กำไร +฿${profit}/ชิ้น</span>
+                <span style="color:#94a3b8;">${rating}⭐ ${sold} ชิ้น</span>
+            </div>
+        </div>
+        ${images.length > 0 ? `<div style="margin-bottom:12px;"><div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">🖼️ ภาพ HD (${images.length} รูป):</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${imgThumbsHtml}</div></div>` : ''}
+        <div style="margin-bottom:8px;">
+            <div style="font-size:11px;color:#a855f7;font-weight:700;margin-bottom:4px;">🎙️ ท่อนที่ 1: Hook (3 วิแรก)</div>
+            <textarea id="vdoScriptHook" style="width:100%;background:#1e293b;color:#e2e8f0;border:1px solid #475569;border-radius:8px;padding:8px 12px;font-size:12px;font-family:'Kanit',sans-serif;resize:vertical;min-height:58px;box-sizing:border-box;">${script.hook}</textarea>
+        </div>
+        <div style="margin-bottom:8px;">
+            <div style="font-size:11px;color:#a855f7;font-weight:700;margin-bottom:4px;">🗣️ ท่อนที่ 2: รีวิว + จุดเด่น</div>
+            <textarea id="vdoScriptBody" style="width:100%;background:#1e293b;color:#e2e8f0;border:1px solid #475569;border-radius:8px;padding:8px 12px;font-size:12px;font-family:'Kanit',sans-serif;resize:vertical;min-height:90px;box-sizing:border-box;">${script.body}</textarea>
+        </div>
+        <div style="margin-bottom:8px;">
+            <div style="font-size:11px;color:#a855f7;font-weight:700;margin-bottom:4px;">💰 ท่อนที่ 3: CTA + ลิงก์</div>
+            <textarea id="vdoScriptCta" style="width:100%;background:#1e293b;color:#e2e8f0;border:1px solid #475569;border-radius:8px;padding:8px 12px;font-size:12px;font-family:'Kanit',sans-serif;resize:vertical;min-height:70px;box-sizing:border-box;">${script.cta}\n\n🔗 ${affLink}</textarea>
+        </div>
+        <div style="margin-bottom:14px;">
+            <div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:4px;">🏷️ แฮชแท็ก Anti-Ban</div>
+            <textarea id="vdoHashtags" style="width:100%;background:#1e293b;color:#64748b;border:1px solid #334155;border-radius:8px;padding:8px 12px;font-size:11px;font-family:'Kanit',sans-serif;resize:vertical;min-height:48px;box-sizing:border-box;">${hashtags}</textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+            <button onclick="copyVdoCaption()" style="flex:1;min-width:160px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">📋 ก๊อปแคปชัน + ลิงก์</button>
+            <button onclick="window.open('https://affiliate.shopee.co.th/my-collection','ShopeeAffiliateTab')" style="background:#ee4d2d;color:#fff;border:none;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">📤 My Collection</button>
+            <button onclick="openShopeeVdoUpload()" style="background:#059669;color:#fff;border:none;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">🎬 เปิด Shopee VDO</button>
+        </div>
+        <div style="font-size:10px;color:#475569;text-align:center;">💡 ก๊อปแคปชัน → เปิด Shopee VDO → อัปโหลดคลิป → วางแคปชัน → แท็กสินค้าจาก My Collection → เผยแพร่!</div>
+    </div>`;
+    document.body.appendChild(modal);
+}
+
+function generateVdoScript(title, price, comm, profit, rating, sold) {
+    const s = title.replace(/\[.*?\]|\(.*?\)|-?\d+%/g,'').trim().substring(0,28);
+    const hooks = [
+        `⚠️ ห้ามเลื่อนผ่าน! ถ้ากำลังมองหา ${s} อันนี้คุ้มที่สุดในช้อปปี้ตอนนี้!`,
+        `🔥 ใครยังไม่รู้จัก ${s} แบบนี้ ถือว่าพลาดมาก!`,
+        `❓ ${s} ราคาแค่ ฿${price} ได้ของดีขนาดนี้จริงไหม? มาพิสูจน์!`
+    ];
+    const bodies = [
+        `🛍️ รีวิว ${s} ขายดีถึง ${sold} ชิ้น คะแนน ${rating} ดาว!\n\n✅ คุณภาพดี ราคาคุ้มค่า ส่งเร็ว\n✅ เหมาะสำหรับทุกคนที่ต้องการของดีราคาโดน\n✅ ราคา ฿${price} เท่านั้น!`,
+        `📦 ${s} ขายดีกว่า ${sold} ชิ้น! ⭐ ${rating}/5 จากคนซื้อจริง\n\n💚 ของแท้ 100% มีรับประกัน\n🚀 ส่งเร็ว ได้ของไว ไม่ต้องรอนาน!\n💰 กำไรต่อชิ้น +฿${profit} ทุกออเดอร์!`
+    ];
+    const ctas = [
+        `💰 ซื้อตอนนี้เลย! ราคาพิเศษ ฿${price} ลิงก์ด้านล่างเลยครับ 👇\nก่อนราคาปรับขึ้น!`,
+        `🛒 กดซื้อได้เลย ฿${price} เท่านั้น จำนวนจำกัด!\nอย่าลืมบอกต่อให้เพื่อนด้วย 💚`
+    ];
+    const r = (arr) => arr[Math.floor(Math.random()*arr.length)];
+    return { hook: r(hooks), body: r(bodies), cta: r(ctas) };
+}
+
+function generateVdoHashtags(title) {
+    const words = title.replace(/[^ก-๙a-zA-Z0-9\s]/g,'').split(' ').filter(w=>w.length>2).slice(0,3).map(w=>`#${w}`);
+    const base = ['#shopee','#ช้อปปี้','#สินค้าแนะนำ','#รีวิวสินค้า','#ของดีราคาถูก','#โปรโมชั่น','#ช้อปปิ้งออนไลน์','#shopeethailand','#ลดราคา','#แนะนำสินค้า'];
+    return [...words,...base].join(' ');
+}
+
+function copyVdoCaption() {
+    const hook = document.getElementById('vdoScriptHook')?.value || '';
+    const body = document.getElementById('vdoScriptBody')?.value || '';
+    const cta = document.getElementById('vdoScriptCta')?.value || '';
+    const tags = document.getElementById('vdoHashtags')?.value || '';
+    navigator.clipboard.writeText(`${hook}\n\n${body}\n\n${cta}\n\n${tags}`).then(() => {
+        showNotification('✅ ก๊อปแคปชัน + ลิงก์ + แฮชแท็กเรียบร้อย! วางใน Shopee VDO ได้เลย!', 'success');
+    });
+}
+
+function openShopeeVdoUpload() {
+    const hook = document.getElementById('vdoScriptHook')?.value || '';
+    const body = document.getElementById('vdoScriptBody')?.value || '';
+    const cta = document.getElementById('vdoScriptCta')?.value || '';
+    const tags = document.getElementById('vdoHashtags')?.value || '';
+    navigator.clipboard.writeText(`${hook}\n\n${body}\n\n${cta}\n\n${tags}`).catch(()=>{});
+    showNotification('📋 ก๊อปแคปชันแล้ว! กำลังเปิด Shopee VDO...', 'success');
+    window.open('https://shopee.co.th/m/shopee-video', 'ShopeeVdoTab');
 }
 
 function deleteItemFromCentralDb(itemId) {
