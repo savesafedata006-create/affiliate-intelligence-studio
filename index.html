@@ -814,17 +814,47 @@
                 <section id="tab-settings" class="tab-page">
                     <div class="card">
                         <div class="card-header">
-                            <h3>🌐 จัดการบัญชี & สลับแอคเค้าท์ Shopee Affiliate (Multi-Account)</h3>
+                            <h3>🌐 จัดการบัญชี & สลับแอคเค้าท์ Shopee Affiliate (Multi-Account Manager)</h3>
                         </div>
-                        <div class="audit-box" id="accountStatusBox">
-                            👤 ชื่อช่องปัจจุบัน: <strong>namkhangcollection</strong><br>
-                            🆔 Shopee Partner ID: <strong>an_15320530167</strong> (🟢 Verified Active Real Account)<br>
-                            🏷️ Referral Code: <strong>X4EBLKP</strong><br>
-                            🛍️ หน้าร้านคอลเล็คชั่นจริง: <strong>https://collshp.com/namkhangcollection</strong><br>
-                            🔗 ลิงก์ทำเงิน Verified: <strong>https://s.shopee.co.th/20uSXcvwRR</strong>
+                        
+                        <!-- Account List -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">👤 บัญชี Shopee Affiliate ที่เชื่อมต่อในระบบ (สลับสคริปต์ & ลิงก์ทุกเมนู 1-Click)</div>
+                            <div id="accountListContainer">
+                                <!-- Populated dynamically by renderAccountsManager() -->
+                            </div>
+                        </div>
+
+                        <!-- Add New Account Form -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">➕ เพิ่มบัญชี Partner ID ใหม่เข้าสู่ระบบ</div>
+                            <form onsubmit="addNewAccount(event)" class="form-grid">
+                                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">👤 ชื่อช่อง / บัญชี (Channel Name):</label>
+                                        <input type="text" id="newAccName" class="form-input" placeholder="เช่น shop2_collection" required>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🆔 Shopee Partner ID:</label>
+                                        <input type="text" id="newAccId" class="form-input" placeholder="เช่น an_1234567890" required>
+                                    </div>
+                                </div>
+                                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🏷️ Referral Code (รหัสแนะนำ):</label>
+                                        <input type="text" id="newAccRef" class="form-input" placeholder="เช่น ABC123XYZ" required>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🛍️ URL หน้าร้านคอลเล็คชั่น (Storefront URL):</label>
+                                        <input type="text" id="newAccStore" class="form-input" placeholder="https://collshp.com/yourname">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">➕ เพิ่มบัญชี & สลับไปใช้ทันที</button>
+                            </form>
                         </div>
                     </div>
                 </section>
+
 
                 <!-- TAB: BACKUP & RESTORE ENGINE -->
                 <section id="tab-backup" class="tab-page">

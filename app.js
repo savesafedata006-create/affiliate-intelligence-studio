@@ -15,6 +15,91 @@ const accountsData = {
 };
 
 let currentAccountId = "acc_1";
+
+function switchAccount(accId) {
+    if (!accountsData[accId]) return;
+    currentAccountId = accId;
+    const acc = accountsData[accId];
+
+    // Update Header / Sidebar Pill
+    const sideName = document.getElementById("sideAccName");
+    const sideId = document.getElementById("sideAccId");
+    if (sideName) sideName.textContent = acc.name;
+    if (sideId) sideId.textContent = `🟢 ID: ${acc.id}`;
+
+    // Update Settings Page UI
+    renderAccountsManager();
+
+    // Re-generate all active prompts and scripts across all tabs
+    if (typeof generateGoogleFlowPrompt === 'function') generateGoogleFlowPrompt();
+    if (typeof generateFlowVideoPackage === 'function') generateFlowVideoPackage();
+    if (typeof generateStoryboard === 'function') generateStoryboard();
+    if (typeof generateShopeeVDOPack === 'function') generateShopeeVDOPack();
+    if (typeof generateCaptions === 'function') generateCaptions();
+
+    alert(`🔄 สลับไปใช้บัญชี Partner: '${acc.name}' (ID: ${acc.id}) เรียบร้อยแล้ว!\n\nทุกสคริปต์และลิงก์ Affiliate จะใช้ Partner ID นี้ทันที`);
+}
+
+function addNewAccount(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const name = document.getElementById("newAccName").value.trim();
+    const pid = document.getElementById("newAccId").value.trim();
+    const ref = document.getElementById("newAccRef").value.trim();
+    const store = document.getElementById("newAccStore").value.trim();
+
+    const newKey = `acc_${Date.now()}`;
+    accountsData[newKey] = {
+        id: pid,
+        name: name,
+        refCode: ref,
+        storefront: store || `https://collshp.com/${name}`,
+        revenue: "฿0.00",
+        clicks: "0 ครั้ง",
+        orders: "0 ออเดอร์",
+        cr: "0.00%"
+    };
+
+    if (document.getElementById("newAccName")) document.getElementById("newAccName").value = '';
+    if (document.getElementById("newAccId")) document.getElementById("newAccId").value = '';
+    if (document.getElementById("newAccRef")) document.getElementById("newAccRef").value = '';
+    if (document.getElementById("newAccStore")) document.getElementById("newAccStore").value = '';
+
+    switchAccount(newKey);
+}
+
+function renderAccountsManager() {
+    const box = document.getElementById("accountListContainer");
+    if (!box) return;
+
+    const listHtml = Object.keys(accountsData).map(key => {
+        const acc = accountsData[key];
+        const isActive = (key === currentAccountId);
+        return `
+            <div style="background:${isActive ? '#0284c715' : '#0f172a'}; border:1px solid ${isActive ? '#0284c7' : '#334155'}; border-radius:10px; padding:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:13px; font-weight:700; color:#f1f5f9;">
+                        ${isActive ? '🟢 [กำลังใช้งาน]' : '👤'} <strong>${acc.name}</strong>
+                    </div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:2px;">
+                        🆔 Partner ID: <code style="color:#38bdf8">${acc.id}</code> | Ref Code: <code>${acc.refCode}</code>
+                    </div>
+                    <div style="font-size:11px; color:#64748b; margin-top:2px;">
+                        🛍️ หน้าร้าน: ${acc.storefront}
+                    </div>
+                </div>
+                <div>
+                    ${isActive ? 
+                        `<span style="font-size:11px; background:#059669; color:#fff; padding:4px 10px; border-radius:6px; font-weight:700;">🟢 Active</span>` : 
+                        `<button class="btn btn-primary" style="font-size:11px; padding:4px 10px;" onclick="switchAccount('${key}')">🔄 สลับใช้บัญชีนี้</button>`
+                    }
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    box.innerHTML = listHtml;
+}
+
 let catalogData = [
     {
         id: "real_skintific_1",
@@ -1568,7 +1653,9 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCreativeAssets();
     generateLiveStreamCommand();
     renderLivePinCards();
+    renderAccountsManager();
 });
+
 
 
 let flowCurrentProduct = null;
