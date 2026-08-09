@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Affiliate Intelligence Mobile App 📱</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Kanit', -apple-system, sans-serif;
+            background: #090d16;
+            color: #f8fafc;
+            min-height: 100vh;
+            padding-bottom: 70px;
+            user-select: none;
+        }
+
+        /* Top Mobile Header */
+        .mobile-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #1e293b;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .mobile-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ee4d2d;
+        }
+        .lan-badge {
+            font-size: 10px;
+            background: #0284c722;
+            color: #38bdf8;
+            border: 1px solid #0284c744;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        /* Search Bar */
+        .search-section {
+            padding: 12px 16px;
+            background: #0f172a;
+            border-bottom: 1px solid #1e293b;
+        }
+        .search-box {
+            display: flex;
+            gap: 8px;
+        }
+        .search-input {
+            flex: 1;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-family: 'Kanit', sans-serif;
+            outline: none;
+        }
+        .search-input:focus { border-color: #ee4d2d; }
+        .filter-chip {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .filter-chip.active {
+            background: #059669;
+            color: #fff;
+            border-color: #059669;
+        }
+
+        /* Stats Strip */
+        .mobile-stats {
+            display: flex;
+            gap: 8px;
+            padding: 10px 16px;
+            overflow-x: auto;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 100px;
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 8px 12px;
+            border: 1px solid #334155;
+        }
+        .stat-val { font-size: 14px; font-weight: 700; color: #34d399; }
+        .stat-lbl { font-size: 10px; color: #94a3b8; }
+
+        /* Product List */
+        .product-container {
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .m-card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .m-card.is-extra {
+            border-color: #05966966;
+            background: linear-gradient(135deg, #0f172a, #064e3b11);
+        }
+        .m-thumb {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            flex-shrink: 0;
+        }
+        .m-info { flex: 1; min-width: 0; }
+        .m-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #f1f5f9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .m-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .m-price { color: #38bdf8; font-weight: 700; }
+        .m-comm { color: #10b981; font-weight: 700; }
+        .m-profit { color: #f59e0b; font-weight: 700; }
+
+        .m-badge-extra {
+            font-size: 9px;
+            background: #059669;
+            color: #fff;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .m-btn-basket {
+            background: linear-gradient(135deg, #ee4d2d, #ff7337);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Kanit', sans-serif;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(238,77,45,0.3);
+        }
+
+        /* Action Sheet Bottom Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .action-sheet {
+            background: #0f172a;
+            border-top: 1px solid #334155;
+            border-radius: 20px 20px 0 0;
+            padding: 20px 20px 30px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.25s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .sheet-handle {
+            width: 40px; height: 4px; background: #334155; border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+        .sheet-title {
+            font-size: 16px; font-weight: 700; color: #ee4d2d; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .sheet-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Kanit', sans-serif;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Bottom Nav Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid #1e293b;
+            display: flex;
+            z-index: 100;
+        }
+        .nav-tab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .nav-tab.active { color: #ee4d2d; }
+        .nav-tab-icon { font-size: 18px; }
+
+        /* Toast */
+        .m-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            z-index: 2000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Header -->
+    <header class="mobile-header">
+        <div class="mobile-brand">
+            <span>🛍️ Affiliate Studio APK</span>
+        </div>
+        <div class="lan-badge" id="mHostIp">LAN: Connected</div>
+    </header>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="search-box">
+            <input type="text" id="mSearchInput" class="search-input" placeholder="🔍 พิมพ์ชื่อสินค้า หรือ 'งบไม่เกิน 300'..." onkeyup="filterMobileProducts()">
+        </div>
+        <div style="display:flex; gap:6px; margin-top:10px; overflow-x:auto;">
+            <div class="filter-chip active" id="fltAll" onclick="setMobileFilter('all')">ทั้งหมด</div>
+            <div class="filter-chip" id="fltExtra" onclick="setMobileFilter('extra')">💎 Extra Comm (20%+)</div>
+            <div class="filter-chip" id="fltTopProfit" onclick="setMobileFilter('profit')">💵 กำไรสูงสุด</div>
+        </div>
+    </div>
+
+    <!-- Stats Strip -->
+    <div class="mobile-stats">
+        <div class="stat-card">
+            <div class="stat-val" id="mStatCount">0</div>
+            <div class="stat-lbl">สินค้าในคลัง</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val" style="color:#ee4d2d;" id="mStatExtra">0</div>
+            <div class="stat-lbl">💎 Extra Comm</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val" style="color:#38bdf8;" id="mStatProfit">฿0</div>
+            <div class="stat-lbl">กำไรรวมโดยประมาณ</div>
+        </div>
+    </div>
+
+    <!-- Product List -->
+    <div class="product-container" id="mProductList">
+        <div style="text-align:center; padding:40px; color:#64748b;">⏳ กำลังโหลดรายการสินค้าจาก DB...</div>
+    </div>
+
+    <!-- Bottom Action Sheet Modal -->
+    <div class="modal-overlay" id="actionSheetModal">
+        <div class="action-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">
+                <span id="sheetProdTitle">🛍️ สินค้า</span>
+                <button onclick="closeActionSheet()" style="background:none; border:none; color:#64748b; font-size:18px; cursor:pointer;">✖</button>
+            </div>
+
+            <!-- Price Meta -->
+            <div style="background:#1e293b; border-radius:10px; padding:10px; margin-bottom:14px; font-size:12px; color:#cbd5e1; display:flex; justify-content:space-between;">
+                <span id="sheetPrice" style="color:#38bdf8; font-weight:700;">฿0</span>
+                <span id="sheetComm" style="color:#10b981; font-weight:700;">คอม 0%</span>
+                <span id="sheetProfit" style="color:#f59e0b; font-weight:700;">กำไร +฿0</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <button class="sheet-btn" style="background:linear-gradient(135deg,#ee4d2d,#ff7337); color:#fff;" onclick="mCopyAffLink()">
+                📋 คัดลอกลิงก์ Affiliate (ปักตะกร้า)
+            </button>
+            <button class="sheet-btn" style="background:#0284c7; color:#fff;" onclick="mCopyCaptionTikTok()">
+                📝 คัดลอก Caption + Hashtag TikTok
+            </button>
+            <button class="sheet-btn" style="background:#7c3aed; color:#fff;" onclick="mCopyFlowPrompt()">
+                ✨ คัดลอก AI Video Prompt (Google Flow)
+            </button>
+            <button class="sheet-btn" style="background:#059669; color:#fff;" onclick="mSendToMyCollection()">
+                📤 ส่งเข้า Shopee My Collection
+            </button>
+            <button class="sheet-btn" style="background:#334155; color:#94a3b8;" onclick="closeActionSheet()">
+                ✖ ปิด
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="m-toast" id="mToast">✅ สำเร็จ</div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <div class="nav-tab active" onclick="switchMobileNav('basket')">
+            <span class="nav-tab-icon">🛒</span>
+            <span>ปักตะกร้า</span>
+        </div>
+        <div class="nav-tab" onclick="switchMobileNav('extra')">
+            <span class="nav-tab-icon">💎</span>
+            <span>Extra Comm</span>
+        </div>
+        <div class="nav-tab" onclick="window.open('https://affiliate.shopee.co.th/my-collection','_blank')">
+            <span class="nav-tab-icon">📤</span>
+            <span>Collection</span>
+        </div>
+        <div class="nav-tab" onclick="window.open('https://www.tiktok.com/upload','_blank')">
+            <span class="nav-tab-icon">🎵</span>
+            <span>TikTok</span>
+        </div>
+    </nav>
+
+    <script>
+        let mobileProducts = [];
+        let filteredProducts = [];
+        let currentFilter = 'all';
+        let activeItem = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('mHostIp').innerText = `IP: ${location.hostname}`;
+            loadMobileProducts();
+        });
+
+        function loadMobileProducts() {
+            fetch('/api/fetch_products')
+                .then(r => r.json())
+                .then(data => {
+                    mobileProducts = data.items || [];
+                    applyMobileFilters();
+                })
+                .catch(err => {
+                    document.getElementById('mProductList').innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444;">⚠️ ไม่สามารถเชื่อมต่อกับ Server ได้ (${err.message})</div>`;
+                });
+        }
+
+        function setMobileFilter(flt) {
+            currentFilter = flt;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            if (flt === 'all') document.getElementById('fltAll').classList.add('active');
+            if (flt === 'extra') document.getElementById('fltExtra').classList.add('active');
+            if (flt === 'profit') document.getElementById('fltTopProfit').classList.add('active');
+            applyMobileFilters();
+        }
+
+        function applyMobileFilters() {
+            const query = document.getElementById('mSearchInput').value.trim().toLowerCase();
+            filteredProducts = mobileProducts.filter(p => {
+                const titleMatch = (p.title || '').toLowerCase().includes(query) || (p.shop_name || '').toLowerCase().includes(query);
+                if (currentFilter === 'extra') {
+                    return titleMatch && parseFloat(p.commission_rate || 0) >= 20;
+                }
+                return titleMatch;
+            });
+
+            if (currentFilter === 'profit') {
+                filteredProducts.sort((a,b) => parseFloat(b.net_profit_thb || 0) - parseFloat(a.net_profit_thb || 0));
+            }
+
+            renderMobileProducts();
+        }
+
+        function filterMobileProducts() {
+            applyMobileFilters();
+        }
+
+        function renderMobileProducts() {
+            const container = document.getElementById('mProductList');
+            if (filteredProducts.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:40px; color:#64748b;">ไม่พบสินค้าที่ตรงกับเงื่อนไข</div>`;
+                return;
+            }
+
+            // Stats update
+            document.getElementById('mStatCount').innerText = filteredProducts.length;
+            const extraCount = filteredProducts.filter(p => parseFloat(p.commission_rate || 0) >= 20).length;
+            document.getElementById('mStatExtra').innerText = extraCount;
+            const totalProfit = filteredProducts.reduce((sum, p) => sum + parseFloat(p.net_profit_thb || 0), 0);
+            document.getElementById('mStatProfit').innerText = `฿${totalProfit.toFixed(0)}`;
+
+            container.innerHTML = filteredProducts.map((p, idx) => {
+                const isExtra = parseFloat(p.commission_rate || 0) >= 20;
+                const imgSrc = p.main_image_path || p.img || 'https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492';
+                return `
+                    <div class="m-card ${isExtra ? 'is-extra' : ''}">
+                        <img src="${imgSrc}" class="m-thumb" onerror="this.src='https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492'" />
+                        <div class="m-info">
+                            <div class="m-title">${p.title}</div>
+                            <div class="m-meta">
+                                <span class="m-price">฿${p.sale_price || p.price}</span>
+                                <span class="m-comm">คอม ${p.commission_rate}%</span>
+                                <span class="m-profit">+฿${parseFloat(p.net_profit_thb||0).toFixed(0)}</span>
+                                ${isExtra ? `<span class="m-badge-extra">💎 EXTRA</span>` : ''}
+                            </div>
+                        </div>
+                        <button class="m-btn-basket" onclick="openActionSheet(${idx})">📌 ปักตะกร้า</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openActionSheet(idx) {
+            activeItem = filteredProducts[idx];
+            if (!activeItem) return;
+
+            document.getElementById('sheetProdTitle').innerText = (activeItem.title || '').substring(0,35) + '...';
+            document.getElementById('sheetPrice').innerText = `฿${activeItem.sale_price || activeItem.price}`;
+            document.getElementById('sheetComm').innerText = `คอม ${activeItem.commission_rate}%`;
+            document.getElementById('sheetProfit').innerText = `กำไร +฿${parseFloat(activeItem.net_profit_thb||0).toFixed(0)}`;
+
+            document.getElementById('actionSheetModal').style.display = 'flex';
+        }
+
+        function closeActionSheet() {
+            document.getElementById('actionSheetModal').style.display = 'none';
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('mToast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        function mCopyAffLink() {
+            if (!activeItem) return;
+            navigator.clipboard.writeText(activeItem.affiliate_link || activeItem.url || '').then(() => {
+                showToast("📋 คัดลอกลิงก์ Affiliate สำเร็จ! พร้อมนำไปปักตะกร้า");
+                closeActionSheet();
+            });
+        }
+
+        function mCopyCaptionTikTok() {
+            if (!activeItem) return;
+            const title = (activeItem.title || '').substring(0, 30);
+            const price = activeItem.sale_price || activeItem.price;
+            const caption = `🔥 ห้ามเลื่อนผ่าน! ${title} ราคาเพียง ฿${price} คุ้มมาก!\n\n📍 สั่งซื้อกดลิงก์โปรไฟล์ / ตะกร้าได้เลยครับ 👇\n🔗 ${activeItem.affiliate_link}\n\n#tiktokthailand #รีวิวช้อปปี้ #ใช้ดีบอกต่อ #ลดราคา`;
+            navigator.clipboard.writeText(caption).then(() => {
+                showToast("📝 คัดลอก Caption + Hashtag สำเร็จ!");
+                closeActionSheet();
+            });
+        }
+
+        function mCopyFlowPrompt() {
+            if (!activeItem) return;
+            const prompt = `Vertical 9:16 high energy product commercial for "${activeItem.title}", cinematic lighting, dynamic camera zoom, floating 3D text "฿${activeItem.sale_price}", photorealistic 4k render`;
+            navigator.clipboard.writeText(prompt).then(() => {
+                showToast("✨ คัดลอก AI Video Prompt เรียบร้อย!");
+                closeActionSheet();
+            });
+        }
+
+        function mSendToMyCollection() {
+            if (!activeItem) return;
+            navigator.clipboard.writeText(activeItem.affiliate_link || '').then(() => {
+                showToast("📤 ก๊อปลิงก์แล้ว! กำลังเปิด My Collection...");
+                window.open('https://affiliate.shopee.co.th/my-collection', '_blank');
+                closeActionSheet();
+            });
+        }
+
+        function switchMobileNav(tab) {
+            if (tab === 'basket') setMobileFilter('all');
+            if (tab === 'extra') setMobileFilter('extra');
+        }
+    </script>
+</body>
+</html>

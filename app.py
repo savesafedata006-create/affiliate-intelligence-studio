@@ -457,6 +457,26 @@ class SingleMasterServerHandler(SimpleHTTPRequestHandler):
 
 
     def do_GET(self):
+        if self.path in ["/mobile", "/mobile.html"]:
+            filepath = os.path.join(WEB_DIR, "mobile.html")
+            if os.path.exists(filepath):
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                with open(filepath, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+
+        if self.path == "/manifest.json":
+            filepath = os.path.join(WEB_DIR, "site_manifest.json")
+            if os.path.exists(filepath):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                with open(filepath, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+
         # Serve local product images via /product_images/ route
         if self.path.startswith("/product_images/"):
             filename = self.path.replace("/product_images/", "")
