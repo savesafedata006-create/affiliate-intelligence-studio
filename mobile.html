@@ -336,6 +336,9 @@
             </div>
 
             <!-- Action Buttons -->
+            <button class="sheet-btn" style="background:linear-gradient(135deg,#ff0050,#ff4d7d); color:#fff;" onclick="mAddToTikTokShowcase()">
+                🛍️ เพิ่มเข้าตู้โชว์ TikTok Showcase
+            </button>
             <button class="sheet-btn" style="background:linear-gradient(135deg,#ee4d2d,#ff7337); color:#fff;" onclick="mCopyAffLink()">
                 📋 คัดลอกลิงก์ Affiliate (ปักตะกร้า)
             </button>
@@ -354,20 +357,57 @@
         </div>
     </div>
 
+    <!-- TikTok Showcase Drawer Modal -->
+    <div class="modal-overlay" id="tiktokShowcaseModal">
+        <div class="action-sheet" style="max-height:90vh;">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">
+                <span style="color:#ff0050;">🛍️ ตู้โชว์สินค้า TikTok (My Showcase Queue)</span>
+                <button onclick="document.getElementById('tiktokShowcaseModal').style.display='none'" style="background:none; border:none; color:#64748b; font-size:18px; cursor:pointer;">✖</button>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:12px;">รายการสินค้าที่เตรียมไว้เพื่อนำไปปักตู้โชว์บนหน้าโปรไฟล์ TikTok ของคุณ</div>
+
+            <div id="mShowcaseList" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; margin-bottom:14px;">
+                <div style="text-align:center; padding:20px; color:#64748b; font-size:12px;">ยังไม่มีสินค้าในตู้โชว์ (กด '📌 ปักตะกร้า' -> '🛍️ เพิ่มเข้าตู้โชว์ TikTok')</div>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+                <button class="sheet-btn" style="background:linear-gradient(135deg,#ff0050,#ff4d7d); color:#fff; flex:1;" onclick="mLaunchTikTokApp()">
+                    🚀 เปิดแอป TikTok (เข้าตู้โชว์)
+                </button>
+                <button class="sheet-btn" style="background:#334155; color:#fff; flex:1;" onclick="mClearShowcaseQueue()">
+                    🧹 ล้างตู้โชว์
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="m-toast" id="mToast">✅ สำเร็จ</div>
 
     <!-- Bottom Nav -->
     <nav class="bottom-nav">
-        <div class="nav-tab active" onclick="switchMobileNav('basket')">
+        <div class="nav-tab active" id="mNavBasket" onclick="switchMobileNav('basket')">
             <span class="nav-tab-icon">🛒</span>
             <span>ปักตะกร้า</span>
         </div>
-        <div class="nav-tab" onclick="switchMobileNav('extra')">
+        <div class="nav-tab" id="mNavExtra" onclick="switchMobileNav('extra')">
             <span class="nav-tab-icon">💎</span>
             <span>Extra Comm</span>
         </div>
+        <div class="nav-tab" id="mNavShowcase" onclick="openTikTokShowcaseModal()">
+            <span class="nav-tab-icon">🛍️</span>
+            <span>ตู้โชว์ TikTok</span>
+        </div>
         <div class="nav-tab" onclick="window.open('https://affiliate.shopee.co.th/my-collection','_blank')">
+            <span class="nav-tab-icon">📤</span>
+            <span>Collection</span>
+        </div>
+        <div class="nav-tab" onclick="window.open('https://www.tiktok.com/upload','_blank')">
+            <span class="nav-tab-icon">🎵</span>
+            <span>TikTok</span>
+        </div>
+    </nav>
             <span class="nav-tab-icon">📤</span>
             <span>Collection</span>
         </div>
@@ -523,6 +563,68 @@
                 window.open('https://affiliate.shopee.co.th/my-collection', '_blank');
                 closeActionSheet();
             });
+        }
+
+        // ===================================
+        // 🛍️ TIKTOK SHOWCASE QUEUE HELPER
+        // ===================================
+        function mAddToTikTokShowcase() {
+            if (!activeItem) return;
+            let showcase = [];
+            try { showcase = JSON.parse(localStorage.getItem('tiktok_showcase_queue') || '[]'); } catch(e){}
+            
+            // Check if already in showcase
+            if (!showcase.some(x => x.item_id === activeItem.item_id)) {
+                showcase.push({
+                    item_id: activeItem.item_id,
+                    title: activeItem.title,
+                    price: activeItem.sale_price || activeItem.price,
+                    comm: activeItem.commission_rate,
+                    profit: activeItem.net_profit_thb,
+                    link: activeItem.affiliate_link,
+                    img: activeItem.main_image_path || activeItem.img
+                });
+                localStorage.setItem('tiktok_showcase_queue', JSON.stringify(showcase));
+            }
+
+            navigator.clipboard.writeText(activeItem.affiliate_link || '').then(() => {
+                showToast("🛍️ เพิ่มเข้าตู้โชว์ TikTok แล้ว! ก๊อปลิงก์สำเร็จ");
+                closeActionSheet();
+            });
+        }
+
+        function openTikTokShowcaseModal() {
+            let showcase = [];
+            try { showcase = JSON.parse(localStorage.getItem('tiktok_showcase_queue') || '[]'); } catch(e){}
+            
+            const listEl = document.getElementById('mShowcaseList');
+            if (showcase.length === 0) {
+                listEl.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b; font-size:12px;">ยังไม่มีสินค้าในตู้โชว์ (กด '📌 ปักตะกร้า' -> '🛍️ เพิ่มเข้าตู้โชว์ TikTok')</div>`;
+            } else {
+                listEl.innerHTML = showcase.map((item, i) => `
+                    <div style="background:#1e293b; border-radius:10px; padding:10px; border:1px solid #ff005044; display:flex; gap:10px; align-items:center;">
+                        <img src="${item.img || 'https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492'}" style="width:44px; height:44px; object-fit:cover; border-radius:8px;" />
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:12px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title}</div>
+                            <div style="font-size:10px; color:#ff0050;">฿${item.price} | คอม ${item.comm}% | กำไร +฿${parseFloat(item.profit||0).toFixed(0)}</div>
+                        </div>
+                        <button onclick="navigator.clipboard.writeText('${(item.link||'').replace(/'/g,"\\'")}'); showToast('📋 ก๊อปลิงก์ชิ้นที่ ${i+1} แล้ว!');" style="background:#ff0050; color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📋 ก๊อป</button>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('tiktokShowcaseModal').style.display = 'flex';
+        }
+
+        function mLaunchTikTokApp() {
+            showToast("🚀 กำลังเปิดแอป TikTok...");
+            // Open TikTok App / TikTok Seller Manager
+            window.open('https://www.tiktok.com/@me', '_blank');
+        }
+
+        function mClearShowcaseQueue() {
+            localStorage.removeItem('tiktok_showcase_queue');
+            openTikTokShowcaseModal();
+            showToast("🧹 ล้างสินค้าในตู้โชว์เรียบร้อย");
         }
 
         function switchMobileNav(tab) {
