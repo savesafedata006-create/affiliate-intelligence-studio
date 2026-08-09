@@ -90,16 +90,41 @@ def save_product_images(image_urls, item_id):
 
     return saved_paths
 
+# ==================== PRODUCT VALIDATION GATE ====================
+JUNK_KEYWORDS = [
+    "เปิดร้านค้า", "เข้าสู่ระบบ", "ตะกร้าสินค้า", "ดูทั้งหมด",
+    "หน้าแรก", "Shopee Thailand", "ช่วยเหลือ", "แชทกับเรา",
+    "หมวดหมู่", "สมัครสมาชิก", "เพิ่มเพื่อน", "ติดตาม", "ดูเพิ่มเติม",
+    "ค้นหา", "ล็อกเอาต์", "การตั้งค่า", "ประวัติการสั่งซื้อ"
+]
+
+def is_valid_product(title: str, sale_price: float) -> bool:
+    """Server-side gate: ป้องกันข้อมูลขยะเข้า DB อย่างเด็ดขาด"""
+    if not title:
+        return False
+    clean = title.strip()
+    # ชื่อสั้นเกินไป (ไม่ใช่สินค้า)
+    if len(clean) <= 4:
+        return False
+    # คำที่บ่งบอกว่าเป็น UI element ไม่ใช่สินค้า
+    if any(kw in clean for kw in JUNK_KEYWORDS):
+        return False
+    # ราคาเป็น 0 หรือลบ (ไม่มีทางเป็นสินค้า)
+    if sale_price <= 0:
+        return False
+    return True
+
 def db_save_products(items):
     conn = get_single_db_connection()
     cursor = conn.cursor()
     saved_count = 0
+    skipped_count = 0
 
     for item in items:
         item_id = str(item.get('item_id', item.get('id', f"sp_{int(time.time())}")))
-        title = item.get('title', 'สินค้า Shopee Affiliate')
+        title = item.get('title', '')
         desc = item.get('description', title)
-        orig_price = float(item.get('original_price', item.get('origPrice', 590.0) or 590.0))
+        orig_price = float(item.get('original_price', item.get('origPrice', 590.0) or 590.0)  or 590.0)
         sale_price = float(item.get('sale_price', item.get('price', 390.0) or 390.0))
         comm_rate = float(str(item.get('commission_rate', item.get('comm', 22.5))).replace('%', ''))
         net_profit = float(item.get('net_profit_thb', item.get('profit', round(sale_price * (comm_rate / 100.0), 2))))
@@ -108,6 +133,12 @@ def db_save_products(items):
         images_list = item.get('images', [main_img])
         shop_name = item.get('shop_name', item.get('shopName', 'Shopee Official Store'))
         status = item.get('status', 'PENDING_VIDEO')
+
+        # ✅ SERVER-SIDE VALIDATION GATE — ตรวจก่อนบันทึก ไม่ผ่านทิ้งทันที
+        if not is_valid_product(title, sale_price):
+            print(f"⚠️  BLOCKED junk item: [{item_id}] '{title[:40]}' price={sale_price}")
+            skipped_count += 1
+            continue
 
         local_paths = save_product_images(images_list, item_id)
         if local_paths:
@@ -127,6 +158,7 @@ def db_save_products(items):
 
     conn.commit()
     conn.close()
+    print(f"✅ Saved {saved_count} valid products | ⚠️ Blocked {skipped_count} junk items")
     return saved_count
 
 def db_soft_delete(item_ids):

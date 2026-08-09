@@ -228,10 +228,15 @@
         for (let i = 0; i < cards.length && scraped < count; i++) {
             const card = cards[i];
             const title = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
-            if (!title || title.length < 5) continue;
+
+            // ✅ FRONT-END VALIDATION — กรองขยะก่อนส่ง Server
+            if (!isValidProductTitle(title)) continue;
 
             const priceText = card.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "290";
             const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 290.0;
+
+            // กรองรายการที่ไม่มีราคา
+            if (price <= 0) continue;
             
             // Extract Multi-Image Gallery
             const gallery = await extractProductGalleryImages(card);
