@@ -580,14 +580,10 @@
             showToast(`✅ บันทึกสินค้า ${items.length} รายการ เข้า DB เรียบร้อยแล้ว!`, "#059669");
             resetSelectionState();
 
-            // 🚀 Smart Focus or Open Web App tab (If tab exists, switch focus; if not, open new)
+            // 🚀 Smart Focus or Open Web App tab (Reuses existing tab if open)
             if (document.getElementById("chkAutoOpenWeb")?.checked) {
                 setTimeout(() => {
-                    try {
-                        chrome.runtime.sendMessage({ action: "FOCUS_OR_OPEN_APP_TAB", url: "http://127.0.0.1:8080/#centraldb" });
-                    } catch (e) {
-                        window.open("http://127.0.0.1:8080/#centraldb", "_blank");
-                    }
+                    window.open("http://127.0.0.1:8080/#centraldb", "AffiliateStudioTab");
                 }, 300);
             }
         })
