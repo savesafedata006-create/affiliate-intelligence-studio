@@ -516,13 +516,17 @@
 
                             <!-- Preview Card -->
                             <div id="flowProdPreviewCard" style="display:none; background:#0f172a; border-radius:10px; padding:12px; gap:12px; align-items:center;">
-                                <img id="flowProdImg" src="" style="width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid #334155;">
+                                <img id="flowProdImg" src="" style="width:72px; height:72px; object-fit:cover; border-radius:8px; border:2px solid #0284c7;">
                                 <div style="flex:1; min-width:0;">
                                     <div id="flowProdTitle" style="font-size:13px; font-weight:700; color:#f1f5f9; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
-                                    <div style="display:flex; gap:8px; margin-top:4px;">
+                                    <div style="display:flex; gap:8px; margin-top:4px; margin-bottom:6px;">
                                         <span id="flowProdPrice" style="font-size:11px; background:#059669; color:#fff; padding:2px 6px; border-radius:4px; font-weight:700;"></span>
                                         <span id="flowProdComm" style="font-size:11px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-weight:700;"></span>
                                         <span id="flowProdProfit" style="font-size:11px; background:#ee4d2d; color:#fff; padding:2px 6px; border-radius:4px; font-weight:700;"></span>
+                                    </div>
+                                    <div style="display:flex; gap:6px;">
+                                        <button onclick="downloadFlowProductImage()" style="font-size:11px; background:#0284c7; color:#fff; border:none; padding:4px 10px; border-radius:6px; cursor:pointer;">📥 ดาวน์โหลดภาพใส่ Google Flow</button>
+                                        <button onclick="copyFlowProductImageLink()" style="font-size:11px; background:#475569; color:#fff; border:none; padding:4px 10px; border-radius:6px; cursor:pointer;">📋 คัดลอกลิงก์รูปภาพ</button>
                                     </div>
                                 </div>
                             </div>
@@ -581,7 +585,24 @@
                                 </select>
                                 <button class="btn btn-outline" onclick="refreshStudioProductList()" style="font-size:12px; white-space:nowrap;">🔄 รีเฟรช</button>
                             </div>
+
+                            <!-- Storyboard Preview Card -->
+                            <div id="sbProdPreviewCard" style="display:none; margin-top:12px; background:#0f172a; border-radius:10px; padding:12px; gap:12px; align-items:center;">
+                                <img id="sbProdImg" src="" style="width:72px; height:72px; object-fit:cover; border-radius:8px; border:2px solid #a855f7;">
+                                <div style="flex:1; min-width:0;">
+                                    <div id="sbProdTitle" style="font-size:13px; font-weight:700; color:#f1f5f9; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                                    <div style="display:flex; gap:8px; margin-top:4px; margin-bottom:6px;">
+                                        <span id="sbProdPrice" style="font-size:11px; background:#059669; color:#fff; padding:2px 6px; border-radius:4px; font-weight:700;"></span>
+                                        <span id="sbProdComm" style="font-size:11px; background:#7c3aed; color:#fff; padding:2px 6px; border-radius:4px; font-weight:700;"></span>
+                                    </div>
+                                    <div style="display:flex; gap:6px;">
+                                        <button onclick="downloadSbProductImage()" style="font-size:11px; background:#a855f7; color:#fff; border:none; padding:4px 10px; border-radius:6px; cursor:pointer;">📥 ดาวน์โหลดรูปภาพต้นฉบับ</button>
+                                        <button onclick="copySbProductImageLink()" style="font-size:11px; background:#475569; color:#fff; border:none; padding:4px 10px; border-radius:6px; cursor:pointer;">📋 คัดลอกลิงก์รูปภาพ</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
 
                         <!-- Storyboard 4 Scenes Grid -->
                         <div id="storyboardContainer" style="display:flex; flex-direction:column; gap:16px;">

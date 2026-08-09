@@ -1708,15 +1708,95 @@ function saveFlowPackageToVault() {
 function loadStoryboardProduct(selectedIdx) {
     const picker = document.getElementById('sbProdPicker');
     if (!picker || selectedIdx === '') {
+        const card = document.getElementById('sbProdPreviewCard');
+        if (card) card.style.display = 'none';
         sbCurrentProduct = null;
         return;
     }
     const opt = picker.options[picker.selectedIndex];
     if (!opt || !opt.dataset.item) return;
 
-    sbCurrentProduct = JSON.parse(opt.dataset.item);
+    const item = JSON.parse(opt.dataset.item);
+    sbCurrentProduct = item;
+
+    const card = document.getElementById('sbProdPreviewCard');
+    if (card) {
+        card.style.display = 'flex';
+        const img = document.getElementById('sbProdImg');
+        if (img) {
+            let imgSrc = item.main_image_path || '';
+            if (imgSrc && !imgSrc.startsWith('data:') && !imgSrc.startsWith('http')) {
+                imgSrc = `/product_images/${imgSrc.split('/').pop()}`;
+            }
+            img.src = imgSrc || '';
+        }
+        const titleEl = document.getElementById('sbProdTitle');
+        if (titleEl) titleEl.textContent = item.title.replace(/\n/g, ' ');
+
+        const priceEl = document.getElementById('sbProdPrice');
+        if (priceEl) priceEl.textContent = `💰 ฿${parseFloat(item.sale_price).toFixed(0)}`;
+
+        const commEl = document.getElementById('sbProdComm');
+        if (commEl) commEl.textContent = `💎 คอม ${item.commission_rate}%`;
+    }
+
     generateStoryboard();
 }
+
+function downloadFlowProductImage() {
+    const p = flowCurrentProduct || studioCurrentProduct;
+    if (!p || !p.main_image_path) {
+        alert("⚠️ ไม่พบรูปภาพของสินค้านี้");
+        return;
+    }
+    const a = document.createElement('a');
+    a.href = p.main_image_path;
+    a.download = `${p.item_id}_original.jpg`;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function copyFlowProductImageLink() {
+    const p = flowCurrentProduct || studioCurrentProduct;
+    if (!p || !p.main_image_path) {
+        alert("⚠️ ไม่พบรูปภาพของสินค้านี้");
+        return;
+    }
+    const fullUrl = p.main_image_path.startsWith('http') ? p.main_image_path : `${window.location.origin}${p.main_image_path}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+        alert(`📋 คัดลอกลิงก์รูปภาพต้นฉบับแล้ว!\n\n${fullUrl}`);
+    });
+}
+
+function downloadSbProductImage() {
+    const p = sbCurrentProduct || flowCurrentProduct || studioCurrentProduct;
+    if (!p || !p.main_image_path) {
+        alert("⚠️ ไม่พบรูปภาพของสินค้านี้");
+        return;
+    }
+    const a = document.createElement('a');
+    a.href = p.main_image_path;
+    a.download = `${p.item_id}_original.jpg`;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function copySbProductImageLink() {
+    const p = sbCurrentProduct || flowCurrentProduct || studioCurrentProduct;
+    if (!p || !p.main_image_path) {
+        alert("⚠️ ไม่พบรูปภาพของสินค้านี้");
+        return;
+    }
+    const fullUrl = p.main_image_path.startsWith('http') ? p.main_image_path : `${window.location.origin}${p.main_image_path}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+        alert(`📋 คัดลอกลิงก์รูปภาพต้นฉบับแล้ว!\n\n${fullUrl}`);
+    });
+}
+
 
 function generateStoryboard() {
     const p = sbCurrentProduct || flowCurrentProduct || studioCurrentProduct;
