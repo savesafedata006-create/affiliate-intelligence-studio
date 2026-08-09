@@ -185,6 +185,7 @@ function loadCatalogFromStorage(callback) {
                     rating: "4.9 ⭐",
                     sold: "1,500 ชิ้น",
                     img: item.main_image_path || "/images/real_skintific_1_0.jpg",
+                    images: item.images || [item.main_image_path || "/images/real_skintific_1_0.jpg"],
                     url: item.affiliate_link,
                     status: "an_15320530167 (🟢 Verified Active)"
                 }));
@@ -386,16 +387,20 @@ function openCarouselModal(prodId) {
     const item = catalogData.find(x => x.id === prodId);
     const title = item ? item.title : 'สไลด์ภาพสินค้า';
     
-    // Multi-image list for carousel
-    activeCarouselImages = [
-        item ? (item.img || "/images/real_skintific_1_0.jpg") : "/images/real_skintific_1_0.jpg",
-        "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b",
-        "https://down-th.img.susercontent.com/file/th-11134207-7r98o-lx285w9372x492",
-        "https://down-th.img.susercontent.com/file/th-11134207-7qul4-lh9z8y9372x420"
-    ];
+    // Dynamic Multi-Image Gallery List
+    if (item && item.images && Array.isArray(item.images) && item.images.length > 0) {
+        activeCarouselImages = item.images;
+    } else if (item && item.img) {
+        activeCarouselImages = [item.img];
+    } else {
+        activeCarouselImages = [
+            "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b",
+            "https://down-th.img.susercontent.com/file/th-11134207-7r98o-lx285w9372x492"
+        ];
+    }
 
     currentCarouselIndex = 0;
-    document.getElementById("carouselModalTitle").innerText = `🖼️ สไลด์ภาพสินค้า: ${title.substring(0, 24)}...`;
+    document.getElementById("carouselModalTitle").innerText = `🖼️ สไลด์ภาพสินค้า HD (${activeCarouselImages.length} ภาพ): ${title.substring(0, 24)}...`;
     updateCarouselSlideView();
 
     const modal = document.getElementById("carouselModal");
