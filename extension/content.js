@@ -156,6 +156,15 @@
         }
     }
 
+    function isValidProductTitle(title) {
+        if (!title) return false;
+        const clean = title.trim();
+        if (clean.length <= 4) return false;
+        const junkWords = ["เปิดร้านค้า", "เข้าสู่ระบบ", "ตะกร้าสินค้า", "ดูทั้งหมด", "หน้าแรก", "Shopee Thailand", "ช่วยเหลือ", "แชทกับเรา", "หมวดหมู่"];
+        if (junkWords.some(word => clean.includes(word))) return false;
+        return true;
+    }
+
     async function handleMouseClickSelect(e) {
         if (!isPickModeActive) return;
         const card = e.target.closest("a, .shopee-search-item-result__item, [data-sqp]");
@@ -163,7 +172,11 @@
             e.preventDefault();
             e.stopPropagation();
 
-            const title = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "สินค้า Shopee";
+            const title = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
+            if (!isValidProductTitle(title)) {
+                showToast("⚠️ องค์ประกอบนี้ไม่ใช่สินค้า กรุณาคลิกเลือกตัวสินค้าครับ", "#eab308");
+                return;
+            }
             const priceText = card.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "390";
             const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 390.0;
             

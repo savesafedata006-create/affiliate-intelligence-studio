@@ -162,6 +162,31 @@ def db_restore(item_ids):
     conn.close()
     return count
 
+def db_purge_junk_items():
+    conn = get_single_db_connection()
+    cursor = conn.cursor()
+    junk_keywords = ["เปิดร้านค้า", "เข้าสู่ระบบ", "ตะกร้าสินค้า", "ดูทั้งหมด", "หน้าแรก", "Shopee Thailand", "ช้อปปี้ถูกชัวร์ ขายดี"]
+    
+    purged_count = 0
+    cursor.execute("SELECT item_id, title FROM shopee_affiliate_items")
+    rows = cursor.fetchall()
+    
+    for item_id, title in rows:
+        clean_title = (title or "").strip()
+        is_junk = False
+        if len(clean_title) <= 3:
+            is_junk = True
+        elif any(kw in clean_title for kw in junk_keywords):
+            is_junk = True
+            
+        if is_junk:
+            cursor.execute("DELETE FROM shopee_affiliate_items WHERE item_id = ?", (item_id,))
+            purged_count += 1
+            
+    conn.commit()
+    conn.close()
+    return purged_count
+
 # ==================== SINGLE MASTER SERVER HANDLER ====================
 class SingleMasterServerHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -185,6 +210,14 @@ class SingleMasterServerHandler(SimpleHTTPRequestHandler):
             body = json.loads(post_data.decode('utf-8'))
         except Exception:
             body = {}
+
+        if self.path == "/api/purge_junk_db":
+            count = db_purge_junk_items()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "success", "purged_count": count, "message": f"Purged {count} non-product junk items from SQLite database!"}, ensure_ascii=False).encode('utf-8'))
+            return
 
         if self.path in ["/api/save_product", "/api/save_db_permanent"]:
             items = body if isinstance(body, list) else [body]
@@ -242,7 +275,7 @@ class SingleMasterServerHandler(SimpleHTTPRequestHandler):
                 self.end_headers()
                 return
 
-        if self.path in ["/api/fetch_products", "/api/search_db"]:
+        if self.path.startswith("/api/fetch_products") or self.path.startswith("/api/search_db"):
             conn = get_single_db_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT item_id, title, original_price, sale_price, commission_rate, net_profit_thb, affiliate_link, main_image_path, shop_name, status, created_at, images_json FROM shopee_affiliate_items WHERE status != 'TRASH_BIN' ORDER BY created_at DESC")

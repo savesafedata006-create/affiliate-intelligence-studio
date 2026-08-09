@@ -103,7 +103,10 @@
                     <div class="card bg-gradient-card">
                         <div class="card-header">
                             <h3>🗄️ หน้าค้นหาและสำรวจฐานข้อมูลกลาง SQLite (Central Database Explorer)</h3>
-                            <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="searchCentralDbLive()">🔎 ค้นหาเรียลไทม์</button>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-primary" style="background:#059669; border-color:#059669;" onclick="searchCentralDbLive()">🔎 ค้นหาเรียลไทม์</button>
+                                <button class="btn btn-rose" style="background:#991b1b;" onclick="purgeJunkFromCentralDb()">🧹 ล้างรายการขยะอัตโนมัติ</button>
+                            </div>
                         </div>
                         <p class="desc-text" style="font-size:14px;">ค้นหา ค้นคลัง และกรองสินค้าทั้งหมดที่บันทึกไว้ในฐานข้อมูลกลาง <code>~/.affiliate_intel_db.sqlite</code> บนดิสก์ Mac ของคุณ</p>
 

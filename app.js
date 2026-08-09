@@ -273,10 +273,46 @@ function renderCentralDbTable(items) {
             <td><small style="color:var(--text-muted);">${item.total_sold || 1200} ชิ้น | ${item.rating_star || '4.9'}⭐</small></td>
             <td><span class="badge badge-green">💾 บันทึกถาวร</span></td>
             <td>
-                <button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="importSelectedDbItemToCatalog(${idx})">📥 ดึงเข้าตระกร้า</button>
+                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                    <button class="btn btn-primary" style="padding:4px 8px; font-size:11px;" onclick="importSelectedDbItemToCatalog(${idx})">📥 ดึงเข้าตระกร้า</button>
+                    <button class="btn btn-rose" style="padding:4px 8px; font-size:11px; background:#991b1b;" onclick="deleteItemFromCentralDb('${item.item_id}')">🗑️ ลบออก</button>
+                </div>
             </td>
         </tr>
     `).join("");
+}
+
+function deleteItemFromCentralDb(itemId) {
+    const item = centralDbResults.find(x => x.item_id === itemId);
+    const title = item ? item.title : itemId;
+
+    if (confirm(`⚠️ ยืนยันการลบสินค้าออกจาก DB ถาวร:\n\nคุณต้องการลบรายการ '${title.substring(0, 30)}...' ออกจากฐานข้อมูล SQLite ใช่หรือไม่?`)) {
+        fetch('/api/permanent_delete_product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_ids: [itemId] })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert("✅ ลบรายการสินค้าออกจากฐานข้อมูลเรียบร้อยแล้ว!");
+            searchCentralDbLive();
+            loadCatalogFromStorage();
+        })
+        .catch(err => console.log(err));
+    }
+}
+
+function purgeJunkFromCentralDb() {
+    if (confirm("🧹 ยืนยันการล้างรายการขยะอัตโนมัติ:\n\nระบบจะทำการตรวจค้นและลบรายการที่ไม่ใช่สินค้า (เช่น 'เปิดร้านค้า', '2', ชื่อสั้นเกินไป) ออกจากฐานข้อมูล SQLite ทั้งหมด คุณต้องการดำเนินการใช่หรือไม่?")) {
+        fetch('/api/purge_junk_db', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                alert(`✅ ล้างรายการที่ไม่ใช่สินค้าออกสำเร็จ ${data.purged_count || 0} รายการ!`);
+                searchCentralDbLive();
+                loadCatalogFromStorage();
+            })
+            .catch(err => console.log(err));
+    }
 }
 
 function importSelectedDbItemToCatalog(index) {
