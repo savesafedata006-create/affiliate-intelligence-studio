@@ -1203,8 +1203,85 @@ function downloadAllImagesForProduct(prodId) {
 
 function saveToVault(title) {
     switchTab('prompt');
+    refreshStudioProductList();
     generateGoogleFlowPrompt();
     alert(`✅ บันทึกสินค้า '${title}' และสร้างพรอมต์ Google Flow 9:16 เรียบร้อยแล้ว!`);
+}
+
+let studioCurrentProduct = null;
+
+function refreshStudioProductList() {
+    fetch('/api/fetch_products')
+        .then(res => res.json())
+        .then(data => {
+            const picker = document.getElementById('studioProductPicker');
+            if (!picker || !data.items) return;
+            picker.innerHTML = '<option value="">-- เลือกสินค้าจากคลัง DB --</option>';
+            data.items.forEach((item, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                const shortTitle = item.title.replace(/\n/g, ' ').substring(0, 45);
+                opt.textContent = `${idx + 1}. ${shortTitle} | ฿${item.sale_price} | คอม ${item.commission_rate}%`;
+                opt.dataset.item = JSON.stringify(item);
+                picker.appendChild(opt);
+            });
+        })
+        .catch(() => {});
+}
+
+function loadProductIntoStudio(selectedIdx) {
+    const picker = document.getElementById('studioProductPicker');
+    if (!picker || selectedIdx === '') {
+        document.getElementById('studioProductPreview').style.display = 'none';
+        studioCurrentProduct = null;
+        return;
+    }
+    const opt = picker.options[picker.selectedIndex];
+    if (!opt || !opt.dataset.item) return;
+
+    const item = JSON.parse(opt.dataset.item);
+    studioCurrentProduct = item;
+
+    // Show preview card
+    const preview = document.getElementById('studioProductPreview');
+    preview.style.display = 'flex';
+
+    const img = document.getElementById('studioProductImg');
+    if (img) {
+        let imgSrc = item.main_image_path || '';
+        if (imgSrc && !imgSrc.startsWith('data:') && !imgSrc.startsWith('http')) {
+            imgSrc = `/product_images/${imgSrc.split('/').pop()}`;
+        }
+        img.src = imgSrc || '';
+        img.onerror = () => img.src = '';
+    }
+
+    const titleEl = document.getElementById('studioProductTitle');
+    if (titleEl) titleEl.textContent = item.title.replace(/\n/g, ' ');
+
+    const priceEl = document.getElementById('studioProductPrice');
+    if (priceEl) priceEl.textContent = `💰 ฿${parseFloat(item.sale_price).toFixed(0)}`;
+
+    const commEl = document.getElementById('studioProductComm');
+    if (commEl) commEl.textContent = `💎 คอม ${item.commission_rate}%`;
+
+    const profitEl = document.getElementById('studioProductProfit');
+    if (profitEl) profitEl.textContent = `🤑 กำไร ฿${parseFloat(item.net_profit_thb || 0).toFixed(0)}`;
+
+    // Auto-generate prompt based on selected product
+    generateGoogleFlowPrompt();
+}
+
+function openAffiliateLinkFromStudio() {
+    if (!studioCurrentProduct) return;
+    window.open(studioCurrentProduct.affiliate_link, '_blank');
+}
+
+function copyAffiliateLinkFromStudio() {
+    if (!studioCurrentProduct) return;
+    navigator.clipboard.writeText(studioCurrentProduct.affiliate_link).then(() => {
+        alert(`📋 คัดลอกลิงก์ Affiliate ของ '${studioCurrentProduct.title.substring(0, 20)}...' แล้ว!`);
+    });
 }
 
 function generateGoogleFlowPrompt() {
@@ -1215,12 +1292,19 @@ function generateGoogleFlowPrompt() {
     const cta = document.getElementById("txtPromptCTA");
 
     const acc = accountsData[currentAccountId] || accountsData["acc_1"];
+    const p = studioCurrentProduct;
 
-    if (visual) visual.value = "Vertical 9:16 portrait. High-end commercial product video shot of live Shopee item. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation.";
-    if (neg) neg.value = "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing";
-    if (hook) hook.value = "ใครกำลังมองหาสินค้าชิ้นนี้อยู่? หยุดดูคลิปนี้ด่วนเลยครับ!";
-    if (body) body.value = "สินค้าชิ้นนี้คุ้มค่ามาก ยอดขายถล่มทลาย แถมมีคูปองส่วนลดพิเศษส่งฟรีวันนี้!";
-    if (cta) cta.value = `พิกัดกดที่หน้าร้าน ${acc.storefront} หรือ ตะกร้าเหลืองซ้ายล่างได้เลยครับ`;
+    // Use real product data if selected, otherwise use generic template
+    const productName = p ? p.title.replace(/\n/g, ' ').substring(0, 50) : "สินค้า Shopee";
+    const price = p ? `฿${parseFloat(p.sale_price).toFixed(0)}` : "ราคาพิเศษ";
+    const profitThb = p ? `฿${parseFloat(p.net_profit_thb || 0).toFixed(0)}` : "";
+    const commPct = p ? `${p.commission_rate}%` : "25%";
+
+    if (visual) visual.value = `Vertical 9:16 portrait. High-end commercial product video of: ${productName}. Slow push-in tracking shot, ultra-realistic textures, soft studio diffused lighting, 8K photorealistic, 60fps, cinema-grade presentation. Product centered, clean white/pastel background, lifestyle setting.`;
+    if (neg) neg.value = "blurry, distorted, low quality, watermark, logo, grain, noise, low resolution, extra limbs, bad framing, text overlay, nsfw";
+    if (hook) hook.value = `หยุดดูก่อน! 🛑 ถ้าคุณกำลังมองหา "${productName.substring(0, 25)}..." อยู่ล่ะก็ คลิปนี้ทำมาเพื่อคุณโดยตรงเลยครับ`;
+    if (body) body.value = `✅ ${productName.substring(0, 40)} ราคาแค่ ${price} เท่านั้น! ยอดขายสูงมาก${p && p.commission_rate ? ` คอมมิชชัน ${commPct}` : ''} สินค้าส่งไวมีของแน่นอน`;
+    if (cta) cta.value = `กดตะกร้าเหลืองซ้ายล่างได้เลยครับ หรือ พิกัดกดที่ ${acc.storefront} 🛒`;
 }
 
 function copyFullPromptScript() {

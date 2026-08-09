@@ -406,12 +406,42 @@
                 <section id="tab-prompt" class="tab-page">
                     <div class="card">
                         <div class="card-header">
-                            <h3>🎬 สตูดิโอสร้างพรอมต์ Google Flow (วิดีโอแนวตั้ง 9:16)</h3>
+                            <h3>🎬 สตูดิโอทำคลิป AI (Google Flow 9:16) & Export</h3>
                             <div style="display:flex; gap:8px;">
-                                <button class="btn btn-primary" onclick="generateGoogleFlowPrompt()">✨ เจนพรอมต์ใหม่ด้วย AI</button>
-                                <button class="btn btn-rose" onclick="clearPromptPageData()">🧹 ล้างพรอมต์หน้านี้</button>
+                                <button class="btn btn-primary" onclick="generateGoogleFlowPrompt()">✨ เจนพรอมต์ใหม่</button>
+                                <button class="btn btn-rose" onclick="clearPromptPageData()">🧹 ล้างข้อมูล</button>
                             </div>
                         </div>
+
+                        <!-- 🛒 PRODUCT PICKER -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">🛒 เลือกสินค้าที่จะทำคลิป</div>
+                            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                <select id="studioProductPicker" onchange="loadProductIntoStudio(this.value)" style="flex:1; background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:8px 12px; border-radius:8px; font-size:13px; min-width:200px; cursor:pointer;">
+                                    <option value="">-- เลือกสินค้าจากคลัง DB --</option>
+                                </select>
+                                <button class="btn btn-outline" onclick="refreshStudioProductList()" style="white-space:nowrap; font-size:12px;">🔄 โหลดรายการ</button>
+                            </div>
+
+                            <!-- Product Preview Card -->
+                            <div id="studioProductPreview" style="display:none; margin-top:12px; background:#0f172a; border-radius:10px; padding:12px; display:flex; gap:12px; align-items:flex-start;">
+                                <img id="studioProductImg" src="" style="width:72px; height:72px; object-fit:cover; border-radius:8px; border:2px solid #334155;">
+                                <div style="flex:1; min-width:0;">
+                                    <div id="studioProductTitle" style="font-size:13px; font-weight:700; color:#f1f5f9; line-height:1.4; margin-bottom:6px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;"></div>
+                                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                        <span id="studioProductPrice" style="font-size:12px; background:#059669; color:#fff; padding:2px 8px; border-radius:6px; font-weight:700;"></span>
+                                        <span id="studioProductComm" style="font-size:12px; background:#7c3aed; color:#fff; padding:2px 8px; border-radius:6px; font-weight:700;"></span>
+                                        <span id="studioProductProfit" style="font-size:12px; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:6px; font-weight:700;"></span>
+                                    </div>
+                                    <div style="margin-top:6px; display:flex; gap:6px;">
+                                        <button onclick="openAffiliateLinkFromStudio()" style="font-size:11px; background:#0284c7; color:#fff; border:none; padding:4px 10px; border-radius:6px; cursor:pointer;">🔗 ลิงก์ Affiliate</button>
+                                        <button onclick="copyAffiliateLinkFromStudio()" style="font-size:11px; background:#475569; color:#fff; border:none; padding:4px 10px; border-radius:6px; cursor:pointer;">📋 คัดลอกลิงก์</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Prompt Fields -->
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>📱 Visual Prompt (9:16 สำหรับ Google Flow):</label>
@@ -423,15 +453,15 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>🎙️ Hook (3 วินาทีแรก):</label>
+                                    <label>🎙️ Hook (3 วินาทีแรก — ดึงคนหยุดดู):</label>
                                     <textarea id="txtPromptHook" class="form-input" rows="2" readonly></textarea>
                                 </div>
                                 <div class="form-group">
-                                    <label>📦 Body (เนื้อหาหลัก):</label>
+                                    <label>📦 Body Script (เนื้อหาหลัก 5-10 วินาที):</label>
                                     <textarea id="txtPromptBody" class="form-input" rows="2" readonly></textarea>
                                 </div>
                                 <div class="form-group">
-                                    <label>👉 CTA (ชี้พิกัดตะกร้า):</label>
+                                    <label>👉 CTA (ปิดการขาย — ชี้พิกัดตะกร้า):</label>
                                     <textarea id="txtPromptCTA" class="form-input" rows="2" readonly></textarea>
                                 </div>
                             </div>
@@ -439,6 +469,7 @@
                         </div>
                     </div>
                 </section>
+
 
                 <!-- TAB: SHOPEE VDO STUDIO -->
                 <section id="tab-shopeevdo" class="tab-page">
