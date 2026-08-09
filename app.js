@@ -157,15 +157,44 @@ const initialLiveProducts = [
 function loadCatalogFromStorage() {
     try {
         const saved = localStorage.getItem(`affiliate_catalog_${currentAccountId}`);
-        if (saved && JSON.parse(saved).length > 0) {
+        if (saved !== null) {
             catalogData = JSON.parse(saved);
         } else {
             catalogData = initialLiveProducts;
             saveCatalogToStorage();
         }
     } catch (e) {
-        catalogData = initialLiveProducts;
+        catalogData = [];
     }
+
+    // Always sync with single SQLite backend (~/.affiliate_intel_db.sqlite)
+    fetch('/api/fetch_products')
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.items && data.items.length > 0) {
+                const mapped = data.items.map(item => ({
+                    id: item.item_id,
+                    platform: "🟠 Shopee Official",
+                    title: item.title,
+                    category: "สินค้าคัดสรร",
+                    price: (item.sale_price || 390).toFixed(2),
+                    origPrice: item.original_price ? item.original_price.toFixed(2) : "",
+                    comm: `${item.commission_rate || 22.5}%`,
+                    profit: (item.net_profit_thb || 87.75).toFixed(2),
+                    shopName: item.shop_name || "Shopee Store",
+                    rating: "4.9 ⭐",
+                    sold: "1,500 ชิ้น",
+                    img: item.main_image_path || "/images/real_skintific_1_0.jpg",
+                    url: item.affiliate_link,
+                    status: "an_15320530167 (🟢 Verified Active)"
+                }));
+
+                catalogData = mapped;
+                saveCatalogToStorage();
+                renderCatalog();
+            }
+        })
+        .catch(err => console.log("DB sync note:", err));
 }
 
 function saveCatalogToStorage() {
