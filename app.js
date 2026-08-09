@@ -1525,11 +1525,51 @@ function toggleLive() {
     }
 }
 
+function generateLiveStreamCommand() {
+    const platform = document.getElementById('livePlatformSelect')?.value || 'shopee';
+    const key = document.getElementById('inpStreamKey')?.value.trim() || 'YOUR_STREAM_KEY';
+    const txt = document.getElementById('txtFfmpegCmd');
+    if (!txt) return;
+
+    let rtmpUrl = "rtmp://live.shopee.co.th/live/";
+    if (platform === 'tiktok') {
+        rtmpUrl = "rtmp://push-rtmp-l1.tiktok.com/live/";
+    } else if (platform === 'youtube') {
+        rtmpUrl = "rtmp://a.rtmp.youtube.com/live2/";
+    }
+
+    const cmd = `ffmpeg -re -stream_loop -1 -i ~/Pictures/AffiliateIntel_Images/live_playlist.mp4 -c:v libx264 -preset veryfast -b:v 3000k -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -ar 44100 -f flv "${rtmpUrl}${key}"`;
+
+    txt.value = cmd;
+}
+
+function renderLivePinCards() {
+    fetch('/api/fetch_products')
+        .then(r => r.json())
+        .then(data => {
+            const container = document.getElementById('livePinContainer');
+            if (!container || !data.items) return;
+            const items = data.items.slice(0, 6);
+            container.innerHTML = items.map((item, idx) => `
+                <div style="min-width:160px; max-width:180px; background:#0f172a; border:1px solid #334155; border-radius:8px; padding:8px; text-align:center;">
+                    <img src="${item.main_image_path || ''}" style="width:48px; height:48px; object-fit:cover; border-radius:6px; margin-bottom:4px;" onerror="this.src=''">
+                    <div style="font-size:11px; font-weight:700; color:#f1f5f9; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${idx+1}. ${item.title.substring(0, 20)}</div>
+                    <div style="font-size:10px; color:#059669; font-weight:700; margin-top:2px;">💰 ฿${parseFloat(item.sale_price).toFixed(0)} (คอม ${item.commission_rate}%)</div>
+                    <span style="font-size:9px; background:#38bdf822; color:#38bdf8; padding:1px 6px; border-radius:4px; display:inline-block; margin-top:4px;">📌 ตะกร้า #${idx+1}</span>
+                </div>
+            `).join('');
+        })
+        .catch(() => {});
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     loadCatalogFromStorage();
     refreshStudioProductList();
     loadCreativeAssets();
+    generateLiveStreamCommand();
+    renderLivePinCards();
 });
+
 
 let flowCurrentProduct = null;
 let sbCurrentProduct = null;

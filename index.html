@@ -838,21 +838,70 @@
                     </div>
                 </section>
 
-                <!-- TAB: AUTO LIVE -->
+                <!-- TAB: AUTO LIVE 24/7 CONTROL CENTER -->
                 <section id="tab-live" class="tab-page">
                     <div class="card">
                         <div class="card-header">
-                            <h3>🔴 สตูดิโอบอทไลฟ์สดอัตโนมัติ (Shopee Live & TikTok Live 24/7)</h3>
-                            <button class="btn btn-rose" id="btnLiveToggle" onclick="toggleLive()">▶️ เริ่มสตรีมไลฟ์สด 24 ชม.</button>
+                            <h3>🔴 สตูดิโอบอทไลฟ์สด 24/7 (Shopee Live & TikTok Shop Live Automation)</h3>
+                            <button class="btn btn-rose" id="btnLiveToggle" onclick="toggleLive()">▶️ เริ่มสตรีมมิ่งไลฟ์สด 24 ชม.</button>
                         </div>
-                        <div class="live-status-box" id="liveStatusBox">
-                            🔴 สถานะสตรีมมิ่ง: <span>สแตนด์บาย</span>
+                        <div class="live-status-box" id="liveStatusBox" style="background:#0f172a; border:1px solid #334155; border-radius:10px; padding:12px; margin-bottom:16px;">
+                            🔴 สถานะสตรีมมิ่ง: <span style="color:#64748b; font-weight:700;">สแตนด์บาย</span> | ผู้ชมเรียลไทม์: <span>0 คน</span>
                         </div>
-                        <div class="chat-log-container" id="chatLog">
-                            [System]: สตูดิโอไลฟ์สดพร้อมทำงาน...
+
+                        <!-- 🛠️ 24/7 STREAMING CONFIGURATION -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">📡 1. ตั้งค่าการยิงสัญญาณสตรีม RTMP 24/7 (OBS / FFmpeg Script)</div>
+                            <div class="form-grid">
+                                <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🌐 Platform สตรีมมิ่ง:</label>
+                                        <select id="livePlatformSelect" onchange="generateLiveStreamCommand()" class="form-input" style="background:#0f172a; color:#38bdf8; font-size:12px;">
+                                            <option value="shopee">🟠 Shopee Live (RTMP Server)</option>
+                                            <option value="tiktok">🖤 TikTok Shop Live (Stream Key)</option>
+                                            <option value="youtube">🔴 YouTube Shorts Live 24/7</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11px; color:#94a3b8;">🔑 Stream Key (รหัสสตรีมไลฟ์สด):</label>
+                                        <input type="text" id="inpStreamKey" oninput="generateLiveStreamCommand()" class="form-input" placeholder="แปะ Stream Key จาก Shopee / TikTok..." value="live_shopee_key_xyz123">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label style="font-size:11px; color:#94a3b8;">⚡ คำสั่ง FFmpeg รันไลฟ์ 24 ชม. อัตโนมัติ (รันใน Terminal Mac ไม่ต้องเปิด OBS):</label>
+                                    <textarea id="txtFfmpegCmd" class="form-input code-text" rows="3" readonly></textarea>
+                                    <button class="btn btn-outline" style="font-size:11px; padding:4px 10px; margin-top:6px;" onclick="copyText('txtFfmpegCmd')">📋 คัดลอกคำสั่ง FFmpeg ยิงสตรีม 24 ชม.</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 📌 AUTO PRODUCT PINNING SCHEDULE -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">📌 2. ระบบสลับปักหมุดตะกร้าสินค้าอัตโนมัติ (Auto Product Carousel)</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <span style="font-size:12px; color:#94a3b8;">ตั้งเวลาสลับปักหมุดสินค้าในคลัง DB ทุกๆ:</span>
+                                <select id="liveIntervalSelect" style="background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:4px 10px; border-radius:6px; font-size:12px;">
+                                    <option value="120">⏱️ ทุก 2 นาที (แนะนำสำหรับสินค้าคอมสูง)</option>
+                                    <option value="300" selected>⏱️ ทุก 5 นาที (มาตรฐาน Shopee Live)</option>
+                                    <option value="600">⏱️ ทุก 10 นาที</option>
+                                </select>
+                            </div>
+                            <div id="livePinContainer" style="display:flex; gap:10px; overflow-x:auto; padding-bottom:8px;">
+                                <!-- Auto populated live pin cards -->
+                            </div>
+                        </div>
+
+                        <!-- 💬 LIVE CHAT LOG & AUTO REPLY -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:8px;">💬 3. บอทตอบแชทสด & บันทึกกิจกรรมเรียลไทม์ (Live Chat Log)</div>
+                            <div class="chat-log-container" id="chatLog" style="height:160px; background:#0f172a; border-radius:8px; padding:10px; font-family:monospace; font-size:11px; overflow-y:auto; color:#38bdf8;">
+                                [System]: สตูดิโอไลฟ์สด 24/7 พร้อมทำงาน... กดปุ่มเริ่มสตรีมมิ่งไลฟ์สดด้านบน
+                            </div>
                         </div>
                     </div>
                 </section>
+
             </div>
         </main>
     </div>
