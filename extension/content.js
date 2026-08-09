@@ -176,14 +176,30 @@
             </select>
         </div>
 
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#1e293b; padding:6px 10px; border-radius:8px; gap:6px;">
+            <label style="font-size:11px; color:#94a3b8; white-space:nowrap;">📂 ติดหมวดหมู่:</label>
+            <select id="selExtCategory" style="background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:4px 6px; border-radius:6px; font-size:11px; flex:1; cursor:pointer;">
+                <option value="🏠 เครื่องใช้ในบ้าน" selected>🏠 เครื่องใช้ในบ้าน</option>
+                <option value="💄 ความงาม & สกินแคร์">💄 ความงาม & สกินแคร์</option>
+                <option value="📱 ไอที & อิเล็กทรอนิกส์">📱 ไอที & อิเล็กทรอนิกส์</option>
+                <option value="👗 แฟชั่น">👗 แฟชั่น</option>
+                <option value="📦 สินค้าคัดสรร">📦 สินค้าคัดสรรทั่วไป</option>
+            </select>
+        </div>
+
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; background:#1e293b; padding:4px 10px; border-radius:6px;">
-            <span>🛡️ ระบบป้องกันการตรวจจับ Anti-Ban</span>
+            <span>🛡️ ป้องกัน Anti-Ban</span>
             <span style="color:#10b981; font-weight:700;">🟢 ACTIVE</span>
         </div>
 
-        <button id="btnSubmitSelected" style="background:linear-gradient(135deg, #ee4d2d, #ff7337); color:#fff; border:none; padding:10px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(238,77,45,0.4);">
-            📌 ส่งเข้า Python DB (<span id="selCountText">0</span> ชิ้น)
-        </button>
+        <div style="display:flex; gap:6px;">
+            <button id="btnSubmitSelected" style="flex:2; background:linear-gradient(135deg, #ee4d2d, #ff7337); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(238,77,45,0.4);">
+                📌 ส่งเข้า DB (<span id="selCountText">0</span>)
+            </button>
+            <button id="btnCopyLinks" style="flex:1; background:#0284c7; color:#fff; border:none; padding:10px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer;" title="คัดลอกลิงก์พร้อมโพสต์ในโซเชียลทันที">
+                📋 ก๊อปลิงก์
+            </button>
+        </div>
     `;
 
     document.body.appendChild(panel);
@@ -191,12 +207,15 @@
     const btnPick = document.getElementById("btnTogglePickMode");
     const btnAuto = document.getElementById("btnAutoExtract");
     const btnSubmit = document.getElementById("btnSubmitSelected");
+    const btnCopyLinks = document.getElementById("btnCopyLinks");
     const selCountText = document.getElementById("selCountText");
     const inpAutoQuota = document.getElementById("inpAutoQuota");
+    const selExtCategory = document.getElementById("selExtCategory");
 
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
     btnSubmit.addEventListener("click", submitSelectedProductsToDB);
+    btnCopyLinks.addEventListener("click", copySelectedAffiliateLinksToClipboard);
 
     function togglePickMode() {
         isPickModeActive = !isPickModeActive;
@@ -464,6 +483,24 @@
         })
         .catch(err => {
             sendBatchToBackend(urls, index + 1, items);
+        });
+    }
+
+    function copySelectedAffiliateLinksToClipboard() {
+        if (selectedProductsMap.size === 0) {
+            showToast("⚠️ ยังไม่ได้เลือกสินค้า กรุณาเลือกสินค้าก่อนก๊อปลิงก์ครับ", "#eab308");
+            return;
+        }
+
+        const items = Array.from(selectedProductsMap.values());
+        const formattedText = items.map((item, idx) => {
+            return `${idx + 1}. 🛍️ ${item.title}\n💰 ราคา: ฿${item.sale_price}\n🔗 พิกัดซื้อ: ${item.affiliate_link}\n`;
+        }).join("\n");
+
+        navigator.clipboard.writeText(formattedText).then(() => {
+            showToast(`📋 คัดลอกแคปชัน & ลิงก์ ${items.length} รายการลง Clipboard แล้ว!`, "#0284c7");
+        }).catch(err => {
+            showToast("❌ ไม่สามารถคัดลอกลง Clipboard ได้", "#dc2626");
         });
     }
 
