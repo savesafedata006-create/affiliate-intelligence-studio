@@ -442,9 +442,179 @@ function purgeJunkFromCentralDb() {
     }
 }
 
+// ==============================
+// 📤 SEND TO MY COLLECTION QUEUE
+// ==============================
+function sendSelectedToCollectionQueue() {
+    const checkboxes = document.querySelectorAll('.chk-catalog-row:checked');
+    let items = [];
+
+    if (checkboxes.length > 0) {
+        checkboxes.forEach(chk => {
+            const idx = parseInt(chk.dataset.idx);
+            const item = centralDbResults[idx];
+            if (item) items.push(item);
+        });
+    } else {
+        // If none selected, use all current results
+        items = centralDbResults.slice(0, 50);
+    }
+
+    if (items.length === 0) {
+        alert("⚠️ ไม่มีสินค้าในรายการ กรุณาดึงสินค้าจาก Extension ก่อนครับ");
+        return;
+    }
+
+    // Build queue of affiliate links
+    const queue = items.map(item => ({
+        title: item.title,
+        price: item.sale_price || item.price,
+        comm: item.commission_rate || item.comm,
+        profit: item.net_profit_thb || item.profit,
+        link: item.affiliate_link || item.url
+    }));
+
+    // Save queue to localStorage for Extension to pick up
+    localStorage.setItem('collection_queue', JSON.stringify(queue));
+    localStorage.setItem('collection_queue_idx', '0');
+
+    // Copy first link to clipboard
+    const firstLink = queue[0].link;
+    navigator.clipboard.writeText(firstLink).then(() => {
+        // Open Shopee Affiliate My Collection page
+        const collectionWindow = window.open(
+            'https://affiliate.shopee.co.th/my-collection',
+            'ShopeeAffiliateTab'
+        );
+
+        // Show instructions overlay
+        showCollectionQueueModal(queue);
+    }).catch(() => {
+        showCollectionQueueModal(queue);
+    });
+}
+
+function showCollectionQueueModal(queue) {
+    // Remove existing modal
+    const existing = document.getElementById('collectionQueueModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'collectionQueueModal';
+    modal.style.cssText = `
+        position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75);
+        z-index:99999; display:flex; align-items:center; justify-content:center;
+    `;
+    modal.innerHTML = `
+        <div style="background:#0f172a; border:1px solid #334155; border-radius:16px; padding:28px 32px; max-width:520px; width:90%; box-shadow:0 24px 60px rgba(0,0,0,0.5); font-family:'Kanit',sans-serif; color:#fff;">
+            <h3 style="color:#38bdf8; margin:0 0 8px; font-size:18px;">📤 ส่งสินค้าเข้า Shopee My Collection</h3>
+            <p style="color:#94a3b8; font-size:13px; margin:0 0 16px;">คัดลอกลิงก์สินค้าแต่ละชิ้นไปวางใน Shopee Affiliate → My Collection → เพิ่มสินค้า</p>
+
+            <div id="collectionQueueList" style="display:flex; flex-direction:column; gap:8px; max-height:320px; overflow-y:auto; margin-bottom:16px;">
+                ${queue.map((item, i) => `
+                <div id="cq_row_${i}" style="display:flex; align-items:center; gap:10px; background:#1e293b; border-radius:10px; padding:8px 12px; border:1px solid ${i===0?'#0284c7':'#334155'};">
+                    <span style="font-size:11px; color:#64748b; min-width:20px;">#${i+1}</span>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:12px; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title.substring(0,45)}...</div>
+                        <div style="font-size:10px; color:#059669;">฿${item.price} | คอม ${item.comm}% | กำไร +฿${parseFloat(item.profit||0).toFixed(0)}</div>
+                    </div>
+                    <button onclick="copyCollectionLink(${i}, ${JSON.stringify(queue).replace(/"/g,'&quot;')})" id="cqbtn_${i}" style="background:${i===0?'#ee4d2d':'#334155'}; color:#fff; border:none; padding:5px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                        ${i===0?'📋 ก๊อปแล้ว ✓':'📋 ก๊อป'}
+                    </button>
+                </div>`).join('')}
+            </div>
+
+            <div style="background:#1e293b; border-radius:10px; padding:12px; margin-bottom:16px; font-size:12px; color:#94a3b8; line-height:1.7;">
+                <strong style="color:#38bdf8;">วิธีใช้งาน:</strong><br>
+                1️⃣ คลิกปุ่ม <strong style="color:#ee4d2d;">📋 ก๊อป</strong> เพื่อคัดลอกลิงก์สินค้าแต่ละชิ้น<br>
+                2️⃣ ไปที่แท็บ <strong style="color:#38bdf8;">Shopee Affiliate → My Collection</strong> ที่เปิดใหม่<br>
+                3️⃣ กด <strong>+ เพิ่มสินค้า</strong> → วางลิงก์ → กดบันทึก<br>
+                4️⃣ กลับมาก๊อปลิงก์ชิ้นถัดไปได้เลย!
+            </div>
+
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button onclick="window.open('https://affiliate.shopee.co.th/my-collection','ShopeeAffiliateTab')" style="background:#0284c7; color:#fff; border:none; padding:8px 18px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">🌐 เปิด My Collection</button>
+                <button onclick="document.getElementById('collectionQueueModal').remove()" style="background:#475569; color:#fff; border:none; padding:8px 18px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">✖ ปิด</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Auto-copy first link
+    if (queue.length > 0) {
+        navigator.clipboard.writeText(queue[0].link).catch(()=>{});
+    }
+}
+
+function copyCollectionLink(idx, queue) {
+    const item = queue[idx];
+    if (!item) return;
+    navigator.clipboard.writeText(item.link).then(() => {
+        // Update button styles
+        queue.forEach((_, i) => {
+            const btn = document.getElementById(`cqbtn_${i}`);
+            const row = document.getElementById(`cq_row_${i}`);
+            if (btn) { btn.innerText = '📋 ก๊อป'; btn.style.background = '#334155'; }
+            if (row) row.style.borderColor = '#334155';
+        });
+        const btn = document.getElementById(`cqbtn_${idx}`);
+        const row = document.getElementById(`cq_row_${idx}`);
+        if (btn) { btn.innerText = '📋 ก๊อปแล้ว ✓'; btn.style.background = '#ee4d2d'; }
+        if (row) row.style.borderColor = '#0284c7';
+    });
+}
+
+// ==============================
+// 📊 EXPORT CSV
+// ==============================
+function exportSelectedAsCSV() {
+    const checkboxes = document.querySelectorAll('.chk-catalog-row:checked');
+    let items = [];
+
+    if (checkboxes.length > 0) {
+        checkboxes.forEach(chk => {
+            const idx = parseInt(chk.dataset.idx);
+            const item = centralDbResults[idx];
+            if (item) items.push(item);
+        });
+    } else {
+        items = centralDbResults;
+    }
+
+    if (items.length === 0) {
+        alert("⚠️ ไม่มีสินค้าในรายการครับ");
+        return;
+    }
+
+    const headers = ["ลำดับ", "ชื่อสินค้า", "ราคา (฿)", "ค่าคอม (%)", "กำไร/ชิ้น (฿)", "ยอดขาย", "เรตติ้ง", "ร้านค้า", "ลิงก์ Affiliate"];
+    const rows = items.map((item, i) => [
+        i + 1,
+        `"${(item.title || '').replace(/"/g, '""')}"`,
+        item.sale_price || item.price || 0,
+        item.commission_rate || item.comm || 0,
+        item.net_profit_thb || item.profit || 0,
+        item.total_sold || 0,
+        item.rating_star || 4.9,
+        `"${(item.shop_name || '').replace(/"/g, '""')}"`,
+        `"${(item.affiliate_link || item.url || '').replace(/"/g, '""')}"`
+    ].join(','));
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shopee_affiliate_products_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showNotification(`✅ Export CSV สำเร็จ! ${items.length} สินค้า`, 'success');
+}
+
 function importSelectedDbItemToCatalog(index) {
     const item = centralDbResults[index];
     if (!item) return;
+
 
     const acc = accountsData[currentAccountId] || accountsData["acc_1"];
     const newProd = {
