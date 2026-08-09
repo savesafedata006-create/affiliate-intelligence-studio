@@ -410,12 +410,26 @@ function openCarouselModal(prodId) {
 function updateCarouselSlideView() {
     const imgEl = document.getElementById("carouselMainImg");
     const countEl = document.getElementById("carouselCounter");
+    const thumbsContainer = document.getElementById("carouselThumbsContainer");
 
     if (imgEl && activeCarouselImages[currentCarouselIndex]) {
         imgEl.src = activeCarouselImages[currentCarouselIndex];
     }
     if (countEl) {
         countEl.innerText = `ภาพที่ ${currentCarouselIndex + 1} / ${activeCarouselImages.length}`;
+    }
+
+    if (thumbsContainer) {
+        thumbsContainer.innerHTML = activeCarouselImages.map((src, idx) => `
+            <img src="${src}" onclick="jumpToCarouselSlide(${idx})" style="width:44px; height:44px; object-fit:cover; border-radius:6px; cursor:pointer; border:${idx === currentCarouselIndex ? '2px solid #7c3aed' : '1px solid #cbd5e1'}; opacity:${idx === currentCarouselIndex ? '1' : '0.6'}; transition:all 0.2s ease;">
+        `).join("");
+    }
+}
+
+function jumpToCarouselSlide(index) {
+    if (index >= 0 && index < activeCarouselImages.length) {
+        currentCarouselIndex = index;
+        updateCarouselSlideView();
     }
 }
 
@@ -435,6 +449,16 @@ function closeCarouselModal() {
     const modal = document.getElementById("carouselModal");
     if (modal) modal.classList.remove("active");
 }
+
+// Keyboard arrow key navigation for carousel
+document.addEventListener("keydown", (e) => {
+    const modal = document.getElementById("carouselModal");
+    if (modal && modal.classList.contains("active")) {
+        if (e.key === "ArrowRight") nextCarouselSlide();
+        if (e.key === "ArrowLeft") prevCarouselSlide();
+        if (e.key === "Escape") closeCarouselModal();
+    }
+});
 
 function renderCatalog(filterCategory = "ALL") {
     const tbody = document.getElementById("catalogTableBody");

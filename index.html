@@ -523,21 +523,24 @@
     </div>
 
     <!-- Interactive Carousel Slide Showcase Modal -->
-    <div id="carouselModal" class="modal-overlay">
+    <div id="carouselModal" class="modal-overlay" onclick="if(event.target===this)closeCarouselModal()">
         <div class="carousel-modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h4 id="carouselModalTitle" style="font-size:15px; color:var(--text-main); margin:0;">🖼️ สไลด์ภาพสินค้า HD</h4>
-                <button class="btn btn-rose" style="padding:2px 8px; font-size:12px;" onclick="closeCarouselModal()">✕ ปิดหน้าต่าง</button>
+                <button class="btn btn-rose" style="padding:4px 10px; font-size:12px;" onclick="closeCarouselModal()">✕ ปิดหน้าต่าง (Esc)</button>
             </div>
             
             <div class="carousel-image-container">
                 <img id="carouselMainImg" src="" alt="Slide Image">
             </div>
 
+            <!-- Thumbnail Dots Strip -->
+            <div id="carouselThumbsContainer" style="display:flex; justify-content:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;"></div>
+
             <div class="carousel-controls">
-                <button class="btn btn-outline" onclick="prevCarouselSlide()">◀️ ภาพก่อนหน้า</button>
+                <button class="btn btn-outline" style="padding:6px 14px;" onclick="prevCarouselSlide()">◀️ ภาพก่อนหน้า (←)</button>
                 <span id="carouselCounter" style="font-size:13px; font-weight:600; color:var(--text-muted);">ภาพที่ 1 / 4</span>
-                <button class="btn btn-primary" onclick="nextCarouselSlide()">ภาพถัดไป ▶️</button>
+                <button class="btn btn-primary" style="padding:6px 14px;" onclick="nextCarouselSlide()">ภาพถัดไป (→) ▶️</button>
             </div>
         </div>
     </div>
