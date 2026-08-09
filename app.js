@@ -356,6 +356,28 @@ function renderCentralDbTable(items) {
     const tbody = document.getElementById("centralDbTableBody");
     if (!tbody) return;
 
+    // Calculate DealTrend summary strip stats
+    let extraCommCount = 0;
+    let totalProfit = 0;
+    let totalSold = 0;
+
+    items.forEach(item => {
+        const commRate = parseFloat(item.commission_rate || item.comm || 0);
+        const profit = parseFloat(item.net_profit_thb || item.profit || 0);
+        const sold = parseInt(item.total_sold || 1200);
+
+        if (commRate >= 20) extraCommCount++;
+        totalProfit += profit;
+        totalSold += sold;
+    });
+
+    const elExtra = document.getElementById('dtExtraCommCount');
+    const elProf = document.getElementById('dtTotalProfit');
+    const elSold = document.getElementById('dtTotalSold');
+    if (elExtra) elExtra.innerText = `${extraCommCount} รายการ`;
+    if (elProf) elProf.innerText = `฿${totalProfit.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+    if (elSold) elSold.innerText = `${totalSold.toLocaleString()} ชิ้น`;
+
     if (titleEl) titleEl.innerText = `📋 ผลการค้นหาในฐานข้อมูลกลาง: พบ ${items.length} รายการ (~/.affiliate_intel_db.sqlite)`;
 
     if (items.length === 0) {
@@ -373,11 +395,12 @@ function renderCentralDbTable(items) {
         const imgSrc   = item.main_image_path || item.img || 'https://cf.shopee.co.th/file/th-11134207-7r98o-lx285w9372x492';
 
         const safeTitle = title.replace(/"/g, '&quot;');
-
         const imgCount = (item.images && Array.isArray(item.images)) ? item.images.length : 1;
+        const commRate = parseFloat(item.commission_rate || item.comm || 0);
+        const isExtraComm = commRate >= 20;
 
         return `
-        <tr>
+        <tr style="${isExtraComm ? 'background:rgba(6,78,59,0.15);' : ''}">
             <td style="text-align:center; padding:4px;">
                 <input type="checkbox" class="catalog-select-chk" data-idx="${idx}" onchange="updateSelectedCount()">
             </td>
@@ -390,7 +413,10 @@ function renderCentralDbTable(items) {
                 <div style="font-size:11px; color:var(--text-muted); margin-top:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">🏪 ${shop}</div>
             </td>
             <td style="padding:4px 6px;"><strong style="color:#0284c7; font-size:13px;">฿${item.sale_price || item.price || '-'}</strong></td>
-            <td style="padding:4px 6px; text-align:center;"><strong style="color:#047857; font-size:13px;">${item.commission_rate || item.comm || '-'}%</strong></td>
+            <td style="padding:4px 6px; text-align:center;">
+                <strong style="color:#047857; font-size:13px;">${commRate}%</strong>
+                ${isExtraComm ? `<br><span style="font-size:9px; background:#059669; color:#fff; padding:1px 4px; border-radius:4px; font-weight:700; display:inline-block; margin-top:2px;">💎 EXTRA</span>` : ''}
+            </td>
             <td style="padding:4px 6px; text-align:center;"><strong style="color:#059669; font-size:13px;">+฿${item.net_profit_thb || item.profit || '-'}</strong></td>
             <td style="padding:4px 6px; text-align:center;"><small style="color:var(--text-muted); font-size:11px; line-height:1.3; display:block;">${item.total_sold || 1200} ชิ้น<br>${item.rating_star || '4.9'}⭐</small></td>
             <td style="padding:4px 6px; overflow:hidden;">
