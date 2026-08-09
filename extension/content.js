@@ -224,13 +224,17 @@
 
         const cards = document.querySelectorAll("a[href*='/product/'], a[href*='-i.'], .shopee-search-item-result__item");
         let scraped = 0;
+        const seenTitlesSet = new Set();
 
         for (let i = 0; i < cards.length && scraped < count; i++) {
             const card = cards[i];
-            const title = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
+            const rawTitle = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
+            const cleanTitle = rawTitle.replace(/\n/g, ' ').trim();
 
-            // ✅ FRONT-END VALIDATION — กรองขยะก่อนส่ง Server
-            if (!isValidProductTitle(title)) continue;
+            // ✅ FRONT-END DEDUPLICATION — ข้ามรายการที่ดึงไปแล้วในรอบนี้ 100%
+            if (!isValidProductTitle(cleanTitle)) continue;
+            if (seenTitlesSet.has(cleanTitle)) continue;
+            seenTitlesSet.add(cleanTitle);
 
             const priceText = card.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "290";
             const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 290.0;
@@ -243,10 +247,14 @@
             const mainImg = gallery[0] || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
             const href = card.href || window.location.href;
 
-            const itemKey = `auto_${i}`;
+            // Deterministic hash-based item_id for duplicate prevention
+            const titleHash = Math.abs(cleanTitle.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)).toString(36);
+            const item_id = `sp_item_${titleHash}`;
+
+            const itemKey = `auto_${titleHash}`;
             selectedProductsMap.set(itemKey, {
-                item_id: `sp_auto_${Date.now()}_${scraped}`,
-                title: title.replace(/\n/g, ' ').trim(),
+                item_id: item_id,
+                title: cleanTitle,
                 sale_price: price,
                 original_price: Math.round(price * 1.4),
                 commission_rate: 25.0,

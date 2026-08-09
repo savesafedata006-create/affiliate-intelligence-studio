@@ -53,6 +53,13 @@ init_single_unified_db()
 def get_single_db_connection():
     return sqlite3.connect(UNIFIED_DB_PATH)
 
+# Auto-clean duplicates and junk on boot
+try:
+    db_deduplicate_items()
+    db_purge_junk_items()
+except Exception as e:
+    print("Startup auto-clean note:", e)
+
 def save_product_images(image_urls, item_id):
     saved_paths = []
     for idx, url in enumerate(image_urls[:4]):
@@ -140,6 +147,12 @@ def db_save_products(items):
             skipped_count += 1
             continue
 
+        # ✅ TITLE DEDUPLICATION GATE — หากชื่อสินค้าเดียวกันมีใน DB อยู่แล้ว ให้ใช้ item_id เดิมเพื่ออัปเดต ไม่เพิ่มซ้ำ!
+        cursor.execute("SELECT item_id FROM shopee_affiliate_items WHERE title = ?", (title,))
+        existing = cursor.fetchone()
+        if existing:
+            item_id = existing[0]
+
         local_paths = save_product_images(images_list, item_id)
         if local_paths:
             main_img = local_paths[0]
@@ -160,6 +173,15 @@ def db_save_products(items):
     conn.close()
     print(f"✅ Saved {saved_count} valid products | ⚠️ Blocked {skipped_count} junk items")
     return saved_count
+
+def db_deduplicate_items():
+    conn = get_single_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM shopee_affiliate_items WHERE rowid NOT IN (SELECT MIN(rowid) FROM shopee_affiliate_items GROUP BY title)")
+    count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return count
 
 def db_soft_delete(item_ids):
     conn = get_single_db_connection()
