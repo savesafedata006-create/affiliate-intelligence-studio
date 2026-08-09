@@ -154,7 +154,7 @@ const initialLiveProducts = [
     }
 ];
 
-function loadCatalogFromStorage() {
+function loadCatalogFromStorage(callback) {
     try {
         const saved = localStorage.getItem(`affiliate_catalog_${currentAccountId}`);
         if (saved !== null) {
@@ -167,7 +167,7 @@ function loadCatalogFromStorage() {
         catalogData = [];
     }
 
-    // Always sync with single SQLite backend (~/.affiliate_intel_db.sqlite)
+    // Always fetch latest products from single SQLite DB (~/.affiliate_intel_db.sqlite)
     fetch('/api/fetch_products')
         .then(res => res.json())
         .then(data => {
@@ -177,10 +177,10 @@ function loadCatalogFromStorage() {
                     platform: "🟠 Shopee Official",
                     title: item.title,
                     category: "สินค้าคัดสรร",
-                    price: (item.sale_price || 390).toFixed(2),
-                    origPrice: item.original_price ? item.original_price.toFixed(2) : "",
+                    price: parseFloat(item.sale_price || 390).toFixed(2),
+                    origPrice: item.original_price ? parseFloat(item.original_price).toFixed(2) : "",
                     comm: `${item.commission_rate || 22.5}%`,
-                    profit: (item.net_profit_thb || 87.75).toFixed(2),
+                    profit: parseFloat(item.net_profit_thb || 87.75).toFixed(2),
                     shopName: item.shop_name || "Shopee Store",
                     rating: "4.9 ⭐",
                     sold: "1,500 ชิ้น",
@@ -192,9 +192,17 @@ function loadCatalogFromStorage() {
                 catalogData = mapped;
                 saveCatalogToStorage();
                 renderCatalog();
+                if (callback) callback();
+            } else {
+                renderCatalog();
+                if (callback) callback();
             }
         })
-        .catch(err => console.log("DB sync note:", err));
+        .catch(err => {
+            console.log("DB sync note:", err);
+            renderCatalog();
+            if (callback) callback();
+        });
 }
 
 function saveCatalogToStorage() {
@@ -1191,6 +1199,13 @@ function switchTab(tabId, event) {
 
     const targetPage = document.getElementById(`tab-${tabId}`);
     if (targetPage) targetPage.classList.add("active");
+
+    if (tabId === 'catalog') {
+        loadCatalogFromStorage();
+        loadTrashBinData();
+    } else if (tabId === 'centraldb') {
+        searchCentralDbLive();
+    }
 
     const titles = {
         centraldb: "ฐานข้อมูลกลาง / 🗄️ ค้นหาและสำรวจข้อมูลสินค้าในฐานข้อมูลกลาง SQLite (~/.affiliate_intel_db.sqlite)",
