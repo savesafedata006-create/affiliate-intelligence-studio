@@ -228,6 +228,9 @@
             <button id="btnCopyLinks" style="flex:1; background:#0284c7; color:#fff; border:none; padding:10px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer;" title="คัดลอกลิงก์พร้อมโพสต์ในโซเชียลทันที">
                 📋 ก๊อปลิงก์
             </button>
+            <button id="btnResetAll" style="background:#475569; color:#fff; border:none; padding:10px 8px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer;" title="ล้างรายการที่เลือกไว้ทั้งหมดเตรียมดึงรอบใหม่">
+                🧹 รีเซ็ต
+            </button>
         </div>
     `;
 
@@ -237,7 +240,8 @@
     const btnAuto = document.getElementById("btnAutoExtract");
     const btnSubmit = document.getElementById("btnSubmitSelected");
     const btnCopyLinks = document.getElementById("btnCopyLinks");
-    const selCountText = document.getElementById("selCountText");
+    const btnResetAll = document.getElementById("btnResetAll");
+    let selCountText = document.getElementById("selCountText");
     const inpAutoQuota = document.getElementById("inpAutoQuota");
     const selExtCategory = document.getElementById("selExtCategory");
 
@@ -245,6 +249,7 @@
     btnAuto.addEventListener("click", runAutoScrapeMode);
     btnSubmit.addEventListener("click", submitSelectedProductsToDB);
     btnCopyLinks.addEventListener("click", copySelectedAffiliateLinksToClipboard);
+    if (btnResetAll) btnResetAll.addEventListener("click", () => { resetSelectionState(); showToast("🧹 ล้างรายการเรียบร้อย พร้อมดึงสินค้ารอบใหม่แล้ว!", "#0284c7"); });
 
     function togglePickMode() {
         isPickModeActive = !isPickModeActive;
@@ -542,11 +547,23 @@
 
     function resetSelectionState() {
         selectedProductsMap.clear();
-        selCountText.innerText = "0";
-        btnSubmit.innerText = "📌 ส่งเข้า Python DB (0 ชิ้น)";
-        btnSubmit.disabled = false;
 
-        // Clear visual borders and badges
+        if (btnSubmit) {
+            btnSubmit.innerHTML = '📌 ส่งเข้า DB (<span id="selCountText">0</span>)';
+            btnSubmit.disabled = false;
+            btnSubmit.style.opacity = "1";
+        }
+
+        // Re-get selCountText element reference
+        selCountText = document.getElementById("selCountText");
+        if (selCountText) selCountText.innerText = "0";
+
+        if (btnAuto) {
+            btnAuto.innerText = "🤖 2. ดึงออโต้";
+            btnAuto.disabled = false;
+        }
+
+        // Clear visual green borders, highlights, and badges from product cards
         document.querySelectorAll("[data-auto-scraped]").forEach(card => {
             card.style.outline = "none";
             card.style.boxShadow = "none";
