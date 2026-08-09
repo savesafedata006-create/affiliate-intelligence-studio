@@ -36,22 +36,23 @@
 
             <nav class="nav-menu">
                 <div class="menu-group-title">📌 1. 📊 ภาพรวม & บัญชี</div>
-                <button class="nav-item active" onclick="switchTab('dashboard')">📊 แดชบอร์ดรายได้ & จัดการ Partner ID</button>
-                <button class="nav-item" onclick="switchTab('settings')">👤 สลับบัญชี & ตั้งค่าโปรไฟล์</button>
+                <button class="nav-item active" onclick="switchTab('dashboard')">📊 แดชบอร์ดรายได้ & Partner ID</button>
+                <button class="nav-item" onclick="switchTab('settings')">👤 Multi-Account & ตั้งค่า</button>
 
-                <div class="menu-group-title">📌 2. 🔎 ค้นหา & ดึงสินค้า</div>
-                <button class="nav-item" onclick="switchTab('addproduct')">📥 ดึงข้อมูลสินค้าจริงจาก Shopee</button>
-                <button class="nav-item" onclick="switchTab('centraldb')">🗄️ คลังค้นหา DB กลาง (SQLite)</button>
+                <div class="menu-group-title">📌 2. 🔎 สินค้า & คลัง DB</div>
+                <button class="nav-item" onclick="switchTab('addproduct')">🔎 ค้นหา & นำเข้าสินค้าใหม่</button>
+                <button class="nav-item" onclick="switchTab('centraldb')">🗄️ คลัง DB กลาง (SQLite)</button>
+                <button class="nav-item" onclick="switchTab('catalog')">🛒 คลังสินค้าคัดสรร 12 มิติ</button>
 
-                <div class="menu-group-title">📌 3. 🛒 คลังสินค้า 12 มิติ</div>
-                <button class="nav-item" onclick="switchTab('catalog')">🛒 คลังตารางสินค้าคัดสรร & สไลด์ภาพ</button>
+                <div class="menu-group-title">📌 3. 🎬 สตูดิโอ AI & Content</div>
+                <button class="nav-item" onclick="switchTab('flowvideo')">🤖 AI Video Creator (7-Layer)</button>
+                <button class="nav-item" onclick="switchTab('storyboard')">🎨 Motion Storyboard Studio</button>
+                <button class="nav-item" onclick="switchTab('assetvault')">📤 Creative Asset Vault</button>
+                <button class="nav-item" onclick="switchTab('contenthub')">📢 Content Creator Hub</button>
 
-                <div class="menu-group-title">📌 4. 🎬 สตูดิโอทำคลิป AI & Export</div>
-                <button class="nav-item" onclick="switchTab('flowvideo')">🤖 1. AI Video Creator (Google Flow/Veo)</button>
-                <button class="nav-item" onclick="switchTab('storyboard')">🎨 2. Motion Graphics Storyboard Studio</button>
-                <button class="nav-item" onclick="switchTab('assetvault')">📤 3. คลังเก็บผลงาน (Creative Vault)</button>
-                <button class="nav-item" onclick="switchTab('prompt')">🎬 พรอมต์ Google Flow 9:16 & พากย์เสียง</button>
-                <button class="nav-item" onclick="switchTab('shopeevdo')">🎥 Shopee VDO Studio & สูตรทำเงิน</button>
+                <div class="menu-group-title">📌 4. 🔴 Live & ระบบ</div>
+                <button class="nav-item" onclick="switchTab('live')">🔴 ไลฟ์สด 24/7 Auto Stream</button>
+                <button class="nav-item" onclick="switchTab('backup')">💾 Backup & Security Shield</button>
             </nav>
         </aside>
 
@@ -169,8 +170,8 @@
                     </div>
                 </section>
 
-                <!-- TAB: YOUTUBE WORKFLOW 4 (BAeKh_Pekb8) -->
-                <section id="tab-ytworkflow4" class="tab-page">
+                <!-- ytworkflow tabs removed (redundant, no nav links) -->
+                <section id="tab-ytworkflow4" class="tab-page" style="display:none !important;"><!-- REMOVED -->
                     <div class="card bg-gradient-card">
                         <div class="card-header">
                             <h3>📱 ระบบถอดสูตรโพสต์กระจายคลิป 4 แพลตฟอร์มออโต้ (ตามคลิป BAeKh_Pekb8)</h3>
@@ -204,39 +205,6 @@
                                 <button class="btn btn-outline" style="font-size:11px; margin-top:8px;" onclick="switchTab('insights')">💡 SEO Insights</button>
                             </div>
                         </div>
-                    </div>
-                </section>
-
-                <!-- TAB: YOUTUBE WORKFLOW 3 (J1PPRCvI8Kw) -->
-                <section id="tab-ytworkflow3" class="tab-page">
-                    <div class="card bg-gradient-card">
-                        <div class="card-header">
-                            <h3>🔴 ระบบถอดสูตรบอทไลฟ์สดทำเงิน 24 ชม. (ตามคลิป J1PPRCvI8Kw)</h3>
-                            <button class="btn btn-primary" onclick="window.open('https://youtu.be/J1PPRCvI8Kw?si=sZBM9KZEKJZPzrDL', '_blank')">▶️ เปิดดูคลิปต้นฉบับในยูทูป</button>
-                        </div>
-                        <p class="desc-text" style="font-size:14px;">ถอดสูตรทำไลฟ์สดอัตโนมัติ 24 ชม. บน Shopee Live & TikTok Live: สลับปักหมุดสินค้าอัตโนมัติ ➔ ตอบแชทลูกค้าออโต้ ➔ แสดงป้ายคาดจอส่วนลดพิเศษ ➔ ปั๊มยอดขายต่อเนื่องตลอดคืน</p>
-                    </div>
-                </section>
-
-                <!-- TAB: YOUTUBE WORKFLOW 2 (UmgVh8U3ZqY) -->
-                <section id="tab-ytworkflow2" class="tab-page">
-                    <div class="card bg-gradient-card">
-                        <div class="card-header">
-                            <h3>🎬 ระบบถอดสูตรสร้างคลิปทำเงินอัตโนมัติ AI (ตามคลิป UmgVh8U3ZqY)</h3>
-                            <button class="btn btn-primary" onclick="window.open('https://www.youtube.com/watch?v=UmgVh8U3ZqY', '_blank')">▶️ เปิดดูคลิปต้นฉบับในยูทูป</button>
-                        </div>
-                        <p class="desc-text" style="font-size:14px;">ถอดสูตรทำคลิปวิดีโอสั้นอัตโนมัติ: ดึงสินค้า Flash Sale ➔ พากย์เสียง AI ภาษาไทย ➔ ใส่เอฟเฟกต์กันโดนแบน (Anti-Ban Dynamic Motion) ➔ โพสต์รับยอดขายถล่มทลาย</p>
-                    </div>
-                </section>
-
-                <!-- TAB: YOUTUBE WORKFLOW 1 (B82CcEoAzpQ) -->
-                <section id="tab-ytworkflow" class="tab-page">
-                    <div class="card bg-gradient-card">
-                        <div class="card-header">
-                            <h3>📺 ระบบถอดสูตรทำคลิปทำเงิน Shopee Affiliate (ตามคลิป B82CcEoAzpQ)</h3>
-                            <button class="btn btn-primary" onclick="window.open('https://youtu.be/B82CcEoAzpQ?si=dreWdrvWqmHVG67p', '_blank')">▶️ เปิดดูคลิปต้นฉบับในยูทูป</button>
-                        </div>
-                        <p class="desc-text" style="font-size:14px;">ถอดเวิร์กโฟลว์ 4 ขั้นตอนจากคลิปยูทูปสำหรับดึงสินค้า Shopee ➔ สร้างวิดีโอ AI 9:16 ➔ โพสต์ Shopee VDO รับค่าคอมมิชชันรวดเร็ว</p>
                     </div>
                 </section>
 
@@ -406,8 +374,8 @@
                     </div>
                 </section>
 
-                <!-- TAB: GOOGLE FLOW PROMPT STUDIO -->
-                <section id="tab-prompt" class="tab-page">
+                <!-- tab-prompt removed: replaced by tab-flowvideo (7-Layer AI Video Creator) -->
+                <section id="tab-prompt" class="tab-page" style="display:none !important;"><!-- REMOVED -->
                     <div class="card">
                         <div class="card-header">
                             <h3>🎬 สตูดิโอทำคลิป AI (Google Flow 9:16) & Export</h3>
@@ -772,43 +740,48 @@
 
 
 
-                <!-- TAB: SHOPEE VDO STUDIO -->
-                <section id="tab-shopeevdo" class="tab-page">
+                <!-- TAB: CONTENT CREATOR HUB (Merged: Shopee VDO + Captions Anti-Ban) -->
+                <section id="tab-contenthub" class="tab-page">
                     <div class="card">
                         <div class="card-header">
-                            <h3>🎥 Shopee VDO Studio (EP2 Complete Studio)</h3>
+                            <h3>📢 Content Creator Hub — Shopee VDO + TikTok/Reels แคปชัน Anti-Ban</h3>
                         </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>📌 1. แท็กสินค้า Shopee & Affiliate Link (EP2 Tagging):</label>
-                                <textarea id="txtVDOTagging" class="form-input code-text" rows="4" readonly></textarea>
+
+                        <!-- Shopee VDO Section -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; margin-bottom:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">🎥 1. Shopee VDO Studio (EP2 Complete Studio)</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>📌 แท็กสินค้า Shopee & Affiliate Link (EP2 Tagging):</label>
+                                    <textarea id="txtVDOTagging" class="form-input code-text" rows="4" readonly></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>💬 แคปชันพร้อมแฮชแท็ก (Shopee VDO Ready):</label>
+                                    <textarea id="txtVDOCaption" class="form-input" rows="3" readonly></textarea>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>💬 2. แคปชันพร้อมแฮชแท็ก (Shopee VDO Ready):</label>
-                                <textarea id="txtVDOCaption" class="form-input" rows="3" readonly></textarea>
+                        </div>
+
+                        <!-- Captions Anti-Ban Section -->
+                        <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px;">
+                            <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:12px;">🛡️ 2. คลังแคปชัน 3 รูปแบบ & ระบบตรวจ Anti-Ban (TikTok / Reels / Shorts)</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>แบบที่ 1: สั้น กระชับ (&lt;100 ตัวอักษร):</label>
+                                    <textarea id="txtCap1" class="form-input" rows="2" readonly></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>แบบที่ 2: เล่าเรื่อง รีวิว (150-250 ตัวอักษร):</label>
+                                    <textarea id="txtCap2" class="form-input" rows="2" readonly></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- TAB: CAPTIONS & ANTI-BAN -->
-                <section id="tab-captions" class="tab-page">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3>🛡️ คลังแคปชัน 3 รูปแบบ & ระบบตรวจ Anti-Ban</h3>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>แบบที่ 1: สั้น กระชับ (<100 ตัวอักษร):</label>
-                                <textarea id="txtCap1" class="form-input" rows="2" readonly></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>แบบที่ 2: เล่าเรื่อง รีวิว (150-250 ตัวอักษร):</label>
-                                <textarea id="txtCap2" class="form-input" rows="2" readonly></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <!-- legacy IDs kept for backward compatibility -->
+                <section id="tab-shopeevdo" style="display:none;"></section>
+                <section id="tab-captions" style="display:none;"></section>
 
                 <!-- TAB: SETTINGS & ACCOUNTS MANAGER -->
                 <section id="tab-settings" class="tab-page">
