@@ -210,8 +210,7 @@
         btnSubmit.disabled = true;
 
         const endpoints = [
-            "http://localhost:5000/api/save_product",
-            "http://127.0.0.1:8080/api/save_db_permanent"
+            "http://127.0.0.1:8080/api/save_product"
         ];
 
         sendBatchToBackend(endpoints, 0, items);
