@@ -391,6 +391,9 @@
                 card.style.outline = "4px solid #10b981";
                 showToast(`✅ เลือก '${title.substring(0, 15)}...' พร้อมคลัง ${gallery.length} ภาพเรียบร้อยแล้ว`, "#059669");
             }
+            updateExtSelectionCount();
+        }
+    }
 
     function updateExtSelectionCount() {
         const size = selectedProductsMap.size;
