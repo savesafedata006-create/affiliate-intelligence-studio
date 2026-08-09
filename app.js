@@ -1749,13 +1749,23 @@ function downloadFlowProductImage() {
         alert("⚠️ ไม่พบรูปภาพของสินค้านี้");
         return;
     }
-    const a = document.createElement('a');
-    a.href = p.main_image_path;
-    a.download = `${p.item_id}_original.jpg`;
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const imgSrc = p.main_image_path.startsWith('http') ? p.main_image_path : `${window.location.origin}${p.main_image_path}`;
+    fetch(imgSrc)
+        .then(res => res.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `shopee_product_${p.item_id || 'img'}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            alert(`📥 ดาวน์โหลดรูปภาพต้นฉบับลง Mac เรียบร้อยแล้ว!\n\nเปิดโฟลเดอร์ Downloads บน Mac แล้วลากไฟล์รูปนี้เข้า Google Flow ได้เลยครับ`);
+        })
+        .catch(() => {
+            window.open(imgSrc, '_blank');
+        });
 }
 
 function copyFlowProductImageLink() {
@@ -1776,13 +1786,23 @@ function downloadSbProductImage() {
         alert("⚠️ ไม่พบรูปภาพของสินค้านี้");
         return;
     }
-    const a = document.createElement('a');
-    a.href = p.main_image_path;
-    a.download = `${p.item_id}_original.jpg`;
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const imgSrc = p.main_image_path.startsWith('http') ? p.main_image_path : `${window.location.origin}${p.main_image_path}`;
+    fetch(imgSrc)
+        .then(res => res.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `shopee_product_${p.item_id || 'img'}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            alert(`📥 ดาวน์โหลดรูปภาพต้นฉบับลง Mac เรียบร้อยแล้ว!\n\nเปิดโฟลเดอร์ Downloads บน Mac แล้วลากไฟล์รูปนี้เข้า Google Flow ได้เลยครับ`);
+        })
+        .catch(() => {
+            window.open(imgSrc, '_blank');
+        });
 }
 
 function copySbProductImageLink() {
@@ -1796,6 +1816,7 @@ function copySbProductImageLink() {
         alert(`📋 คัดลอกลิงก์รูปภาพต้นฉบับแล้ว!\n\n${fullUrl}`);
     });
 }
+
 
 
 function generateStoryboard() {
