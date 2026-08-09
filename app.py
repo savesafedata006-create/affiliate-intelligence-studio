@@ -113,12 +113,7 @@ def db_delete_creative_asset(asset_id):
 def get_single_db_connection():
     return sqlite3.connect(UNIFIED_DB_PATH)
 
-# Auto-clean duplicates and junk on boot
-try:
-    db_deduplicate_items()
-    db_purge_junk_items()
-except Exception as e:
-    print("Startup auto-clean note:", e)
+
 
 def save_product_images(image_urls, item_id):
     saved_paths = []
@@ -165,6 +160,32 @@ JUNK_KEYWORDS = [
     "ค้นหา", "ล็อกเอาต์", "การตั้งค่า", "ประวัติการสั่งซื้อ"
 ]
 
+import difflib
+
+def clean_title_for_comparison(t):
+    if not t: return ''
+    t = re.sub(r'-?\d+%', '', t)
+    t = re.sub(r'\[.*?\]|\(.*?\)|【.*?】', '', t)
+    t = re.sub(r'฿\s*\d+.*', '', t)
+    t = re.sub(r'ร้านไทย|พร้อมส่ง|ขายดี|ช้อปปี้ถูกชัวร์|ราคาโรงงาน|โปรเด็ด|ราคาขายต่อซอง|มีหลายกลิ่น', '', t)
+    t = re.sub(r'[^\w\s]', ' ', t)
+    return ' '.join(t.lower().split())
+
+def calculate_winner_score(net_profit_thb, commission_rate, rating_star=4.9, total_sold=1200):
+    return (float(net_profit_thb or 0) * 3.0) + (float(commission_rate or 0) * 2.0) + (float(rating_star or 4.9) * 5.0) + (float(total_sold or 1200) / 500.0)
+
+def find_duplicate_db_item(cursor, new_title):
+    cursor.execute("SELECT item_id, title, net_profit_thb, commission_rate, rating_star, total_sold FROM shopee_affiliate_items WHERE status != 'TRASH_BIN'")
+    all_items = cursor.fetchall()
+    c_new = clean_title_for_comparison(new_title)
+
+    for item_id, title, profit, comm, rating, sold in all_items:
+        c_exist = clean_title_for_comparison(title)
+        if difflib.SequenceMatcher(None, c_new, c_exist).ratio() > 0.68:
+            exist_score = calculate_winner_score(profit, comm, rating, sold)
+            return item_id, exist_score
+    return None, 0
+
 def is_valid_product(title: str, sale_price: float) -> bool:
     """Server-side gate: ป้องกันข้อมูลขยะเข้า DB อย่างเด็ดขาด"""
     if not title:
@@ -207,11 +228,18 @@ def db_save_products(items):
             skipped_count += 1
             continue
 
-        # ✅ TITLE DEDUPLICATION GATE — หากชื่อสินค้าเดียวกันมีใน DB อยู่แล้ว ให้ใช้ item_id เดิมเพื่ออัปเดต ไม่เพิ่มซ้ำ!
-        cursor.execute("SELECT item_id FROM shopee_affiliate_items WHERE title = ?", (title,))
-        existing = cursor.fetchone()
-        if existing:
-            item_id = existing[0]
+        # 🏆 AI SMART BEST WINNER DEDUPLICATION GATE — สแกนหาตัวสินค้าเดียวกัน แล้วคัดเฉพาะชิ้นที่กำไร/ค่าคอมเด็ดสุด 1 เดียว!
+        new_score = calculate_winner_score(net_profit, comm_rate, 4.9, 1200)
+        existing_id, exist_score = find_duplicate_db_item(cursor, title)
+
+        if existing_id:
+            if new_score <= exist_score:
+                print(f"⏩ SKIPPED duplicate inferior listing: '{title[:35]}...' (Score {new_score:.1f} <= Existing {exist_score:.1f})")
+                skipped_count += 1
+                continue
+            else:
+                item_id = existing_id
+                print(f"🏆 REPLACED with BETTER WINNER listing: '{title[:35]}...' (Score {new_score:.1f} > Existing {exist_score:.1f})")
 
         local_paths = save_product_images(images_list, item_id)
         if local_paths:
@@ -234,17 +262,52 @@ def db_save_products(items):
 
     conn.commit()
     conn.close()
-    print(f"✅ Saved {saved_count} valid products | ⚠️ Blocked {skipped_count} junk items")
+    print(f"✅ Saved {saved_count} valid winner products | ⚠️ Filtered out {skipped_count} duplicate/junk items")
     return saved_count
 
 def db_deduplicate_items():
     conn = get_single_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM shopee_affiliate_items WHERE rowid NOT IN (SELECT MIN(rowid) FROM shopee_affiliate_items GROUP BY title)")
-    count = cursor.rowcount
-    conn.commit()
+    cursor.execute("SELECT item_id, title, net_profit_thb, commission_rate, rating_star, total_sold FROM shopee_affiliate_items WHERE status != 'TRASH_BIN'")
+    rows = cursor.fetchall()
+
+    cleaned_groups = {}
+    duplicates = []
+
+    for item_id, title, profit, comm, rating, sold in rows:
+        c_title = clean_title_for_comparison(title)
+        score = calculate_winner_score(profit, comm, rating, sold)
+        matched = False
+        for key in list(cleaned_groups.keys()):
+            if difflib.SequenceMatcher(None, c_title, key).ratio() > 0.68:
+                matched = True
+                cleaned_groups[key].append((item_id, score))
+                break
+        if not matched:
+            cleaned_groups[c_title] = [(item_id, score)]
+
+    for group in cleaned_groups.values():
+        if len(group) > 1:
+            # Sort group by AI score descending, keep best winner [0], mark others as duplicate for deletion
+            group.sort(key=lambda x: x[1], reverse=True)
+            for item_id, score in group[1:]:
+                duplicates.append(item_id)
+
+    count = 0
+    if duplicates:
+        cursor.executemany("DELETE FROM shopee_affiliate_items WHERE item_id = ?", [(i,) for i in duplicates])
+        count = len(duplicates)
+        conn.commit()
+
     conn.close()
+    print(f"🧹 Smart Deduplication: Removed {count} duplicate listings, kept only Best Winner items.")
     return count
+
+# Auto-clean duplicates and junk on boot
+try:
+    db_deduplicate_items()
+except Exception as e:
+    print("Startup auto-clean note:", e)
 
 def db_soft_delete(item_ids):
     conn = get_single_db_connection()

@@ -187,20 +187,18 @@
 
         <div style="display:flex; align-items:center; justify-content:space-between; background:#1e293b; padding:6px 10px; border-radius:8px; gap:6px;">
             <label style="font-size:11px; color:#94a3b8; white-space:nowrap;">🔢 จำนวนดึงออโต้:</label>
-            <input type="number" id="inpAutoQuota" min="1" max="100" value="10" placeholder="พิมพ์ระบุจำนวน เช่น 15, 30" style="background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:700; width:70px; text-align:center;">
-            <select id="selAutoPreset" style="background:#0f172a; color:#fff; border:1px solid #475569; padding:4px 4px; border-radius:6px; font-size:11px; cursor:pointer;" onchange="if(this.value)document.getElementById('inpAutoQuota').value=this.value">
-                <option value="">เลือกเร็ว</option>
-                <option value="4">4 ชิ้น</option>
-                <option value="10" selected>10 ชิ้น</option>
-                <option value="20">20 ชิ้น</option>
-                <option value="30">30 ชิ้น</option>
-                <option value="50">50 ชิ้น (Max)</option>
+            <select id="inpAutoQuota" style="background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:700; flex:1; cursor:pointer;">
+                <option value="4">4 รายการ</option>
+                <option value="10" selected>10 รายการ (แนะนำ)</option>
+                <option value="20">20 รายการ</option>
+                <option value="30">30 รายการ</option>
+                <option value="50">50 รายการ (สูงสุด)</option>
             </select>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; background:#1e293b; padding:6px 10px; border-radius:8px; gap:6px;">
             <label style="font-size:11px; color:#94a3b8; white-space:nowrap;">📂 ติดหมวดหมู่:</label>
-            <select id="selExtCategory" style="background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:4px 6px; border-radius:6px; font-size:11px; flex:1; cursor:pointer;">
+            <select id="selExtCategory" style="background:#0f172a; color:#38bdf8; border:1px solid #475569; padding:5px 6px; border-radius:6px; font-size:11px; flex:1; cursor:pointer;">
                 <option value="🏠 เครื่องใช้ในบ้าน" selected>🏠 เครื่องใช้ในบ้าน</option>
                 <option value="💄 ความงาม & สกินแคร์">💄 ความงาม & สกินแคร์</option>
                 <option value="📱 ไอที & อิเล็กทรอนิกส์">📱 ไอที & อิเล็กทรอนิกส์</option>
@@ -209,9 +207,9 @@
             </select>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; background:#1e293b; padding:4px 10px; border-radius:6px;">
-            <span>🛡️ ป้องกัน Anti-Ban</span>
-            <span style="color:#10b981; font-weight:700;">🟢 ACTIVE</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; background:#1e293b; padding:5px 10px; border-radius:6px;">
+            <span>🏆 AI Best Winner Filter</span>
+            <span style="color:#10b981; font-weight:700;">🟢 คัดชิ้นเด็ดสุด 1 เดียว</span>
         </div>
 
         <div style="display:flex; align-items:center; background:#1e293b; padding:4px 10px; border-radius:6px;">
