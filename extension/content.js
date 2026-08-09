@@ -155,10 +155,14 @@
     // Create Floating Control Panel Toolbar
     const panel = document.createElement("div");
     panel.id = "shopeeExtractorControlPanel";
+    // Restore saved position from localStorage
+    const savedPanelPos = (() => { try { return JSON.parse(localStorage.getItem('ext_panel_pos')); } catch(e) { return null; } })();
+    const panelRight = savedPanelPos ? null : '20px';
+    const panelBottom = savedPanelPos ? null : '20px';
     panel.style.cssText = `
         position: fixed;
-        bottom: 20px;
-        right: 20px;
+        bottom: ${savedPanelPos ? savedPanelPos.bottom + 'px' : '20px'};
+        right: ${savedPanelPos ? savedPanelPos.right + 'px' : '20px'};
         z-index: 999999;
         background: #0f172a;
         color: #ffffff;
@@ -172,6 +176,8 @@
         gap: 10px;
         width: 320px;
         backdrop-filter: blur(10px);
+        user-select: none;
+        cursor: default;
     `;
 
     panel.innerHTML = `
@@ -294,6 +300,52 @@
     if (sessionStorage.getItem("shopee_ext_panel_collapsed") === "true") {
         collapsePanel();
     }
+
+    // ✋ DRAG TO MOVE — ลากวางแผงควบคุมได้อิสระ!
+    function makeDraggable(el, handleEl) {
+        let isDragging = false, startX, startY, startRight, startBottom;
+        handleEl.style.cursor = 'grab';
+        handleEl.addEventListener('mousedown', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = el.getBoundingClientRect();
+            startRight = window.innerWidth - rect.right;
+            startBottom = window.innerHeight - rect.bottom;
+            handleEl.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            const newRight = Math.max(0, Math.min(window.innerWidth - 50, startRight - dx));
+            const newBottom = Math.max(0, Math.min(window.innerHeight - 50, startBottom - dy));
+            el.style.right = newRight + 'px';
+            el.style.bottom = newBottom + 'px';
+            el.style.left = 'auto';
+            el.style.top = 'auto';
+        });
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            handleEl.style.cursor = 'grab';
+            // Save position for this element
+            const key = el.id === 'shopeeExtractorControlPanel' ? 'ext_panel_pos' : 'ext_pill_pos';
+            localStorage.setItem(key, JSON.stringify({
+                right: parseFloat(el.style.right),
+                bottom: parseFloat(el.style.bottom)
+            }));
+        });
+    }
+
+    // Attach drag to panel header row (top title bar)
+    const panelHeader = panel.querySelector('div');
+    if (panelHeader) makeDraggable(panel, panelHeader);
+
+    // Attach drag to trigger pill itself
+    makeDraggable(triggerPill, triggerPill);
 
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
