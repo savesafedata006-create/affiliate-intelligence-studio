@@ -428,6 +428,46 @@
         }, 1200);
     }
 
+    // ===================================================
+    // 🤖 REAL PHYSICAL MOUSE CLICK & BACKGROUND TICK ENGINE
+    // ===================================================
+    function clickElementReal(el) {
+        if (!el) return false;
+        try {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const events = ['mouseenter', 'mouseover', 'mousedown', 'mouseup', 'click'];
+            events.forEach(type => {
+                const ev = new MouseEvent(type, {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    buttons: 1
+                });
+                el.dispatchEvent(ev);
+            });
+            if (typeof el.click === 'function') el.click();
+            return true;
+        } catch(e) {
+            console.log("Click element real note:", e);
+            return false;
+        }
+    }
+
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
+        chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+            if (msg.action === "AUTO_CLICKER_BACKGROUND_TICK") {
+                if (isAutoClickerRunning) {
+                    runAutoClickerLoop();
+                }
+                if (typeof runAntiBanAutoClickStep === 'function' && window.isMyCollectionAutoClickerActive) {
+                    runAntiBanAutoClickStep();
+                }
+                sendResponse({ status: "tick_received" });
+            }
+            return true;
+        });
+    }
+
     function togglePickMode() {
         if (isAutoClickerRunning) stopAutoClickerExtractor();
 
@@ -1029,20 +1069,29 @@
 
         function toggleAntiBanAutoClick() {
             isAutoClickingActive = !isAutoClickingActive;
+            window.isMyCollectionAutoClickerActive = isAutoClickingActive;
+
             if (isAutoClickingActive) {
-                showToast("🤖 เริ่มต้น Auto-Click Anti-Ban Mode (สุ่มหน่วงเวลาเหมือนมนุษย์)...", "#059669");
+                showToast("🤖 เริ่มต้น Auto-Click Anti-Ban Mode (ทำงานฉากหลัง + คลิกเมาส์จริง)...", "#059669");
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    chrome.runtime.sendMessage({ action: "START_BACKGROUND_AUTO_CLICKER" });
+                }
                 runAntiBanAutoClickStep();
             } else {
                 showToast("⏹️ หยุดการทำงาน Auto-Click เรียบร้อย", "#991b1b");
+                if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    chrome.runtime.sendMessage({ action: "STOP_BACKGROUND_AUTO_CLICKER" });
+                }
             }
             renderWidgetContent();
         }
 
         function runAntiBanAutoClickStep() {
-            if (!isAutoClickingActive) return;
+            if (!isAutoClickingActive && !window.isMyCollectionAutoClickerActive) return;
             const item = queue[currentIdx];
             if (!item) {
                 isAutoClickingActive = false;
+                window.isMyCollectionAutoClickerActive = false;
                 showToast("🎉 เพิ่มสินค้าทั้งคิวเสร็จสิ้นสมบูรณ์!", "#10b981");
                 renderWidgetContent();
                 return;
@@ -1055,8 +1104,8 @@
             const randomDelay = Math.floor(Math.random() * 1800) + 2400;
 
             setTimeout(() => {
-                // Find & click Submit button automatically
-                const buttons = Array.from(document.querySelectorAll('button'));
+                // Find & click Submit button automatically using REAL PHYSICAL MOUSE CLICK
+                const buttons = Array.from(document.querySelectorAll('button, div[role="button"], input[type="submit"]'));
                 const submitBtn = buttons.find(b => 
                     b.innerText.includes('เพิ่ม') || 
                     b.innerText.includes('บันทึก') || 
@@ -1066,14 +1115,14 @@
                 );
 
                 if (submitBtn) {
-                    submitBtn.click();
+                    clickElementReal(submitBtn);
                 }
 
                 currentIdx++;
                 localStorage.setItem('collection_queue_idx', currentIdx.toString());
                 renderWidgetContent();
 
-                if (isAutoClickingActive) {
+                if (isAutoClickingActive || window.isMyCollectionAutoClickerActive) {
                     setTimeout(runAntiBanAutoClickStep, 1500);
                 }
             }, randomDelay);

@@ -5,7 +5,9 @@
   "description": "Chrome Extension ดึงข้อมูลสินค้า ภาพ และลิงก์ Affiliate จาก Shopee เข้าฐานข้อมูล Python MySQL",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "alarms",
+    "tabs"
   ],
   "host_permissions": [
     "https://shopee.co.th/*",
@@ -14,6 +16,9 @@
     "http://localhost:8080/*",
     "http://127.0.0.1:8080/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_title": "Shopee Affiliate Data Extractor"
   },
