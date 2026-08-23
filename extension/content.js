@@ -1215,22 +1215,44 @@
         }
 
         function autoFillLinkToPage(linkUrl) {
-            const inputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type])'));
-            let targetInput = inputs.find(inp => 
-                inp.placeholder?.includes('http') || 
-                inp.placeholder?.includes('ลิงก์') || 
-                inp.placeholder?.includes('link') || 
-                inp.placeholder?.includes('URL') ||
-                inp.value.includes('shopee')
+            // หา input ที่รับลิงก์สินค้า (placeholder ต่างๆ)
+            const inputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type]), textarea'));
+            let targetInput = inputs.find(inp =>
+                inp.placeholder?.toLowerCase().includes('http') ||
+                inp.placeholder?.toLowerCase().includes('ลิงก์') ||
+                inp.placeholder?.toLowerCase().includes('link') ||
+                inp.placeholder?.toLowerCase().includes('url') ||
+                inp.value?.includes('shopee')
             ) || inputs[0];
 
             if (targetInput) {
                 targetInput.focus();
-                targetInput.value = linkUrl;
-                targetInput.dispatchEvent(new Event('input', { bubbles: true }));
-                targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+                targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // ✅ React-compatible: ใช้ nativeInputValueSetter เพื่อให้ React รับค่าจริง
+                const nativeSetter = Object.getOwnPropertyDescriptor(
+                    window.HTMLInputElement.prototype, 'value'
+                )?.set || Object.getOwnPropertyDescriptor(
+                    window.HTMLTextAreaElement.prototype, 'value'
+                )?.set;
+
+                if (nativeSetter) {
+                    nativeSetter.call(targetInput, linkUrl);
+                } else {
+                    targetInput.value = linkUrl;
+                }
+
+                // Dispatch events ที่ React ต้องการ
+                ['input', 'change', 'keyup', 'blur'].forEach(type => {
+                    targetInput.dispatchEvent(new Event(type, { bubbles: true }));
+                });
+
+                showToast(`✅ วางลิงก์ใส่ช่องแล้ว! กดปุ่ม "เพิ่ม" ใน Shopee ได้เลยครับ`, "#059669");
             } else {
-                navigator.clipboard.writeText(linkUrl);
+                // fallback: copy to clipboard
+                navigator.clipboard.writeText(linkUrl).then(() => {
+                    showToast(`📋 ก๊อปลิงก์แล้ว! วางลง (Ctrl+V) ในช่อง URL ของ Shopee ด้วยมือครับ`, "#0284c7");
+                });
             }
         }
 
