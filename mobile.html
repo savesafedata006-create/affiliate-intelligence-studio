@@ -371,11 +371,17 @@
                 <div style="text-align:center; padding:20px; color:#64748b; font-size:12px;">ยังไม่มีสินค้าในตู้โชว์ (กด '📌 ปักตะกร้า' -> '🛍️ เพิ่มเข้าตู้โชว์ TikTok')</div>
             </div>
 
-            <div style="display:flex; gap:8px;">
-                <button class="sheet-btn" style="background:linear-gradient(135deg,#ff0050,#ff4d7d); color:#fff; flex:1;" onclick="mLaunchTikTokApp()">
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+                <button class="sheet-btn" style="background:linear-gradient(135deg,#ff0050,#ff4d7d); color:#fff; flex:1; min-width:140px;" onclick="mLaunchTikTokApp()">
                     🚀 เปิดแอป TikTok (เข้าตู้โชว์)
                 </button>
-                <button class="sheet-btn" style="background:#334155; color:#fff; flex:1;" onclick="mClearShowcaseQueue()">
+                <button class="sheet-btn" style="background:#059669; color:#fff; flex:1; min-width:120px;" onclick="mExportShowcaseCSV()">
+                    📊 Export CSV
+                </button>
+                <button class="sheet-btn" style="background:#0284c7; color:#fff; flex:1; min-width:140px;" onclick="mCopyAllShowcaseLinks()">
+                    ⚡ ก๊อปลิงก์ทั้งหมด
+                </button>
+                <button class="sheet-btn" style="background:#334155; color:#fff; flex:1; min-width:100px;" onclick="mClearShowcaseQueue()">
                     🧹 ล้างตู้โชว์
                 </button>
             </div>

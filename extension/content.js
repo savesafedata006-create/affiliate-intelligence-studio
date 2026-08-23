@@ -786,6 +786,8 @@
             box-shadow: 0 20px 50px rgba(238,77,45,0.4);
         `;
 
+        let isAutoClickingActive = false;
+
         function renderWidgetContent() {
             const item = queue[currentIdx];
             if (!item) {
@@ -806,10 +808,13 @@
                     <span style="font-size:11px; background:#ee4d2d22; color:#ee4d2d; padding:2px 8px; border-radius:10px; font-weight:700;">${currentIdx + 1}/${queue.length}</span>
                 </div>
                 <div style="font-size:12px; color:#e2e8f0; font-weight:600; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title}</div>
-                <div style="font-size:11px; color:#10b981; margin-bottom:10px;">฿${item.price} | คอม ${item.comm}% | กำไร +฿${parseFloat(item.profit||0).toFixed(0)}</div>
+                <div style="font-size:11px; color:#10b981; margin-bottom:8px;">฿${item.price} | คอม ${item.comm}% | กำไร +฿${parseFloat(item.profit||0).toFixed(0)}</div>
 
                 <div style="display:flex; flex-direction:column; gap:6px;">
-                    <button id="btnAutoPasteLink" style="background:linear-gradient(135deg,#ee4d2d,#ff7337); color:#fff; border:none; padding:9px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">⚡ หยอดลิงก์ใส่ช่องออโต้</button>
+                    <button id="btnAntiBanAutoClick" style="background:${isAutoClickingActive ? '#991b1b' : 'linear-gradient(135deg,#059669,#10b981)'}; color:#fff; border:none; padding:9px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">
+                        ${isAutoClickingActive ? '⏹️ หยุด Auto-Click (Anti-Ban)' : '🤖 เพิ่มออโต้ทั้งคิว (Anti-Ban Mode)'}
+                    </button>
+                    <button id="btnAutoPasteLink" style="background:linear-gradient(135deg,#ee4d2d,#ff7337); color:#fff; border:none; padding:8px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">⚡ หยอดลิงก์ใส่ช่องออโต้ (ทีละชิ้น)</button>
                     <div style="display:flex; gap:6px;">
                         <button id="btnCopyOnly" style="flex:1; background:#0284c7; color:#fff; border:none; padding:7px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">📋 ก๊อปลิงก์</button>
                         <button id="btnNextItem" style="flex:1; background:#334155; color:#fff; border:none; padding:7px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">⏩ ข้ามชิ้นถัดไป</button>
@@ -817,6 +822,7 @@
                 </div>
             `;
 
+            document.getElementById('btnAntiBanAutoClick')?.addEventListener('click', toggleAntiBanAutoClick);
             document.getElementById('btnAutoPasteLink')?.addEventListener('click', () => autoFillLinkToPage(item.link));
             document.getElementById('btnCopyOnly')?.addEventListener('click', () => {
                 navigator.clipboard.writeText(item.link);
@@ -829,8 +835,59 @@
             });
         }
 
+        function toggleAntiBanAutoClick() {
+            isAutoClickingActive = !isAutoClickingActive;
+            if (isAutoClickingActive) {
+                showToast("🤖 เริ่มต้น Auto-Click Anti-Ban Mode (สุ่มหน่วงเวลาเหมือนมนุษย์)...", "#059669");
+                runAntiBanAutoClickStep();
+            } else {
+                showToast("⏹️ หยุดการทำงาน Auto-Click เรียบร้อย", "#991b1b");
+            }
+            renderWidgetContent();
+        }
+
+        function runAntiBanAutoClickStep() {
+            if (!isAutoClickingActive) return;
+            const item = queue[currentIdx];
+            if (!item) {
+                isAutoClickingActive = false;
+                showToast("🎉 เพิ่มสินค้าทั้งคิวเสร็จสิ้นสมบูรณ์!", "#10b981");
+                renderWidgetContent();
+                return;
+            }
+
+            // Fill link
+            autoFillLinkToPage(item.link);
+
+            // Random delay between 2.4s to 4.2s (Human-like behavior to prevent bot ban)
+            const randomDelay = Math.floor(Math.random() * 1800) + 2400;
+
+            setTimeout(() => {
+                // Find & click Submit button automatically
+                const buttons = Array.from(document.querySelectorAll('button'));
+                const submitBtn = buttons.find(b => 
+                    b.innerText.includes('เพิ่ม') || 
+                    b.innerText.includes('บันทึก') || 
+                    b.innerText.includes('Add') || 
+                    b.innerText.includes('Save') ||
+                    b.innerText.includes('Confirm')
+                );
+
+                if (submitBtn) {
+                    submitBtn.click();
+                }
+
+                currentIdx++;
+                localStorage.setItem('collection_queue_idx', currentIdx.toString());
+                renderWidgetContent();
+
+                if (isAutoClickingActive) {
+                    setTimeout(runAntiBanAutoClickStep, 1500);
+                }
+            }, randomDelay);
+        }
+
         function autoFillLinkToPage(linkUrl) {
-            // Find input on My Collection page
             const inputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type])'));
             let targetInput = inputs.find(inp => 
                 inp.placeholder?.includes('http') || 
@@ -845,17 +902,8 @@
                 targetInput.value = linkUrl;
                 targetInput.dispatchEvent(new Event('input', { bubbles: true }));
                 targetInput.dispatchEvent(new Event('change', { bubbles: true }));
-                showToast("⚡ หยอดลิงก์เรียบร้อย! กด 'เพิ่มสินค้า' ได้เลยครับ", "#10b981");
-
-                // Auto advance queue index after 2 seconds
-                setTimeout(() => {
-                    currentIdx++;
-                    localStorage.setItem('collection_queue_idx', currentIdx.toString());
-                    renderWidgetContent();
-                }, 2000);
             } else {
                 navigator.clipboard.writeText(linkUrl);
-                showToast("📋 ก๊อปลิงก์แล้ว! กรุณากดช่องวางบนหน้าเว็บครับ", "#0284c7");
             }
         }
 
