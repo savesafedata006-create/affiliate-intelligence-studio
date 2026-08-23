@@ -697,8 +697,9 @@
         window.scrollBy({ top: 400, behavior: 'smooth' });
         await new Promise(r => setTimeout(r, 1200));
 
-        const cards = document.querySelectorAll("a[href*='/product/'], a[href*='-i.'], .shopee-search-item-result__item");
+        const cards = document.querySelectorAll("a[href*='/product/'], a[href*='-i.'], .shopee-search-item-result__item, [data-sqp], div[class*='product-card'], div[class*='offer-card'], div:has(> button), a[href*='shopee.co.th']");
         const seenNormTitlesList = [];
+        let scraped = 0;
 
         for (let i = 0; i < cards.length && scraped < count; i++) {
             const card = cards[i];
@@ -805,9 +806,10 @@
             }
         }
 
-        btnAuto.innerText = "🤖 2. ดึงออโต้";
+        btnAuto.innerText = "📥 2. ดึงลง DB ทั้งหน้า";
         btnAuto.disabled = false;
-        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${scraped} รายการ!`, "#059669");
+        updateModeBanner('ready');
+        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${scraped} รายการ! กดปุ่มสีแดง "ส่งเข้า DB" ได้เลยครับ`, "#059669");
     }
 
     async function submitSelectedProductsToDB() {
