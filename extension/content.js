@@ -189,9 +189,16 @@
             </div>
         </div>
 
-        <div style="display:flex; gap:6px;">
-            <button id="btnTogglePickMode" style="flex:1; background:#334155; color:#fff; border:none; padding:8px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">🎯 1. จิ้มเลือกเอง</button>
-            <button id="btnAutoExtract" style="flex:1; background:#334155; color:#fff; border:none; padding:8px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">🤖 2. ดึงออโต้</button>
+        <!-- Mode Indicator Display Banner -->
+        <div id="extModeDisplayBanner" style="background:#1e293b; border:1px solid #0284c7; border-radius:10px; padding:8px 10px; text-align:center; font-size:11px; font-weight:700; color:#38bdf8; transition:all 0.3s ease;">
+            ⚪ โหมดปัจจุบัน: Ready (พร้อมทำงาน)
+        </div>
+
+        <!-- 3 Extraction Mode Buttons -->
+        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button id="btnTogglePickMode" style="flex:1; background:#334155; color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; min-width:85px;">🎯 จิ้มเลือกเอง</button>
+            <button id="btnAutoExtract" style="flex:1; background:#334155; color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; min-width:85px;">⚡ ดึงสินค้าทั้งหน้า</button>
+            <button id="btnAutoClickerMode" style="flex:1; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; min-width:100px;">🤖 ออโต้คลิกเกอร์ DB</button>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; background:#1e293b; padding:6px 10px; border-radius:8px; gap:6px;">
@@ -347,24 +354,141 @@
     // Attach drag to trigger pill itself
     makeDraggable(triggerPill, triggerPill);
 
+    const btnAutoClicker = document.getElementById("btnAutoClickerMode");
+    const modeBanner = document.getElementById("extModeDisplayBanner");
+
+    let currentExtMode = 'ready'; // 'ready', 'pick', 'autoscrape', 'autoclicker'
+    let isAutoClickerRunning = false;
+
+    function updateModeBanner(mode) {
+        currentExtMode = mode;
+        if (!modeBanner) return;
+
+        if (mode === 'ready') {
+            modeBanner.innerText = "⚪ โหมดปัจจุบัน: Ready (พร้อมทำงาน)";
+            modeBanner.style.background = "#1e293b";
+            modeBanner.style.borderColor = "#0284c7";
+            modeBanner.style.color = "#38bdf8";
+        } else if (mode === 'pick') {
+            modeBanner.innerText = "🎯 โหมดปัจจุบัน: 🎯 จิ้มเลือกสินค้าเอง";
+            modeBanner.style.background = "#7c3aed22";
+            modeBanner.style.borderColor = "#7c3aed";
+            modeBanner.style.color = "#c4b5fd";
+        } else if (mode === 'autoscrape') {
+            modeBanner.innerText = "⚡ โหมดปัจจุบัน: ⚡ ดึงสินค้าทั้งหน้า";
+            modeBanner.style.background = "#05966922";
+            modeBanner.style.borderColor = "#059669";
+            modeBanner.style.color = "#6ee7b7";
+        } else if (mode === 'autoclicker') {
+            modeBanner.innerText = "🤖 โหมดปัจจุบัน: 🤖 Auto-Clicker ดึงสินค้าลง DB ต่อเนื่อง...";
+            modeBanner.style.background = "#a855f722";
+            modeBanner.style.borderColor = "#a855f7";
+            modeBanner.style.color = "#f0abfc";
+        }
+    }
+
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
+    if (btnAutoClicker) btnAutoClicker.addEventListener("click", toggleAutoClickerExtractorMode);
     btnSubmit.addEventListener("click", submitSelectedProductsToDB);
     btnCopyLinks.addEventListener("click", copySelectedAffiliateLinksToClipboard);
-    if (btnResetAll) btnResetAll.addEventListener("click", () => { resetSelectionState(); showToast("🧹 ล้างรายการเรียบร้อย พร้อมดึงสินค้ารอบใหม่แล้ว!", "#0284c7"); });
+    if (btnResetAll) btnResetAll.addEventListener("click", () => { 
+        resetSelectionState(); 
+        updateModeBanner('ready');
+        showToast("🧹 ล้างรายการเรียบร้อย พร้อมดึงสินค้ารอบใหม่แล้ว!", "#0284c7"); 
+    });
 
     function togglePickMode() {
+        if (isAutoClickerRunning) stopAutoClickerExtractor();
+
         isPickModeActive = !isPickModeActive;
         if (isPickModeActive) {
             btnPick.style.background = "#7c3aed";
-            btnPick.innerText = "🎯 กำลังเลือก (คลิกสินค้า)";
+            btnPick.innerText = "🎯 กำลังเลือก...";
+            updateModeBanner('pick');
             showToast("🎯 เปิดโหมดจิ้มเลือก: นำเมาส์ไปคลิกที่สินค้าบนหน้าจอได้เลยครับ!", "#7c3aed");
             enableClickToSelectHighlighter();
         } else {
             btnPick.style.background = "#334155";
-            btnPick.innerText = "🎯 1. จิ้มเลือกเอง";
+            btnPick.innerText = "🎯 จิ้มเลือกเอง";
+            updateModeBanner('ready');
             showToast("🛑 ปิดโหมดจิ้มเลือกเรียบร้อยแล้ว", "#475569");
             disableClickToSelectHighlighter();
+        }
+    }
+
+    // ===================================================
+    // 🤖 AUTO-CLICKER EXTRACTOR ENGINE (Shopee -> DB Auto)
+    // ===================================================
+    function toggleAutoClickerExtractorMode() {
+        if (isPickModeActive) togglePickMode();
+
+        isAutoClickerRunning = !isAutoClickerRunning;
+        if (isAutoClickerRunning) {
+            btnAutoClicker.style.background = "#991b1b";
+            btnAutoClicker.innerText = "⏹️ หยุด Auto-Clicker";
+            updateModeBanner('autoclicker');
+            showToast("🤖 เริ่มโหมด Auto-Clicker: กำลังดึงสินค้าและส่งเข้า DB อัตโนมัติ...", "#7c3aed");
+            runAutoClickerLoop();
+        } else {
+            stopAutoClickerExtractor();
+        }
+    }
+
+    function stopAutoClickerExtractor() {
+        isAutoClickerRunning = false;
+        if (btnAutoClicker) {
+            btnAutoClicker.style.background = "linear-gradient(135deg,#7c3aed,#a855f7)";
+            btnAutoClicker.innerText = "🤖 ออโต้คลิกเกอร์ DB";
+        }
+        updateModeBanner('ready');
+        showToast("⏹️ หยุดทำงาน Auto-Clicker Extractor เรียบร้อยแล้ว", "#475569");
+    }
+
+    async function runAutoClickerLoop() {
+        if (!isAutoClickerRunning) return;
+
+        // 1. Smooth scroll down to trigger lazy loading
+        window.scrollBy({ top: 350, behavior: 'smooth' });
+
+        // 2. Scrape visible products
+        const quota = parseInt(document.getElementById("inpAutoQuota")?.value || "10");
+        const cards = Array.from(document.querySelectorAll("a, .shopee-search-item-result__item, [data-sqp]"));
+
+        let countAdded = 0;
+        for (const card of cards) {
+            if (!isAutoClickerRunning) break;
+            const title = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
+            if (!isValidProductTitle(title)) continue;
+            if (isProductAlreadyInDB(title)) {
+                markCardAsAlreadyExtracted(card);
+                continue;
+            }
+
+            const prodData = extractSingleProductFromCard(card);
+            if (prodData && prodData.title) {
+                const titleKey = prodData.title.trim();
+                if (!selectedProductsMap.has(titleKey)) {
+                    selectedProductsMap.set(titleKey, prodData);
+                    highlightSelectedCard(card);
+                    countAdded++;
+                }
+            }
+
+            if (selectedProductsMap.size >= quota) break;
+        }
+
+        updateSelectionUI();
+
+        // 3. Auto-submit to DB if we reached items
+        if (selectedProductsMap.size > 0) {
+            await submitSelectedProductsToDB();
+        }
+
+        // 4. Continue loop after human-like random delay (2.0s to 3.5s)
+        if (isAutoClickerRunning) {
+            const randomDelay = Math.floor(Math.random() * 1500) + 2000;
+            setTimeout(runAutoClickerLoop, randomDelay);
         }
     }
 
@@ -456,6 +580,8 @@
     }
 
     async function runAutoScrapeMode() {
+        if (isAutoClickerRunning) stopAutoClickerExtractor();
+        updateModeBanner('autoscrape');
         const count = parseInt(document.getElementById("inpAutoQuota")?.value) || 10;
         btnAuto.innerText = "⏳ กำลังดึง...";
         btnAuto.disabled = true;
