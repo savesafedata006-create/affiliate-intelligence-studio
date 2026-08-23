@@ -191,14 +191,14 @@
 
         <!-- Mode Indicator Display Banner -->
         <div id="extModeDisplayBanner" style="background:#1e293b; border:1px solid #0284c7; border-radius:10px; padding:8px 10px; text-align:center; font-size:11px; font-weight:700; color:#38bdf8; transition:all 0.3s ease;">
-            ⚪ โหมดปัจจุบัน: Ready (พร้อมทำงาน)
+            ⚪ โหมดปัจจุบัน: Ready (พร้อมดึงสินค้าเข้าคลัง DB)
         </div>
 
         <!-- 3 Extraction Mode Buttons -->
         <div style="display:flex; gap:4px; flex-wrap:wrap;">
-            <button id="btnTogglePickMode" style="flex:1; background:#334155; color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; min-width:85px;">🎯 จิ้มเลือกเอง</button>
-            <button id="btnAutoExtract" style="flex:1; background:#334155; color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; min-width:85px;">⚡ ดึงสินค้าทั้งหน้า</button>
-            <button id="btnAutoClickerMode" style="flex:1; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; min-width:100px;">🤖 ออโต้คลิกเกอร์ DB</button>
+            <button id="btnTogglePickMode" style="flex:1; background:#334155; color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; min-width:85px;">🎯 1. จิ้มเลือกเอง</button>
+            <button id="btnAutoExtract" style="flex:1; background:#334155; color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; min-width:85px;">📥 2. ดึงลง DB ทั้งหน้า</button>
+            <button id="btnAutoClickerMode" style="flex:1; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; min-width:100px;">🤖 3. ออโต้ดึงลง DB</button>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; background:#1e293b; padding:6px 10px; border-radius:8px; gap:6px;">
