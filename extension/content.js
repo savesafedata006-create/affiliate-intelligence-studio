@@ -558,42 +558,74 @@
         };
     }
 
+    // ✅ highlightSelectedCard — กรอบสีเขียวบนการ์ดสินค้าที่ถูกเลือก
+    function highlightSelectedCard(card) {
+        if (!card) return;
+        card.style.outline = "4px solid #10b981";
+        card.style.outlineOffset = "-4px";
+        card.style.boxShadow = "0 0 16px rgba(16, 185, 129, 0.6)";
+        card.style.transition = "all 0.3s ease";
+        card.dataset.autoScraped = "true";
+        if (!card.querySelector(".ext-selected-badge")) {
+            const badge = document.createElement("div");
+            badge.className = "ext-selected-badge";
+            badge.style.cssText = `
+                position:absolute; top:6px; left:6px; z-index:9999;
+                background:#10b981; color:#fff; font-size:11px;
+                font-weight:700; padding:3px 8px; border-radius:6px;
+                box-shadow:0 4px 10px rgba(0,0,0,0.3); font-family:sans-serif;
+            `;
+            badge.innerText = `✅ #${selectedProductsMap.size}`;
+            if (window.getComputedStyle(card).position === "static") card.style.position = "relative";
+            card.appendChild(badge);
+        }
+    }
+
+    // ✅ updateSelectionUI — อัปเดตตัวเลขนับสินค้าในปุ่มและ Pill
+    function updateSelectionUI() {
+        const size = selectedProductsMap.size;
+        const countEl = document.getElementById("selCountText");
+        const pillEl = document.getElementById("pillCountBadge");
+        if (countEl) countEl.innerText = size;
+        if (pillEl) pillEl.innerText = size;
+    }
+
     async function runAutoClickerLoop() {
         if (!isAutoClickerRunning) return;
 
         // 1. Smooth scroll down to trigger lazy loading
         window.scrollBy({ top: 350, behavior: 'smooth' });
+        await new Promise(r => setTimeout(r, 800));
 
-        // 2. Scrape visible products (supports Shopee Marketplace & Shopee Affiliate Offer page)
+        // 2. Scrape visible products
         const quota = parseInt(document.getElementById("inpAutoQuota")?.value || "10");
-        const cards = Array.from(document.querySelectorAll("a, .shopee-search-item-result__item, [data-sqp], div[class*='product-card'], div[class*='offer-card'], div:has(> button)"));
+        const cards = Array.from(document.querySelectorAll(
+            "a[href*='shopee.co.th'], a[href*='/product/'], a[href*='-i.'], .shopee-search-item-result__item, [data-sqp]"
+        ));
 
-        let countAdded = 0;
         for (const card of cards) {
             if (!isAutoClickerRunning) break;
             const prodData = extractSingleProductFromCard(card);
             if (prodData && prodData.title) {
                 const titleKey = prodData.title.trim();
-                if (!selectedProductsMap.has(titleKey)) {
+                if (!selectedProductsMap.has(titleKey) && !isProductAlreadyInDB(titleKey)) {
                     selectedProductsMap.set(titleKey, prodData);
                     highlightSelectedCard(card);
-                    countAdded++;
                 }
             }
-
             if (selectedProductsMap.size >= quota) break;
         }
 
         updateSelectionUI();
 
-        // 3. Auto-submit to DB if we reached items
+        // 3. Auto-submit to DB if we have items
         if (selectedProductsMap.size > 0) {
             await submitSelectedProductsToDB();
         }
 
-        // 4. Continue loop after human-like random delay (2.0s to 3.5s)
+        // 4. Continue loop after human-like random delay (2.5s to 4.5s)
         if (isAutoClickerRunning) {
-            const randomDelay = Math.floor(Math.random() * 1500) + 2000;
+            const randomDelay = Math.floor(Math.random() * 2000) + 2500;
             setTimeout(runAutoClickerLoop, randomDelay);
         }
     }
@@ -697,7 +729,14 @@
         window.scrollBy({ top: 400, behavior: 'smooth' });
         await new Promise(r => setTimeout(r, 1200));
 
-        const cards = document.querySelectorAll("a[href*='/product/'], a[href*='-i.'], .shopee-search-item-result__item, [data-sqp], div[class*='product-card'], div[class*='offer-card'], div:has(> button), a[href*='shopee.co.th']");
+        const allSelectors = [
+            "a[href*='/product/']",
+            "a[href*='-i.']",
+            "a[href*='shopee.co.th/product']",
+            ".shopee-search-item-result__item",
+            "[data-sqp]"
+        ].join(", ");
+        const cards = document.querySelectorAll(allSelectors);
         const seenNormTitlesList = [];
         let scraped = 0;
 
@@ -913,7 +952,7 @@
         if (selCountText) selCountText.innerText = "0";
 
         if (btnAuto) {
-            btnAuto.innerText = "🤖 2. ดึงออโต้";
+            btnAuto.innerText = "📥 2. ดึงลง DB ทั้งหน้า";
             btnAuto.disabled = false;
         }
 
