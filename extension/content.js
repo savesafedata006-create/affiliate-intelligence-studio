@@ -276,6 +276,11 @@
             📤 ดึงส่งเข้าคลังบัญชี Shopee ออนไลน์ (My Collection)
         </button>
 
+        <!-- OPEN ASSISTANT WIDGET DIRECTLY -->
+        <button id="btnOpenCollectionAssistant" style="width:100%; background:#1e293b; border:1px solid #10b981; color:#10b981; padding:8px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer;">
+            🪄 เปิดกล่องผู้ช่วย My Collection Assistant ทันที
+        </button>
+
         <div style="display:flex; gap:6px;">
             <button id="btnSubmitSelected" style="flex:2; background:linear-gradient(135deg, #ee4d2d, #ff7337); color:#fff; border:none; padding:9px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(238,77,45,0.4);">
                 📌 ส่งเข้า DB (<span id="selCountText">0</span>)
@@ -433,6 +438,14 @@
 
     const btnAutoClickNative = document.getElementById("btnAutoClickNative");
     if (btnAutoClickNative) btnAutoClickNative.addEventListener("click", autoClickShopeeNativeAddButtons);
+
+    const btnOpenAssistant = document.getElementById("btnOpenCollectionAssistant");
+    if (btnOpenAssistant) {
+        btnOpenAssistant.addEventListener("click", () => {
+            initMyCollectionAutoFillHelper(true);
+            showToast("🪄 เปิดกล่องผู้ช่วย My Collection Assistant มุมขวาบนแล้วครับ!", "#059669");
+        });
+    }
 
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
@@ -1132,7 +1145,7 @@
         initMyCollectionAutoFillHelper();
     }
 
-    function initMyCollectionAutoFillHelper() {
+    function initMyCollectionAutoFillHelper(forceOpen = false) {
         let queue = [];
         let currentIdx = 0;
 
@@ -1141,7 +1154,39 @@
             currentIdx = parseInt(localStorage.getItem('collection_queue_idx') || '0');
         } catch (e) {}
 
+        if (forceOpen && (!queue || queue.length === 0)) {
+            // If user selected products in panel, populate queue from selectedProductsMap
+            if (selectedProductsMap.size > 0) {
+                const items = Array.from(selectedProductsMap.values());
+                queue = items.map(p => ({
+                    title: p.title,
+                    price: p.sale_price,
+                    comm: p.commission_rate,
+                    profit: p.net_profit_thb,
+                    link: p.affiliate_link
+                }));
+                localStorage.setItem('collection_queue', JSON.stringify(queue));
+                localStorage.setItem('collection_queue_idx', '0');
+                currentIdx = 0;
+            } else {
+                // Check if current page is single product
+                queue = [{
+                    title: document.title || "สินค้าตัวอย่าง Shopee",
+                    price: 290,
+                    comm: 20,
+                    profit: 58,
+                    link: window.location.href.includes('?') ? `${window.location.href}&af_id=X4EBLKP&mmp_pid=an_15320530167` : `${window.location.href}?af_id=X4EBLKP&mmp_pid=an_15320530167`
+                }];
+                localStorage.setItem('collection_queue', JSON.stringify(queue));
+                localStorage.setItem('collection_queue_idx', '0');
+                currentIdx = 0;
+            }
+        }
+
         if (!queue || queue.length === 0) return;
+
+        // Remove old widget if already exists
+        document.getElementById('shopeeCollectionHelperWidget')?.remove();
 
         const widget = document.createElement('div');
         widget.id = 'shopeeCollectionHelperWidget';
