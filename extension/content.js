@@ -445,26 +445,62 @@
         showToast("⏹️ หยุดทำงาน Auto-Clicker Extractor เรียบร้อยแล้ว", "#475569");
     }
 
+    function extractSingleProductFromCard(card) {
+        if (!card) return null;
+        const text = card.innerText || "";
+        const rawTitle = card.querySelector("h1, h2, h3, div[class*='title'], span[class*='title'], [title], ._44qnta, .vioxSu")?.innerText || text;
+        const cleanTitle = rawTitle.replace(/\n/g, ' ').trim();
+        if (!isValidProductTitle(cleanTitle)) return null;
+
+        // Parse price
+        const priceMatch = text.match(/฿\s*([\d,.]+)/) || text.match(/([\d,.]+)\s*บาท/);
+        const price = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, "")) : 290.0;
+        if (price <= 0) return null;
+
+        // Parse commission percentage (e.g. อัตราค่าคอมมิชชัน 10%, 12%, 25%)
+        const commMatch = text.match(/อัตราค่าคอมมิชชัน\s*([\d.]+)%/) || text.match(/คอม\s*([\d.]+)%/) || text.match(/([\d.]+)%/);
+        const commRate = commMatch ? parseFloat(commMatch[1]) : 20.0;
+        const profit = Math.round(price * (commRate / 100.0) * 100) / 100;
+
+        // Image
+        const imgEl = card.querySelector("img");
+        const imgSrc = imgEl?.src || imgEl?.dataset?.src || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
+
+        // Link
+        const linkEl = card.querySelector("a[href]") || (card.tagName === 'A' ? card : null);
+        const href = linkEl?.href || window.location.href;
+        const affLink = href.includes('?') ? `${href}&af_id=X4EBLKP&mmp_pid=an_15320530167` : `${href}?af_id=X4EBLKP&mmp_pid=an_15320530167`;
+
+        const titleHash = Math.abs(cleanTitle.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)).toString(36);
+
+        return {
+            item_id: `sp_offer_${titleHash}`,
+            title: cleanTitle,
+            sale_price: price,
+            original_price: Math.round(price * 1.3),
+            commission_rate: commRate,
+            net_profit_thb: profit,
+            main_image_path: imgSrc,
+            images: [imgSrc],
+            affiliate_link: affLink,
+            shop_name: "Shopee Affiliate Mall",
+            status: "PENDING_VIDEO"
+        };
+    }
+
     async function runAutoClickerLoop() {
         if (!isAutoClickerRunning) return;
 
         // 1. Smooth scroll down to trigger lazy loading
         window.scrollBy({ top: 350, behavior: 'smooth' });
 
-        // 2. Scrape visible products
+        // 2. Scrape visible products (supports Shopee Marketplace & Shopee Affiliate Offer page)
         const quota = parseInt(document.getElementById("inpAutoQuota")?.value || "10");
-        const cards = Array.from(document.querySelectorAll("a, .shopee-search-item-result__item, [data-sqp]"));
+        const cards = Array.from(document.querySelectorAll("a, .shopee-search-item-result__item, [data-sqp], div[class*='product-card'], div[class*='offer-card'], div:has(> button)"));
 
         let countAdded = 0;
         for (const card of cards) {
             if (!isAutoClickerRunning) break;
-            const title = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
-            if (!isValidProductTitle(title)) continue;
-            if (isProductAlreadyInDB(title)) {
-                markCardAsAlreadyExtracted(card);
-                continue;
-            }
-
             const prodData = extractSingleProductFromCard(card);
             if (prodData && prodData.title) {
                 const titleKey = prodData.title.trim();
