@@ -517,31 +517,77 @@
 
     function extractSingleProductFromCard(card) {
         if (!card) return null;
-        const text = card.innerText || "";
-        const rawTitle = card.querySelector("h1, h2, h3, div[class*='title'], span[class*='title'], [title], ._44qnta, .vioxSu")?.innerText || text;
-        const cleanTitle = rawTitle.replace(/\n/g, ' ').trim();
+
+        // ─── 1. TITLE ─── ลองหาชื่อสินค้าจากหลาย selector เรียงตามความแม่นยำ
+        const titleSelectors = [
+            "._44qnta", ".vioxSu", ".product-name", ".offer-name",
+            "h1", "h2", "h3", "h4",
+            "div[class*='title']", "span[class*='title']",
+            "div[class*='name']",  "span[class*='name']",
+            "p[class*='name']",    "p[class*='title']",
+            "[title]", "div[class*='product'] span", "div[class*='offer'] span"
+        ];
+        let cleanTitle = "";
+        for (const sel of titleSelectors) {
+            const el = card.querySelector(sel);
+            const raw = el?.getAttribute("title") || el?.innerText || "";
+            const t = raw.replace(/\n/g, " ").trim();
+            if (t.length >= 8) { cleanTitle = t; break; }
+        }
+
+        // fallback: ใช้ innerText ทั้ง card แต่เอาแค่บรรทัดแรกที่ยาวพอ
+        if (!cleanTitle) {
+            const lines = (card.innerText || "").split("\n").map(l => l.trim()).filter(l => l.length >= 8);
+            cleanTitle = lines[0] || "";
+        }
+
         if (!isValidProductTitle(cleanTitle)) return null;
 
-        // Parse price
-        const priceMatch = text.match(/฿\s*([\d,.]+)/) || text.match(/([\d,.]+)\s*บาท/);
-        const price = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, "")) : 290.0;
-        if (price <= 0) return null;
+        // ─── 2. PRICE ─── ค้นหาราคาจากหลายรูปแบบ
+        const fullText = card.innerText || "";
+        const priceSelectors = ["._1w9fTh", ".pq8Piy", "._3n5odx",
+            "div[class*='price']", "span[class*='price']", "p[class*='price']"];
+        let price = 0;
+        for (const sel of priceSelectors) {
+            const el = card.querySelector(sel);
+            if (el) {
+                const m = el.innerText.match(/[\d,.]+/);
+                if (m) { price = parseFloat(m[0].replace(/,/g, "")); break; }
+            }
+        }
+        if (!price) {
+            const m = fullText.match(/฿\s*([\d,.]+)/) ||
+                      fullText.match(/([\d,.]+)\s*บาท/) ||
+                      fullText.match(/(\d{2,6})/);
+            price = m ? parseFloat(m[1].replace(/,/g, "")) : 290.0;
+        }
+        if (price <= 0) price = 290.0;
 
-        // Parse commission percentage (e.g. อัตราค่าคอมมิชชัน 10%, 12%, 25%)
-        const commMatch = text.match(/อัตราค่าคอมมิชชัน\s*([\d.]+)%/) || text.match(/คอม\s*([\d.]+)%/) || text.match(/([\d.]+)%/);
+        // ─── 3. COMMISSION ───
+        const commMatch = fullText.match(/อัตราค่าคอมมิชชัน\s*([\d.]+)%/) ||
+                          fullText.match(/คอม\s*([\d.]+)%/) ||
+                          fullText.match(/([\d.]+)%/);
         const commRate = commMatch ? parseFloat(commMatch[1]) : 20.0;
-        const profit = Math.round(price * (commRate / 100.0) * 100) / 100;
 
-        // Image
+        // ─── 4. IMAGE ───
         const imgEl = card.querySelector("img");
-        const imgSrc = imgEl?.src || imgEl?.dataset?.src || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
+        const imgSrc = imgEl?.src || imgEl?.dataset?.src ||
+            "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
 
-        // Link
-        const linkEl = card.querySelector("a[href]") || (card.tagName === 'A' ? card : null);
+        // ─── 5. LINK ─── ค้นหา href จากหลายแหล่ง
+        const linkEl = card.querySelector("a[href*='shopee']") ||
+                       card.querySelector("a[href*='product']") ||
+                       card.querySelector("a[href]") ||
+                       (card.tagName === "A" ? card : null);
         const href = linkEl?.href || window.location.href;
-        const affLink = href.includes('?') ? `${href}&af_id=X4EBLKP&mmp_pid=an_15320530167` : `${href}?af_id=X4EBLKP&mmp_pid=an_15320530167`;
+        const affLink = href.includes("af_id=") ? href :
+                        href.includes("?") ?
+                        `${href}&af_id=X4EBLKP&mmp_pid=an_15320530167` :
+                        `${href}?af_id=X4EBLKP&mmp_pid=an_15320530167`;
 
-        const titleHash = Math.abs(cleanTitle.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)).toString(36);
+        const titleHash = Math.abs(
+            cleanTitle.split("").reduce((acc, c) => (acc << 5) - acc + c.charCodeAt(0), 0)
+        ).toString(36);
 
         return {
             item_id: `sp_offer_${titleHash}`,
@@ -549,7 +595,7 @@
             sale_price: price,
             original_price: Math.round(price * 1.3),
             commission_rate: commRate,
-            net_profit_thb: profit,
+            net_profit_thb: Math.round(price * (commRate / 100) * 100) / 100,
             main_image_path: imgSrc,
             images: [imgSrc],
             affiliate_link: affLink,
@@ -595,13 +641,42 @@
 
         // 1. Smooth scroll down to trigger lazy loading
         window.scrollBy({ top: 350, behavior: 'smooth' });
-        await new Promise(r => setTimeout(r, 800));
+        await new Promise(r => setTimeout(r, 1000));
 
-        // 2. Scrape visible products
+        // 2. หา product cards บนทุกหน้า Shopee/Affiliate — ใช้ multi-selector กว้างๆ
         const quota = parseInt(document.getElementById("inpAutoQuota")?.value || "10");
-        const cards = Array.from(document.querySelectorAll(
-            "a[href*='shopee.co.th'], a[href*='/product/'], a[href*='-i.'], .shopee-search-item-result__item, [data-sqp]"
-        ));
+
+        // รวม candidates จากทุก selector
+        const candidateSelectors = [
+            "[data-sqp]",
+            "a[href*='shopee.co.th/product']",
+            "a[href*='/product/']",
+            "a[href*='-i.']",
+            ".shopee-search-item-result__item",
+            "div[class*='product-card']",
+            "div[class*='productCard']",
+            "div[class*='offer-card']",
+            "div[class*='offerCard']",
+            "div[class*='item-card']",
+            "li[class*='product']",
+            "li[class*='item']"
+        ];
+        const seen = new Set();
+        const candidates = [];
+        for (const sel of candidateSelectors) {
+            try {
+                document.querySelectorAll(sel).forEach(el => {
+                    if (!seen.has(el)) { seen.add(el); candidates.push(el); }
+                });
+            } catch(e) {}
+        }
+
+        // กรอง: เอาเฉพาะที่มี img และ text >= 8 chars (น่าจะเป็นสินค้า)
+        const cards = candidates.filter(el =>
+            el.querySelector("img") && (el.innerText || "").trim().length >= 8
+        );
+
+        showToast(`🔍 พบ ${cards.length} การ์ดบนหน้า กำลังดึง...`, "#0284c7");
 
         for (const card of cards) {
             if (!isAutoClickerRunning) break;
@@ -621,6 +696,8 @@
         // 3. Auto-submit to DB if we have items
         if (selectedProductsMap.size > 0) {
             await submitSelectedProductsToDB();
+        } else {
+            showToast("⚠️ ยังไม่พบสินค้าบนหน้านี้ เลื่อนหน้าต่อ...", "#eab308");
         }
 
         // 4. Continue loop after human-like random delay (2.5s to 4.5s)
@@ -738,9 +815,9 @@
         ].join(", ");
         const cards = document.querySelectorAll(allSelectors);
         const seenNormTitlesList = [];
-        let scraped = 0;
+        const startSize = selectedProductsMap.size;
 
-        for (let i = 0; i < cards.length && scraped < count; i++) {
+        for (let i = 0; i < cards.length && (selectedProductsMap.size - startSize) < count; i++) {
             const card = cards[i];
             const rawTitle = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
             const cleanTitle = rawTitle.replace(/\n/g, ' ').trim();
@@ -748,7 +825,7 @@
             // ✅ FRONT-END DEDUPLICATION — ข้ามรายการที่ดึงไปแล้วในรอบนี้ 100%
             if (!isValidProductTitle(cleanTitle)) continue;
 
-            // 🏆 AI SMART FILTER — สแกนความคล้ายของชื่อสินค้าบนหน้าจอ หากเป็นสินค้าชนิดเดียวกันจะเลือกเฉพาะชิ้นแรกที่ดีที่สุดและข้ามการไฮไลท์ตัวซ้ำ!
+            // 🏆 AI SMART FILTER — สแกนความคล้ายของชื่อสินค้า ข้ามซ้ำ
             const normTitle = cleanTitleForMatching(cleanTitle);
             let isDuplicateOnScreen = false;
             for (const existingNorm of seenNormTitlesList) {
@@ -757,9 +834,7 @@
                     break;
                 }
             }
-            if (isDuplicateOnScreen) {
-                continue;
-            }
+            if (isDuplicateOnScreen) continue;
             seenNormTitlesList.push(normTitle);
 
             // ✅ CHECK IF ALREADY IN DB — ข้ามสินค้าที่มีใน DB แล้วอัตโนมัติ
@@ -798,40 +873,9 @@
                 status: "PENDING_VIDEO"
             });
 
-            // ✅ HIGHLIGHT BORDER & BADGE OVERLAY — กรอบไฮไลท์สีเขียวสดใสบอกรายการที่ถูกเลือก
+            // ✅ HIGHLIGHT BORDER & BADGE — ใช้ฟังก์ชันกลาง highlightSelectedCard
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            card.style.outline = "4px solid #10b981";
-            card.style.outlineOffset = "-4px";
-            card.style.boxShadow = "0 0 16px rgba(16, 185, 129, 0.7)";
-            card.style.transition = "all 0.3s ease";
-            card.dataset.autoScraped = "true";
-
-            // สร้างป้ายบอกลำดับ #1, #2...
-            if (!card.querySelector(".ext-selected-badge")) {
-                const badge = document.createElement("div");
-                badge.className = "ext-selected-badge";
-                badge.style.cssText = `
-                    position: absolute;
-                    top: 6px;
-                    left: 6px;
-                    z-index: 9999;
-                    background: #10b981;
-                    color: #ffffff;
-                    font-size: 11px;
-                    font-weight: 700;
-                    padding: 3px 8px;
-                    border-radius: 6px;
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-                    font-family: sans-serif;
-                `;
-                badge.innerText = `✅ ดึงออโต้ #${scraped + 1}`;
-                if (window.getComputedStyle(card).position === 'static') {
-                    card.style.position = 'relative';
-                }
-                card.appendChild(badge);
-            }
-
-            scraped++;
+            highlightSelectedCard(card);
             updateExtSelectionCount();
 
             // 🛡️ ANTI-BAN HUMAN-LIKE JITTER DELAY — สุ่มดีเลย์แบบมนุษย์ป้องกันการโดนบล็อก (1.2s - 2.5s)
@@ -839,7 +883,8 @@
             await new Promise(r => setTimeout(r, antiBanDelay));
 
             // พักสายตา 2.5 วินาที ทุกๆ 10 สินค้า (จำลองพฤติกรรมมนุษย์)
-            if (scraped % 10 === 0 && scraped < count) {
+            const addedSoFar = selectedProductsMap.size - startSize;
+            if (addedSoFar > 0 && addedSoFar % 10 === 0 && addedSoFar < count) {
                 showToast(`🛡️ Anti-Ban: พักจำลองพฤติกรรมมนุษย์ 2.5 วินาที...`, "#0284c7");
                 await new Promise(r => setTimeout(r, 2500));
             }
@@ -848,7 +893,7 @@
         btnAuto.innerText = "📥 2. ดึงลง DB ทั้งหน้า";
         btnAuto.disabled = false;
         updateModeBanner('ready');
-        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${scraped} รายการ! กดปุ่มสีแดง "ส่งเข้า DB" ได้เลยครับ`, "#059669");
+        showToast(`✅ สกัดข้อมูลออโต้สำเร็จ ${selectedProductsMap.size - startSize} รายการ! กดปุ่มสีแดง "ส่งเข้า DB" ได้เลยครับ`, "#059669");
     }
 
     async function submitSelectedProductsToDB() {
