@@ -74,6 +74,43 @@
         });
     }
 
+    // ✅ UNIVERSAL CARD FINDER — ค้นหาการ์ดสินค้าจาก Shopee CDN image + walk up DOM
+    // ใช้ได้ทุกหน้า Shopee/Affiliate ไม่ขึ้นกับ class name
+    function findProductCardsOnPage() {
+        // Step 1: Find all Shopee CDN product images
+        const productImgs = Array.from(document.querySelectorAll('img')).filter(img => {
+            const src = img.src || img.currentSrc || img.getAttribute('data-src') || '';
+            return src.includes('susercontent.com') || src.includes('shopee.com/file/');
+        });
+
+        const cardSet = new Set();
+        const cards = [];
+
+        productImgs.forEach(img => {
+            let el = img.parentElement;
+
+            // Walk up DOM from image to find card container (has price text ฿)
+            while (el && el !== document.body && el !== document.documentElement) {
+                const text = el.innerText || '';
+                const hasPrice = /฿\s*[\d,]+/.test(text) || /[\d,]+\s*บาท/.test(text);
+
+                if (hasPrice) {
+                    // Make sure this isn't a large container with multiple products
+                    const imgCount = el.querySelectorAll('img[src*="susercontent"]').length;
+                    if (imgCount <= 2 && !cardSet.has(el)) {
+                        cardSet.add(el);
+                        cards.push(el);
+                    }
+                    break;
+                }
+                el = el.parentElement;
+            }
+        });
+
+        console.log(`⚡ findProductCardsOnPage: found ${cards.length} product cards`);
+        return cards;
+    }
+
     // Run DB sync on extension start
     syncExistingProductsFromDB();
 
@@ -227,6 +264,12 @@
             <span>🏆 AI Best Winner Filter</span>
             <span style="color:#10b981; font-weight:700;">🟢 คัดชิ้นเด็ดสุด 1 เดียว</span>
         </div>
+
+
+        <!-- AUTO CLICK NATIVE SHOPEE BUTTONS ON PAGE -->
+        <button id="btnAutoClickNative" style="width:100%; background:linear-gradient(135deg,#0284c7,#38bdf8); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(2,132,199,0.3);">
+            🖱️ กดปุ่ม "เพิ่มลงคลัง" ในหน้าตรงๆ (Auto-Click)
+        </button>
 
         <!-- DIRECT PUSH TO MY COLLECTION BUTTON -->
         <button id="btnDirectPushCollection" style="width:100%; background:linear-gradient(135deg,#059669,#10b981); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(16,185,129,0.3);">
@@ -388,6 +431,9 @@
     const btnPushCollection = document.getElementById("btnDirectPushCollection");
     if (btnPushCollection) btnPushCollection.addEventListener("click", directPushSelectedToMyCollection);
 
+    const btnAutoClickNative = document.getElementById("btnAutoClickNative");
+    if (btnAutoClickNative) btnAutoClickNative.addEventListener("click", autoClickShopeeNativeAddButtons);
+
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
     if (btnAutoClicker) btnAutoClicker.addEventListener("click", toggleAutoClickerExtractorMode);
@@ -398,6 +444,55 @@
         updateModeBanner('ready');
         showToast("🧹 ล้างรายการเรียบร้อย พร้อมดึงสินค้ารอบใหม่แล้ว!", "#0284c7"); 
     });
+
+    // ===================================================
+    // 🖱️ AUTO-CLICK NATIVE SHOPEE BUTTONS ON CURRENT PAGE
+    // กดปุ่ม "เพิ่มลงคลัง" ในแต่ละการ์ดโดยตรง ไม่ต้องเปิดหน้าใหม่
+    // ===================================================
+    async function autoClickShopeeNativeAddButtons() {
+        updateModeBanner('autoclicker');
+        const quota = parseInt(document.getElementById('inpAutoQuota')?.value || '10');
+
+        // Step 1: หาการ์ดสินค้าทั้งหมดบนหน้า
+        const cards = findProductCardsOnPage();
+        showToast(`🔍 พบ ${cards.length} การ์ดสินค้าบนหน้า กำลังกดปุ่มเพิ่มลงคลัง...`, '#0284c7');
+
+        if (cards.length === 0) {
+            showToast('⚠️ ไม่พบการ์ดสินค้าบนหน้านี้ ลองเลื่อนหน้าให้สินค้าโหลดก่อนครับ', '#eab308');
+            updateModeBanner('ready');
+            return;
+        }
+
+        let added = 0;
+
+        for (const card of cards) {
+            if (added >= quota) break;
+
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await new Promise(r => setTimeout(r, 600));
+
+            // หาปุ่มในการ์ด — ลอง keyword หลายแบบ
+            const allBtns = Array.from(card.querySelectorAll('button, [role="button"], a[class*="btn"]'));
+            const addBtn = allBtns.find(btn => {
+                const t = (btn.innerText || btn.textContent || btn.getAttribute('aria-label') || '').trim();
+                return /เพิ่ม|คลัง|เพิ่มลง|add|collect|marketing|เลือก/i.test(t);
+            }) || allBtns[allBtns.length - 1]; // fallback: ปุ่มสุดท้ายในการ์ด
+
+            if (addBtn) {
+                clickElementReal(addBtn);
+                highlightSelectedCard(card);
+                added++;
+                showToast(`✅ กดเพิ่มลงคลัง ${added}/${quota} แล้ว`, '#059669');
+
+                // Anti-ban: delay 1.5–3.0 วินาที
+                const delay = Math.floor(Math.random() * 1500) + 1500;
+                await new Promise(r => setTimeout(r, delay));
+            }
+        }
+
+        updateModeBanner('ready');
+        showToast(`🎉 กดเพิ่มลงคลังสำเร็จ ${added} รายการ! ตรวจสอบที่ My Collection ได้เลยครับ`, '#059669');
+    }
 
     async function directPushSelectedToMyCollection() {
         if (selectedProductsMap.size === 0) {
@@ -643,38 +738,9 @@
         window.scrollBy({ top: 350, behavior: 'smooth' });
         await new Promise(r => setTimeout(r, 1000));
 
-        // 2. หา product cards บนทุกหน้า Shopee/Affiliate — ใช้ multi-selector กว้างๆ
+        // 2. หา product cards บนทุกหน้า Shopee/Affiliate — ใช้ Universal Finder
         const quota = parseInt(document.getElementById("inpAutoQuota")?.value || "10");
-
-        // รวม candidates จากทุก selector
-        const candidateSelectors = [
-            "[data-sqp]",
-            "a[href*='shopee.co.th/product']",
-            "a[href*='/product/']",
-            "a[href*='-i.']",
-            ".shopee-search-item-result__item",
-            "div[class*='product-card']",
-            "div[class*='productCard']",
-            "div[class*='offer-card']",
-            "div[class*='offerCard']",
-            "div[class*='item-card']",
-            "li[class*='product']",
-            "li[class*='item']"
-        ];
-        const seen = new Set();
-        const candidates = [];
-        for (const sel of candidateSelectors) {
-            try {
-                document.querySelectorAll(sel).forEach(el => {
-                    if (!seen.has(el)) { seen.add(el); candidates.push(el); }
-                });
-            } catch(e) {}
-        }
-
-        // กรอง: เอาเฉพาะที่มี img และ text >= 8 chars (น่าจะเป็นสินค้า)
-        const cards = candidates.filter(el =>
-            el.querySelector("img") && (el.innerText || "").trim().length >= 8
-        );
+        const cards = findProductCardsOnPage();
 
         showToast(`🔍 พบ ${cards.length} การ์ดบนหน้า กำลังดึง...`, "#0284c7");
 
@@ -719,7 +785,8 @@
 
     function handleMouseOverHighlighter(e) {
         if (!isPickModeActive) return;
-        const card = e.target.closest("a, .shopee-search-item-result__item, [data-sqp]");
+        const card = e.target.closest("a, .shopee-search-item-result__item, [data-sqp], div[class*='card'], div[class*='offer'], div[class*='product']") || 
+                     (e.target.tagName === 'IMG' ? e.target.closest('div') : null);
         if (card && !card.dataset.extBound) {
             card.style.outline = "3px solid #7c3aed";
             card.style.outlineOffset = "-3px";
@@ -738,49 +805,36 @@
 
     async function handleMouseClickSelect(e) {
         if (!isPickModeActive) return;
-        const card = e.target.closest("a, .shopee-search-item-result__item, [data-sqp]");
+        // Don't intercept clicks inside extension control panel
+        if (e.target.closest('#shopeeExtractorControlPanel')) return;
+
+        const card = e.target.closest("a, .shopee-search-item-result__item, [data-sqp], div[class*='card'], div[class*='offer'], div[class*='product']") ||
+                     (e.target.tagName === 'IMG' ? e.target.closest('div') : e.target);
+
         if (card) {
             e.preventDefault();
             e.stopPropagation();
 
-            const title = card.querySelector("h1, ._44qnta, .vioxSu, [title]")?.innerText || card.innerText || "";
-            if (!isValidProductTitle(title)) {
-                showToast("⚠️ องค์ประกอบนี้ไม่ใช่สินค้า กรุณาคลิกเลือกตัวสินค้าครับ", "#eab308");
+            const prodData = extractSingleProductFromCard(card);
+            if (!prodData || !prodData.title) {
+                showToast("⚠️ ไม่สามารถดึงข้อมูลจากการ์ดนี้ได้ กรุณาลองคลิกส่วนอื่นของสินค้า", "#eab308");
                 return;
             }
-            if (isProductAlreadyInDB(title)) {
-                markCardAsAlreadyExtracted(card);
-                showToast(`📦 สินค้า '${title.substring(0, 15)}...' มีในฐานข้อมูลอยู่แล้ว`, "#0284c7");
-            }
-            const priceText = card.querySelector("._1w9fTh, .pq8Piy, ._3n5odx")?.innerText || "390";
-            const price = parseFloat(priceText.replace(/[^0-9.]/g, "")) || 390.0;
-            
-            // Extract Multi-Image Gallery
-            const gallery = await extractProductGalleryImages(card);
-            const mainImg = gallery[0] || "https://down-th.img.susercontent.com/file/sg-11134201-7rd5e-m4p50n5z0c2g7b";
-            const href = card.href || window.location.href;
 
-            const itemKey = `pick_${title.substring(0, 15)}`;
+            const title = prodData.title;
+            const itemKey = `pick_${prodData.item_id}`;
+
             if (selectedProductsMap.has(itemKey)) {
                 selectedProductsMap.delete(itemKey);
                 card.style.outline = "none";
+                card.style.boxShadow = "none";
+                const badge = card.querySelector('.ext-selected-badge');
+                if (badge) badge.remove();
                 showToast(`❌ ยกเลิกเลือก '${title.substring(0, 15)}...'`, "#dc2626");
             } else {
-                selectedProductsMap.set(itemKey, {
-                    item_id: `sp_custom_${Date.now()}_${selectedProductsMap.size}`,
-                    title: title.replace(/\n/g, ' ').trim(),
-                    sale_price: price,
-                    original_price: Math.round(price * 1.4),
-                    commission_rate: 22.5,
-                    net_profit_thb: Math.round(price * 0.225 * 100) / 100,
-                    main_image_path: mainImg,
-                    images: gallery,
-                    affiliate_link: href.includes('?') ? `${href}&af_id=X4EBLKP&mmp_pid=an_15320530167` : `${href}?af_id=X4EBLKP&mmp_pid=an_15320530167`,
-                    shop_name: "Shopee Official Store",
-                    status: "PENDING_VIDEO"
-                });
-                card.style.outline = "4px solid #10b981";
-                showToast(`✅ เลือก '${title.substring(0, 15)}...' พร้อมคลัง ${gallery.length} ภาพเรียบร้อยแล้ว`, "#059669");
+                selectedProductsMap.set(itemKey, prodData);
+                highlightSelectedCard(card);
+                showToast(`✅ เลือก '${title.substring(0, 15)}...' เรียบร้อยแล้ว`, "#059669");
             }
             updateExtSelectionCount();
         }
@@ -806,14 +860,16 @@
         window.scrollBy({ top: 400, behavior: 'smooth' });
         await new Promise(r => setTimeout(r, 1200));
 
-        const allSelectors = [
-            "a[href*='/product/']",
-            "a[href*='-i.']",
-            "a[href*='shopee.co.th/product']",
-            ".shopee-search-item-result__item",
-            "[data-sqp]"
-        ].join(", ");
-        const cards = document.querySelectorAll(allSelectors);
+        // ✅ ใช้ Universal Card Finder แทน CSS selector — ทำงานได้ทุกหน้า Shopee/Affiliate
+        const cards = findProductCardsOnPage();
+        if (cards.length === 0) {
+            showToast('⚠️ ไม่พบสินค้าบนหน้านี้ ลองเลื่อนหน้าให้โหลดก่อนครับ', '#eab308');
+            btnAuto.innerText = "📥 2. ดึงลง DB ทั้งหน้า";
+            btnAuto.disabled = false;
+            updateModeBanner('ready');
+            return;
+        }
+        showToast(`🔍 พบ ${cards.length} การ์ดสินค้า กำลังดึง...`, '#0284c7');
         const seenNormTitlesList = [];
         const startSize = selectedProductsMap.size;
 
