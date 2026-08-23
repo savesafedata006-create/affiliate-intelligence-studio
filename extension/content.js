@@ -194,11 +194,11 @@
             ⚪ โหมดปัจจุบัน: Ready (พร้อมดึงสินค้าเข้าคลัง DB)
         </div>
 
-        <!-- 3 Extraction Mode Buttons -->
+        <!-- 4 Extraction Mode Buttons -->
         <div style="display:flex; gap:4px; flex-wrap:wrap;">
             <button id="btnTogglePickMode" style="flex:1; background:#334155; color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; min-width:85px;">🎯 1. จิ้มเลือกเอง</button>
             <button id="btnAutoExtract" style="flex:1; background:#334155; color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; min-width:85px;">📥 2. ดึงลง DB ทั้งหน้า</button>
-            <button id="btnAutoClickerMode" style="flex:1; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; min-width:100px;">🤖 3. ออโต้ดึงลง DB</button>
+            <button id="btnAutoClickerMode" style="flex:1; background:linear-gradient(135deg,#7c3aed,#a855f7); color:#fff; border:none; padding:7px 4px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; min-width:95px;">🤖 3. ออโต้ดึงลง DB</button>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; background:#1e293b; padding:6px 10px; border-radius:8px; gap:6px;">
@@ -228,21 +228,19 @@
             <span style="color:#10b981; font-weight:700;">🟢 คัดชิ้นเด็ดสุด 1 เดียว</span>
         </div>
 
-        <div style="display:flex; align-items:center; background:#1e293b; padding:4px 10px; border-radius:6px;">
-            <label style="font-size:11px; color:#38bdf8; cursor:pointer; display:flex; align-items:center; gap:6px;">
-                <input type="checkbox" id="chkAutoOpenWeb" checked style="cursor:pointer;"> 
-                🚀 ส่งเข้า DB แล้วเปิด/สลับไปหน้าเว็บทันที
-            </label>
-        </div>
+        <!-- DIRECT PUSH TO MY COLLECTION BUTTON -->
+        <button id="btnDirectPushCollection" style="width:100%; background:linear-gradient(135deg,#059669,#10b981); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(16,185,129,0.3);">
+            📤 ดึงส่งเข้าคลังบัญชี Shopee ออนไลน์ (My Collection)
+        </button>
 
         <div style="display:flex; gap:6px;">
-            <button id="btnSubmitSelected" style="flex:2; background:linear-gradient(135deg, #ee4d2d, #ff7337); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(238,77,45,0.4);">
+            <button id="btnSubmitSelected" style="flex:2; background:linear-gradient(135deg, #ee4d2d, #ff7337); color:#fff; border:none; padding:9px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(238,77,45,0.4);">
                 📌 ส่งเข้า DB (<span id="selCountText">0</span>)
             </button>
-            <button id="btnCopyLinks" style="flex:1; background:#0284c7; color:#fff; border:none; padding:10px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer;" title="คัดลอกลิงก์พร้อมโพสต์ในโซเชียลทันที">
+            <button id="btnCopyLinks" style="flex:1; background:#0284c7; color:#fff; border:none; padding:9px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer;" title="คัดลอกลิงก์พร้อมโพสต์ในโซเชียลทันที">
                 📋 ก๊อปลิงก์
             </button>
-            <button id="btnResetAll" style="background:#475569; color:#fff; border:none; padding:10px 8px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer;" title="ล้างรายการที่เลือกไว้ทั้งหมดเตรียมดึงรอบใหม่">
+            <button id="btnResetAll" style="background:#475569; color:#fff; border:none; padding:9px 8px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer;" title="ล้างรายการที่เลือกไว้ทั้งหมดเตรียมดึงรอบใหม่">
                 🧹 รีเซ็ต
             </button>
         </div>
@@ -387,6 +385,9 @@
         }
     }
 
+    const btnPushCollection = document.getElementById("btnDirectPushCollection");
+    if (btnPushCollection) btnPushCollection.addEventListener("click", directPushSelectedToMyCollection);
+
     btnPick.addEventListener("click", togglePickMode);
     btnAuto.addEventListener("click", runAutoScrapeMode);
     if (btnAutoClicker) btnAutoClicker.addEventListener("click", toggleAutoClickerExtractorMode);
@@ -397,6 +398,35 @@
         updateModeBanner('ready');
         showToast("🧹 ล้างรายการเรียบร้อย พร้อมดึงสินค้ารอบใหม่แล้ว!", "#0284c7"); 
     });
+
+    async function directPushSelectedToMyCollection() {
+        if (selectedProductsMap.size === 0) {
+            // Auto scrape page first if nothing selected
+            await runAutoScrapeMode();
+        }
+
+        const items = Array.from(selectedProductsMap.values());
+        if (items.length === 0) {
+            showToast("⚠️ ไม่พบสินค้าบนหน้าจอ กรุณาเลือกสินค้าก่อนครับ", "#eab308");
+            return;
+        }
+
+        const queue = items.map(p => ({
+            title: p.title,
+            price: p.sale_price,
+            comm: p.commission_rate,
+            profit: p.net_profit_thb,
+            link: p.affiliate_link
+        }));
+
+        localStorage.setItem('collection_queue', JSON.stringify(queue));
+        localStorage.setItem('collection_queue_idx', '0');
+
+        showToast(`📤 กำลังส่งสินค้า ${queue.length} รายการเข้าคลังบัญชี Shopee...`, "#059669");
+        setTimeout(() => {
+            window.open('https://affiliate.shopee.co.th/my-collection', '_blank');
+        }, 1200);
+    }
 
     function togglePickMode() {
         if (isAutoClickerRunning) stopAutoClickerExtractor();
