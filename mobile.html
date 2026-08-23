@@ -286,6 +286,18 @@
         <div class="lan-badge" id="mHostIp">LAN: Connected</div>
     </header>
 
+    <!-- Personal Storefront Banner -->
+    <div style="background:linear-gradient(135deg,#064e3b,#022c22); border-bottom:1px solid #10b98144; padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <div style="font-size:10px; color:#a7f3d0; font-weight:700;">🛍️ หน้าร้านรวมสินค้าของคุณ (My Collection)</div>
+            <div style="font-size:12px; color:#34d399; font-weight:800;" id="mStorefrontUrl">collshp.com/namkhangcollection</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+            <button onclick="navigator.clipboard.writeText('https://collshp.com/namkhangcollection'); showToast('📋 คัดลอกลิงก์หน้าร้านเรียบร้อย!');" style="background:#059669; color:#fff; border:none; padding:5px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">📋 ก๊อปลิงก์</button>
+            <button onclick="window.open('https://collshp.com/namkhangcollection','_blank')" style="background:#0284c7; color:#fff; border:none; padding:5px 10px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">🌐 เปิด</button>
+        </div>
+    </div>
+
     <!-- Search Section -->
     <div class="search-section">
         <div class="search-box">
